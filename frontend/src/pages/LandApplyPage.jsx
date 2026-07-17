@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
-import { applicationTypeLabels, compatibleApplicationTypes } from '@/constants/application.js';
+import { applicationTypeLabels, compatibleApplicationTypes } from '@/utils/applicationData.js';
 import { useAuth } from '@/context/AuthContext.jsx';
 import { useCreateApplication } from '@/hooks/useApplications.js';
 import { useLand } from '@/hooks/useLands.js';

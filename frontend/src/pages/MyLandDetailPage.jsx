@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
-import { statusLabels } from '@/constants/land.js';
+import { statusLabels } from '@/utils/landData.js';
 import { useLand, useSubmitLandVerification, useUpdateLandStatus } from '@/hooks/useLands.js';
 
 export function MyLandDetailPage() {

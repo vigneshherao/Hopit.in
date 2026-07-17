@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { LandCard, getDisplayPrice } from '@/components/lands/LandCard.jsx';
 import { LandMap } from '@/components/lands/LandMap.jsx';
-import { demoLandImage, purposeLabels, transactionLabels } from '@/constants/land.js';
+import { demoLandImage, purposeLabels, transactionLabels } from '@/utils/landData.js';
 import { useLand } from '@/hooks/useLands.js';
 
 export function LandDetailPage() {

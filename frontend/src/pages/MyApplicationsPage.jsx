@@ -2,7 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
-import { applicationStatusLabels, applicationTypeLabels } from '@/constants/application.js';
+import { applicationStatusLabels, applicationTypeLabels } from '@/utils/applicationData.js';
 import { useApplicationStatistics, useMyApplications, useSubmitApplication, useWithdrawApplication } from '@/hooks/useApplications.js';
 
 export function MyApplicationsPage() {

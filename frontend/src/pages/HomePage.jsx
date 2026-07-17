@@ -8,153 +8,25 @@ import {
   Bot,
   BrainCircuit,
   ChevronRight,
-  ClipboardCheck,
   CloudSun,
-  FileSignature,
-  LineChart,
-  MapPin,
-  Orbit,
   ShieldCheck,
   Sparkles,
   Sprout,
-  Tractor,
-  Truck,
-  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
-import heroImage from '@/assets/1.png';
-import landCardImage from '@/assets/2.png';
-import aiCardImage from '@/assets/3.png';
-import agreementCardImage from '@/assets/4.png';
-import profitCardImage from '@/assets/5.png';
-import aiGif from '@/assets/aigif.gif';
-import appleImage from '@/assets/apple.jpg';
-import bananaImage from '@/assets/banana.jpg';
-import broccoliImage from '@/assets/brocoli.jpg';
-import carrotImage from '@/assets/carrot.webp';
-import pineappleImage from '@/assets/pineapple.jpg';
-
-const trustIndicators = ['15K+ Users', '8K+ Lands', 'AI Powered', '98% Satisfaction'];
-
-const featureCards = [
-  {
-    title: 'Land Marketplace',
-    description: 'Discover verified land for lease, rent, sale, revenue share, or partnership.',
-    image: landCardImage,
-    icon: MapPin,
-  },
-  {
-    title: 'Hire Farmers & Workers',
-    description: 'Build reliable farm teams with role-aware profiles, bookings, and trust signals.',
-    icon: Users,
-  },
-  {
-    title: 'AI Assistant',
-    description: 'Use soil, water, budget, and market signals to plan profitable farming decisions.',
-    image: aiCardImage,
-    icon: BrainCircuit,
-  },
-  {
-    title: 'Digital Agreements',
-    description: 'Prepare transparent agreement drafts after proposal acceptance and negotiation.',
-    image: agreementCardImage,
-    icon: FileSignature,
-  },
-  {
-    title: 'Track Profit',
-    description: 'Monitor yield, expenses, ROI, and progress from one premium command center.',
-    image: profitCardImage,
-    icon: LineChart,
-  },
-  {
-    title: 'Equipment Rental',
-    description: 'Coordinate tractors, irrigation tools, harvest equipment, and seasonal machinery.',
-    icon: Tractor,
-  },
-  {
-    title: 'Drone Monitoring',
-    description: 'Prepare every listing for aerial inspection, crop health, and risk intelligence.',
-    icon: Orbit,
-  },
-  {
-    title: 'Logistics',
-    description: 'Connect production with storage, markets, cold chains, and transport partners.',
-    icon: Truck,
-  },
-];
-
-const cropOrbitItems = [
-  {
-    name: 'Apple',
-    icon: '🍎',
-    image: appleImage,
-  },
-  {
-    name: 'Carrot',
-    icon: '🥕',
-    image: carrotImage,
-  },
-  {
-    name: 'Broccoli',
-    icon: '🥦',
-    image: broccoliImage,
-  },
-  {
-    name: 'Banana',
-    icon: '🍌',
-    image: bananaImage,
-  },
-  {
-    name: 'Pineapple',
-    icon: '🍍',
-    image: pineappleImage,
-  },
-];
-
-const steps = [
-  ['Find Land', MapPin],
-  ['Analyze with AI', Bot],
-  ['Apply', ClipboardCheck],
-  ['Agreement', FileSignature],
-  ['Hire Workers', Users],
-  ['Start Farming', Sprout],
-];
-
-const stats = [
-  ['25K+', 'Users'],
-  ['8K+', 'Verified Lands'],
-  ['95%', 'Success Rate'],
-  ['₹120Cr+', 'Transactions'],
-];
-
-const testimonials = [
-  {
-    role: 'Owner',
-    name: 'Meera R.',
-    quote: 'AgriLink AI made our idle land visible to serious farmers with clear proposals.',
-  },
-  {
-    role: 'Farmer',
-    name: 'Arun P.',
-    quote: 'I found verified lease land, negotiated terms, and planned crops from one dashboard.',
-  },
-  {
-    role: 'Investor',
-    name: 'Nikhil S.',
-    quote: 'The platform turns agriculture opportunities into structured, reviewable deals.',
-  },
-  {
-    role: 'Worker',
-    name: 'Devika M.',
-    quote: 'Farm work discovery feels more organized, transparent, and professional.',
-  },
-];
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
-};
+import {
+  analyzerExamplePrompts,
+  brandName,
+  cropOrbitItems,
+  fadeUp,
+  featureCards,
+  landingImages,
+  platformStats,
+  testimonials,
+  trustIndicators,
+  workflowSteps,
+} from '@/utils/homePageData.js';
 
 export function HomePage() {
   const carouselCards = [...featureCards, ...featureCards];
@@ -236,7 +108,7 @@ function HeroSection() {
             className="relative overflow-hidden rounded-[28px] border border-emerald-100/70 bg-white p-2 shadow-[0_30px_90px_rgba(15,23,42,0.14)] sm:rounded-[32px]"
           >
             <img
-              src={heroImage}
+              src={landingImages.hero}
               alt="Farmers using AI technology in a connected agriculture field"
               className="aspect-[1672/941] h-auto w-full rounded-[22px] object-contain"
               loading="eager"
@@ -423,12 +295,6 @@ function AnalyzerSection() {
   const [prompt, setPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
-  const examplePrompts = [
-    '5 acres in Mandya, loamy soil, canal water, ₹3 lakh budget, Kharif season',
-    '2 acres near Coimbatore, red soil, limited water, organic farming preferred',
-    '8 acres in Kerala, good rainfall, want high-profit horticulture',
-  ];
-
   function analyzeLand() {
     setIsAnalyzing(true);
     window.setTimeout(() => {
@@ -505,7 +371,7 @@ function AnalyzerSection() {
                   placeholder="Example: I have 5 acres in Mandya with loamy soil, canal water, ₹3 lakh budget, and I want a high-profit crop for Kharif season."
                 />
                 <div className="flex flex-wrap gap-2 border-t border-emerald-50 pt-2">
-                  {examplePrompts.map((item) => (
+                  {analyzerExamplePrompts.map((item) => (
                     <button
                       key={item}
                       type="button"
@@ -542,7 +408,7 @@ function AnalyzerSection() {
 
               <div className="relative grid gap-4 sm:grid-cols-[150px_1fr] sm:items-start">
                 <div className="mx-auto flex h-36 w-36 items-center justify-center overflow-hidden rounded-[32px] border border-white/10 bg-white/10 p-2 shadow-2xl sm:mx-0">
-                  <img src={aiGif} alt="Animated AI assistant" className="h-full w-full rounded-[26px] object-cover" loading="lazy" />
+                  <img src={landingImages.aiAssistant} alt="Animated AI assistant" className="h-full w-full rounded-[26px] object-cover" loading="lazy" />
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-400 text-slate-950">
@@ -607,7 +473,7 @@ function HowItWorks() {
         subtitle="Every step is built to make agriculture deals easier to discover, assess, and execute."
       />
       <div className="mx-auto mt-14 grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-6 lg:px-8">
-        {steps.map(([label, Icon], index) => (
+        {workflowSteps.map(([label, Icon], index) => (
           <motion.div
             key={label}
             variants={fadeUp}
@@ -620,7 +486,7 @@ function HowItWorks() {
             <span className="text-sm font-semibold text-emerald-600">0{index + 1}</span>
             <Icon className="mt-6 h-7 w-7 text-emerald-500" />
             <h3 className="mt-4 text-lg font-semibold text-slate-950">{label}</h3>
-            {index < steps.length - 1 && <div className="absolute -right-3 top-1/2 hidden h-px w-6 bg-emerald-200 lg:block" />}
+            {index < workflowSteps.length - 1 && <div className="absolute -right-3 top-1/2 hidden h-px w-6 bg-emerald-200 lg:block" />}
           </motion.div>
         ))}
       </div>
@@ -632,7 +498,7 @@ function StatsSection() {
   return (
     <section className="bg-slate-950 py-20 text-white">
       <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        {stats.map(([value, label]) => (
+        {platformStats.map(([value, label]) => (
           <motion.div
             key={label}
             whileHover={{ y: -6 }}
@@ -689,7 +555,7 @@ function FinalCta() {
         <div className="absolute left-10 top-10 h-32 w-32 rounded-full bg-emerald-400/25 blur-3xl" />
         <div className="absolute bottom-8 right-10 h-40 w-40 rounded-full bg-lime-300/20 blur-3xl" />
         <div className="relative">
-          <p className="text-sm font-semibold uppercase text-emerald-300">AgriLink AI</p>
+          <p className="text-sm font-semibold uppercase text-emerald-300">{brandName}</p>
           <h2 className="mt-4 text-4xl font-semibold sm:text-5xl">Ready to Build Your Future?</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">
             Find land, evaluate opportunity, negotiate proposals, and prepare your next agriculture

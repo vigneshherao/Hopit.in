@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
-import { agreementDisclaimer } from '@/constants/application.js';
+import { agreementDisclaimer } from '@/utils/applicationData.js';
 import { useAgreement, useConfirmAgreement, useRequestAgreementChanges } from '@/hooks/useApplications.js';
 
 export function AgreementPage() {

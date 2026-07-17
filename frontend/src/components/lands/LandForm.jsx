@@ -19,7 +19,7 @@ import {
   transactionTypes,
   waterAvailabilityOptions,
   waterSources,
-} from '@/constants/land.js';
+} from '@/utils/landData.js';
 import { uploadLandFiles } from '@/services/landService.js';
 
 const schema = z.object({

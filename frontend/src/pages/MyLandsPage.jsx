@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import { getDisplayPrice } from '@/components/lands/LandCard.jsx';
-import { statusLabels } from '@/constants/land.js';
+import { statusLabels } from '@/utils/landData.js';
 import { useDeleteLand, useLandStatistics, useMyLands, useSubmitLandVerification, useUpdateLandStatus } from '@/hooks/useLands.js';
 
 export function MyLandsPage() {

@@ -13,7 +13,7 @@ import {
   transactionLabels,
   transactionTypes,
   waterAvailabilityOptions,
-} from '@/constants/land.js';
+} from '@/utils/landData.js';
 import { useLands } from '@/hooks/useLands.js';
 
 export function LandsPage() {

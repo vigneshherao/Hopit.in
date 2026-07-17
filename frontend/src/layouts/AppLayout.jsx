@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { Leaf, LogIn, LogOut } from 'lucide-react';
-import { navigationItems } from '@/constants/navigation.js';
+import { navigationItems } from '@/utils/navigationData.js';
 import { Button } from '@/components/ui/button.jsx';
 import { useAuth } from '@/context/AuthContext.jsx';
 import { cn } from '@/utils/cn.js';
@@ -16,7 +16,7 @@ export function AppLayout() {
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
               <Leaf className="h-5 w-5" />
             </span>
-            <span className="whitespace-nowrap">AgriLink AI</span>
+            <span className="whitespace-nowrap">Hopit</span>
           </NavLink>
 
           <nav className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto pb-1 lg:order-2 lg:mx-0 lg:w-auto lg:justify-center lg:overflow-visible lg:pb-0">

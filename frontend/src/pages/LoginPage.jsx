@@ -49,7 +49,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-3xl">Login</CardTitle>
-          <CardDescription>Access your AgriLink AI workspace.</CardDescription>
+          <CardDescription>Access your Hopit workspace.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
@@ -90,7 +90,7 @@ export function LoginPage() {
               Forgot password flow is not enabled yet.
             </button>
             <p className="text-center text-sm text-muted-foreground">
-              New to AgriLink AI?{' '}
+              New to Hopit?{' '}
               <Link className="font-medium text-primary" to="/register">
                 Create account
               </Link>

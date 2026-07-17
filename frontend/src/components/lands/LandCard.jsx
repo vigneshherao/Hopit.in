@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
-import { demoLandImage, purposeLabels, transactionLabels } from '@/constants/land.js';
+import { demoLandImage, purposeLabels, transactionLabels } from '@/utils/landData.js';
 
 export function LandCard({ land, view = 'grid' }) {
   const image = land.media?.images?.[0] ?? demoLandImage;

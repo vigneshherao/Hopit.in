@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { NegotiationTimeline } from '@/components/applications/NegotiationTimeline.jsx';
-import { applicationStatusLabels, applicationTypeLabels } from '@/constants/application.js';
+import { applicationStatusLabels, applicationTypeLabels } from '@/utils/applicationData.js';
 import {
   useAcceptApplication,
   useAcceptNegotiatedTerms,
