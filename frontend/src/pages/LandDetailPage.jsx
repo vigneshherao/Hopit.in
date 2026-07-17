@@ -43,7 +43,9 @@ export function LandDetailPage() {
             <div className="flex flex-wrap gap-2">
               {land.purposes.map((purpose) => <Badge key={purpose} variant="outline">{purposeLabels[purpose]}</Badge>)}
             </div>
-            <Button disabled className="w-full">Apply flow coming in Prompt 4</Button>
+            <Button asChild className="w-full">
+              <Link to={`/lands/${land.slug ?? land._id}/apply`}>Apply or submit proposal</Link>
+            </Button>
             {hasApplied ? <p className="text-sm text-muted-foreground">You have already applied for this land.</p> : null}
             <Button asChild variant="outline" className="w-full"><Link to="/ai">Run AI analysis</Link></Button>
             <Button asChild variant="outline" className="w-full"><Link to="/workers">Hire workers</Link></Button>

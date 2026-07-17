@@ -25,3 +25,4 @@ yarn-error.log*
 # Runtime uploads
 backend/uploads/
 uploads/
+backend/uploads/applications/

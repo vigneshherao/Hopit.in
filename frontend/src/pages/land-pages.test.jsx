@@ -100,7 +100,7 @@ describe('land marketplace frontend', () => {
       ['/lands/mandya-organic-farm-land'],
     );
     expect(screen.getByText('Soil and water')).toBeInTheDocument();
-    expect(screen.getByText('Apply flow coming in Prompt 4')).toBeDisabled();
+    expect(screen.getByRole('link', { name: /apply or submit proposal/i })).toBeInTheDocument();
   });
 
   it('protects create-listing route', () => {

@@ -1,5 +1,8 @@
 import { connectDatabase, disconnectDatabase } from '@/config/database.js';
 import { env } from '@/config/env.js';
+import { AgreementModel } from '@/models/agreement.model.js';
+import { ApplicationNegotiationModel } from '@/models/application-negotiation.model.js';
+import { ApplicationModel } from '@/models/application.model.js';
 import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
@@ -13,6 +16,9 @@ const demoUsers = [
   { name: 'Demo Farmer', email: 'farmer@agrilink.demo', role: 'farmer' },
   { name: 'Demo Worker', email: 'worker@agrilink.demo', role: 'worker' },
   { name: 'Demo Admin', email: 'admin@agrilink.demo', role: 'admin' },
+  { name: 'Demo Investor', email: 'investor@agrilink.demo', role: 'owner' },
+  { name: 'Demo Dairy Farmer', email: 'dairy@agrilink.demo', role: 'farmer' },
+  { name: 'Demo Solar Entrepreneur', email: 'solar@agrilink.demo', role: 'owner' },
 ] as const;
 
 const imageUrls = [
@@ -84,7 +90,165 @@ async function seed(): Promise<void> {
     );
   }
 
+  await seedApplications(owner._id, admin?._id);
+
   logger.info('Development demo users seeded. Password: AgriLink@123');
+}
+
+async function seedApplications(ownerId: unknown, adminId: unknown) {
+  const applicants = await UserModel.find({
+    email: { $in: ['farmer@agrilink.demo', 'investor@agrilink.demo', 'dairy@agrilink.demo', 'solar@agrilink.demo'] },
+  });
+  const lands = await LandModel.find({ ownerId }).limit(8);
+  if (!lands.length || !applicants.length) return;
+
+  const statuses = [
+    'submitted',
+    'submitted',
+    'submitted',
+    'submitted',
+    'submitted',
+    'submitted',
+    'shortlisted',
+    'shortlisted',
+    'changes-requested',
+    'agreement-pending',
+    'rejected',
+    'draft',
+  ] as const;
+  const types = ['lease', 'rent', 'revenue-share', 'joint-venture', 'sale-enquiry', 'business-proposal'] as const;
+
+  for (let index = 0; index < statuses.length; index += 1) {
+    const applicant = applicants[index % applicants.length];
+    const land = lands[index % lands.length];
+    const type = compatibleType(types[index % types.length], land.transactionTypes, land.purposes);
+    const status = statuses[index];
+    const application = await ApplicationModel.findOneAndUpdate(
+      { landId: land._id, applicantId: applicant._id, status: { $in: ['draft', 'submitted', 'under-review', 'shortlisted', 'changes-requested', 'agreement-pending'] } },
+      {
+        $set: {
+          landId: land._id,
+          applicantId: applicant._id,
+          farmerId: applicant.role === 'farmer' ? applicant._id : undefined,
+          ownerId,
+          applicationType: type,
+          status,
+          applicantProfile: {
+            occupation: applicant.role === 'farmer' ? 'Farmer' : 'Entrepreneur',
+            experienceYears: 5 + index,
+            currentLocation: land.location.city,
+            preferredLanguage: 'English',
+            farmingExperience: 'Experienced in regional crop and labor planning.',
+            businessExperience: 'Managed small agricultural operations and local partnerships.',
+          },
+          proposal: {
+            title: `${type} proposal for ${land.title}`,
+            summary: 'A practical proposal with clear investment, operating responsibility, and local market access.',
+            intendedUse: land.purposes[0],
+            cropsOrBusinessTypes: land.purposes,
+            expectedStartDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            proposedDurationMonths: 24,
+            proposedMonthlyRent: type === 'rent' ? 35000 : undefined,
+            proposedAnnualLeaseAmount: type === 'lease' ? 360000 : undefined,
+            proposedPurchasePrice: type === 'sale-enquiry' ? 15000000 : undefined,
+            proposedSecurityDeposit: 75000,
+            proposedOwnerRevenuePercentage: type === 'revenue-share' || type === 'joint-venture' ? 40 : undefined,
+            proposedApplicantRevenuePercentage: type === 'revenue-share' || type === 'joint-venture' ? 60 : undefined,
+            expectedInvestment: 500000 + index * 100000,
+            fundingSource: 'self-funded',
+            ownerParticipationRequested: type === 'joint-venture',
+            requestedOwnerResponsibilities: ['Land access', 'Local introductions'],
+            applicantResponsibilities: ['Operations', 'Labor', 'Input planning'],
+            estimatedWorkersRequired: 4 + index,
+          },
+          coverMessage: 'Please consider this proposal for a structured land partnership.',
+          submittedAt: status === 'draft' ? undefined : new Date(),
+          acceptedAt: status === 'agreement-pending' ? new Date() : undefined,
+          rejectedAt: status === 'rejected' ? new Date() : undefined,
+          negotiation: { currentRound: index < 3 ? 2 : 1, lastActionBy: applicant._id, lastActionAt: new Date() },
+        },
+      },
+      { upsert: true, new: true, runValidators: true },
+    );
+
+    await ApplicationNegotiationModel.updateOne(
+      { applicationId: application._id, round: 1 },
+      {
+        $set: {
+          applicationId: application._id,
+          round: 1,
+          createdBy: applicant._id,
+          createdByRole: 'applicant',
+          message: 'Initial proposal submitted.',
+          proposedTerms: { durationMonths: 24, annualLeaseAmount: 360000, ownerParticipation: false },
+          action: 'proposal-created',
+        },
+      },
+      { upsert: true },
+    );
+
+    if (index < 3) {
+      await ApplicationNegotiationModel.updateOne(
+        { applicationId: application._id, round: 2 },
+        {
+          $set: {
+            applicationId: application._id,
+            round: 2,
+            createdBy: ownerId,
+            createdByRole: 'owner',
+            message: 'Owner counter-offer with adjusted duration and amount.',
+            proposedTerms: { durationMonths: 36, annualLeaseAmount: 390000, ownerParticipation: true },
+            action: 'counter-offer',
+          },
+        },
+        { upsert: true },
+      );
+    }
+
+    if (status === 'agreement-pending') {
+      const agreement = await AgreementModel.findOneAndUpdate(
+        { applicationId: application._id },
+        {
+          $set: {
+            applicationId: application._id,
+            landId: land._id,
+            ownerId,
+            applicantId: applicant._id,
+            agreementType: type === 'sale-enquiry' ? 'sale' : type === 'business-proposal' ? 'business-use' : type,
+            status: 'review-pending',
+            terms: {
+              landTitle: land.title,
+              landLocation: `${land.location.district}, ${land.location.state}`,
+              landAreaValue: land.area.value,
+              landAreaUnit: land.area.unit,
+              purpose: land.purposes[0],
+              durationMonths: 24,
+              annualLeaseAmount: 360000,
+              ownerParticipation: false,
+              ownerResponsibilities: ['Provide possession after legal review'],
+              applicantResponsibilities: ['Operate responsibly and pay agreed charges'],
+              additionalTerms: ['Subject to legal review'],
+            },
+            generatedSummary: `Draft agreement summary for ${land.title}. Legal review is required before execution.`,
+            version: 1,
+            generatedBy: adminId ? 'admin' : 'system',
+          },
+        },
+        { upsert: true, new: true, runValidators: true },
+      );
+      application.agreement = { agreementId: agreement._id as never, summaryGenerated: true, generatedAt: new Date() };
+      await application.save();
+    }
+  }
+}
+
+function compatibleType(preferred: string, transactions: string[], purposes: string[]) {
+  if (preferred === 'sale-enquiry' && transactions.includes('sale')) return preferred;
+  if (preferred !== 'sale-enquiry' && transactions.includes(preferred)) return preferred;
+  if (purposes.some((purpose) => ['commercial', 'agri-business', 'warehouse', 'solar-project', 'dairy', 'poultry', 'fish-farming', 'other'].includes(purpose))) {
+    return 'business-proposal';
+  }
+  return transactions.includes('rent') ? 'rent' : 'lease';
 }
 
 function buildLandListings(ownerId: unknown, adminId: unknown) {

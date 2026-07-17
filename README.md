@@ -181,6 +181,12 @@ Hopit includes a land marketplace for sale, lease, rent, joint venture, and reve
 
 See [docs/land-marketplace.md](/Users/vigneshhe/Desktop/Hopit.in/docs/land-marketplace.md).
 
+## Application Workflow
+
+Hopit supports land applications, proposal negotiation, owner selection, and platform-generated draft agreement summaries.
+
+See [docs/application-workflow.md](/Users/vigneshhe/Desktop/Hopit.in/docs/application-workflow.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.
