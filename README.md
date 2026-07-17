@@ -175,6 +175,12 @@ Hopit uses JWT access tokens plus rotating refresh tokens. Access tokens are sho
 
 See [docs/authentication.md](/Users/vigneshhe/Desktop/Hopit.in/docs/authentication.md) for the full flow.
 
+## Land Marketplace
+
+Hopit includes a land marketplace for sale, lease, rent, joint venture, and revenue-share listings. Owners can create drafts, submit for verification, manage statuses, and upload images/documents. Public users can browse available listings with filters and map views.
+
+See [docs/land-marketplace.md](/Users/vigneshhe/Desktop/Hopit.in/docs/land-marketplace.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

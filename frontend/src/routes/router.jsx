@@ -3,9 +3,13 @@ import { AppLayout } from '@/layouts/AppLayout.jsx';
 import { AiPage } from '@/pages/AiPage.jsx';
 import { DashboardPage } from '@/pages/DashboardPage.jsx';
 import { HomePage } from '@/pages/HomePage.jsx';
+import { LandCreatePage } from '@/pages/LandCreatePage.jsx';
 import { LandDetailPage } from '@/pages/LandDetailPage.jsx';
+import { LandEditPage } from '@/pages/LandEditPage.jsx';
 import { LandsPage } from '@/pages/LandsPage.jsx';
 import { LoginPage } from '@/pages/LoginPage.jsx';
+import { MyLandDetailPage } from '@/pages/MyLandDetailPage.jsx';
+import { MyLandsPage } from '@/pages/MyLandsPage.jsx';
 import { NotFoundPage } from '@/pages/NotFoundPage.jsx';
 import { ProfilePage } from '@/pages/ProfilePage.jsx';
 import { RegisterPage } from '@/pages/RegisterPage.jsx';
@@ -72,7 +76,39 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'lands', element: <LandsPage /> },
-      { path: 'lands/:id', element: <LandDetailPage /> },
+      {
+        path: 'lands/new',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <LandCreatePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'lands/:id/edit',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <LandEditPage />
+          </RoleRoute>
+        ),
+      },
+      { path: 'lands/:identifier', element: <LandDetailPage /> },
+      {
+        path: 'my-lands',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <MyLandsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'my-lands/:id',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <MyLandDetailPage />
+          </RoleRoute>
+        ),
+      },
       { path: 'workers', element: <WorkersPage /> },
       { path: 'ai', element: <AiPage /> },
       { path: 'not-found', element: <NotFoundPage /> },
