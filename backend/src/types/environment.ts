@@ -3,10 +3,14 @@ export type NodeEnvironment = 'development' | 'test' | 'production';
 export interface AppEnvironment {
   nodeEnv: NodeEnvironment;
   port: number;
-  clientOrigin: string;
+  clientUrl: string;
   mongoUri: string;
-  jwtSecret: string;
-  jwtExpiresIn: string;
+  jwtAccessSecret: string;
+  jwtAccessExpiresIn: string;
+  jwtRefreshSecret: string;
+  jwtRefreshExpiresIn: string;
+  cookieSecure: boolean;
+  cookieSameSite: 'lax' | 'strict' | 'none';
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;

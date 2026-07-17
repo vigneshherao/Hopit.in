@@ -1,10 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Leaf, LogIn } from 'lucide-react';
+import { Leaf, LogIn, LogOut } from 'lucide-react';
 import { navigationItems } from '@/constants/navigation.js';
 import { Button } from '@/components/ui/button.jsx';
+import { useAuth } from '@/context/AuthContext.jsx';
 import { cn } from '@/utils/cn.js';
 
 export function AppLayout() {
+  const { isAuthenticated, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -34,12 +37,19 @@ export function AppLayout() {
             ))}
           </nav>
 
-          <Button asChild variant="outline" size="sm">
-            <NavLink to="/login">
-              <LogIn className="h-4 w-4" />
-              Login
-            </NavLink>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          ) : (
+            <Button asChild variant="outline" size="sm">
+              <NavLink to="/login">
+                <LogIn className="h-4 w-4" />
+                Login
+              </NavLink>
+            </Button>
+          )}
         </div>
       </header>
 

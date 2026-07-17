@@ -17,8 +17,11 @@ export function validateRequest(schemas: RequestSchemas) {
     const failedResult = [bodyResult, paramsResult, queryResult].find((result) => result && !result.success);
 
     if (failedResult && !failedResult.success) {
-      const message = failedResult.error.issues.map((issue) => issue.message).join(', ');
-      next(new AppError(message, 400));
+      const errors = failedResult.error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+      }));
+      next(new AppError('Validation failed', 400, true, errors));
       return;
     }
 

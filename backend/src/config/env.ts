@@ -6,14 +6,28 @@ dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().int().positive().default(5001),
-  CLIENT_ORIGIN: z.string().url().default('http://localhost:5173'),
-  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required').default('mongodb://127.0.0.1:27017/hopit'),
-  JWT_SECRET: z
+  PORT: z.coerce.number().int().positive().default(5000),
+  CLIENT_URL: z.string().url().default('http://localhost:5173'),
+  CLIENT_ORIGIN: z.string().url().optional(),
+  MONGODB_URI: z
     .string()
-    .min(16, 'JWT_SECRET must be at least 16 characters')
-    .default('development-hopit-secret-change-me'),
-  JWT_EXPIRES_IN: z.string().default('7d'),
+    .min(1, 'MONGODB_URI is required')
+    .default('mongodb://127.0.0.1:27017/hopit'),
+  JWT_ACCESS_SECRET: z
+    .string()
+    .min(24, 'JWT_ACCESS_SECRET must be at least 24 characters')
+    .default('development-hopit-access-secret-change-me'),
+  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(24, 'JWT_REFRESH_SECRET must be at least 24 characters')
+    .default('development-hopit-refresh-secret-change-me'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
@@ -29,10 +43,14 @@ if (!parsed.success) {
 export const env: AppEnvironment = {
   nodeEnv: parsed.data.NODE_ENV,
   port: parsed.data.PORT,
-  clientOrigin: parsed.data.CLIENT_ORIGIN,
+  clientUrl: parsed.data.CLIENT_ORIGIN ?? parsed.data.CLIENT_URL,
   mongoUri: parsed.data.MONGODB_URI,
-  jwtSecret: parsed.data.JWT_SECRET,
-  jwtExpiresIn: parsed.data.JWT_EXPIRES_IN,
+  jwtAccessSecret: parsed.data.JWT_ACCESS_SECRET,
+  jwtAccessExpiresIn: parsed.data.JWT_ACCESS_EXPIRES_IN,
+  jwtRefreshSecret: parsed.data.JWT_REFRESH_SECRET,
+  jwtRefreshExpiresIn: parsed.data.JWT_REFRESH_EXPIRES_IN,
+  cookieSecure: parsed.data.COOKIE_SECURE,
+  cookieSameSite: parsed.data.COOKIE_SAME_SITE,
   cloudinaryCloudName: parsed.data.CLOUDINARY_CLOUD_NAME,
   cloudinaryApiKey: parsed.data.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: parsed.data.CLOUDINARY_API_SECRET,

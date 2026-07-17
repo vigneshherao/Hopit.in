@@ -31,18 +31,22 @@ cp backend/.env.example backend/.env
 Frontend variables:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5001/api/v1
+VITE_API_BASE_URL=http://localhost:5000/api/v1
 ```
 
 Backend variables:
 
 ```env
 NODE_ENV=development
-PORT=5001
-CLIENT_ORIGIN=http://localhost:5173
+PORT=5000
+CLIENT_URL=http://localhost:5173
 MONGODB_URI=mongodb://127.0.0.1:27017/hopit
-JWT_SECRET=replace-with-a-long-random-secret
-JWT_EXPIRES_IN=7d
+JWT_ACCESS_SECRET=replace_with_a_long_random_access_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=replace_with_a_different_long_random_refresh_secret
+JWT_REFRESH_EXPIRES_IN=7d
+COOKIE_SECURE=false
+COOKIE_SAME_SITE=lax
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
@@ -62,12 +66,12 @@ This starts Vite at `http://localhost:5173`.
 npm run dev --workspace backend
 ```
 
-This starts the Express API at `http://localhost:5001/api/v1`.
+This starts the Express API at `http://localhost:5000/api/v1`.
 
 Health check:
 
 ```bash
-curl http://localhost:5001/api/v1/health
+curl http://localhost:5000/api/v1/health
 ```
 
 Expected response:
@@ -109,6 +113,9 @@ Backend:
 - `npm run build --workspace backend`: compile TypeScript to `dist`.
 - `npm start --workspace backend`: run compiled server.
 - `npm run lint --workspace backend`: run ESLint.
+- `npm run seed --workspace backend`: seed development demo users.
+- `npm run test --workspace backend`: run API tests.
+- `npm run test --workspace frontend`: run frontend auth tests.
 
 ## Folder Structure
 
@@ -162,4 +169,48 @@ Use `backend` as the service root.
 
 ## Notes
 
-This repository contains the complete project foundation only. It intentionally avoids domain business logic so authentication flows, leasing workflows, job matching, and AI recommendations can be added cleanly inside the existing modules.
+## Authentication Architecture
+
+Hopit uses JWT access tokens plus rotating refresh tokens. Access tokens are short lived and sent with `Authorization: Bearer <token>`. Refresh tokens are random secrets stored only as SHA-256 hashes in MongoDB and sent to the browser through an HTTP-only cookie.
+
+See [docs/authentication.md](/Users/vigneshhe/Desktop/Hopit.in/docs/authentication.md) for the full flow.
+
+## Database Models
+
+The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.
+
+## Auth API Routes
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/logout-all`
+- `GET /api/v1/auth/me`
+- `PATCH /api/v1/auth/me`
+- `PATCH /api/v1/auth/change-password`
+
+## Demo Credentials
+
+Seed demo users:
+
+```bash
+npm run seed --workspace backend
+```
+
+Development-only password:
+
+```text
+AgriLink@123
+```
+
+Demo emails:
+
+- `owner@agrilink.demo`
+- `farmer@agrilink.demo`
+- `worker@agrilink.demo`
+- `admin@agrilink.demo`
+
+## Security Notes
+
+Use strong access and refresh secrets outside development. Set `COOKIE_SECURE=true` in production, keep CORS origins explicit, and never store refresh tokens in frontend storage.

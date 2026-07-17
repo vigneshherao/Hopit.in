@@ -1,11 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
+import { useAuth } from '@/context/AuthContext.jsx';
+import { getApiErrorMessage } from '@/utils/authErrors.js';
+import { roleDashboards } from '@/types/domain.js';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address.'),
@@ -13,13 +18,31 @@ const loginSchema = z.object({
 });
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, user } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState('');
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = () => undefined;
+  if (isAuthenticated && user?.role) {
+    return <Navigate to={roleDashboards[user.role]} replace />;
+  }
+
+  const onSubmit = async (values) => {
+    setFormError('');
+    try {
+      const session = await login(values);
+      const redirectTo = location.state?.from?.pathname ?? roleDashboards[session.user.role] ?? '/dashboard';
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, 'Invalid email or password.'));
+    }
+  };
 
   return (
     <section className="page-shell flex justify-center">
@@ -29,7 +52,7 @@ export function LoginPage() {
           <CardDescription>Access your Hopit workspace.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register('email')} />
@@ -37,14 +60,35 @@ export function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register('password')} />
+              <div className="relative">
+                <Input id="password" type={showPassword ? 'text' : 'password'} {...register('password')} />
+                <button
+                  type="button"
+                  className="absolute right-3 top-2.5 text-muted-foreground"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.password ? (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               ) : null}
             </div>
-            <Button className="w-full" type="submit">
-              Login
+            {formError ? <p className="text-sm text-destructive">{formError}</p> : null}
+            <Button className="w-full" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
+            <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">Demo accounts</p>
+              <p>owner@agrilink.demo / AgriLink@123</p>
+              <p>farmer@agrilink.demo / AgriLink@123</p>
+              <p>worker@agrilink.demo / AgriLink@123</p>
+              <p>admin@agrilink.demo / AgriLink@123</p>
+            </div>
+            <button className="w-full text-sm text-muted-foreground" type="button" disabled>
+              Forgot password flow is not enabled yet.
+            </button>
             <p className="text-center text-sm text-muted-foreground">
               New to Hopit?{' '}
               <Link className="font-medium text-primary" to="/register">
