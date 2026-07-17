@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function WorkersPage() {
   return (
     <section className="page-shell">
-      <Card>
+      <Card className="mx-auto max-w-5xl">
         <CardHeader>
-          <CardTitle>Workers</CardTitle>
+          <CardTitle className="text-3xl">Workers</CardTitle>
           <CardDescription>
             Foundation for agricultural job discovery, worker profiles, skills, and availability.
           </CardDescription>
@@ -13,7 +13,7 @@ export function WorkersPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             {['Profiles', 'Jobs', 'Availability'].map((item) => (
-              <div key={item} className="rounded-md border p-4 font-medium">
+              <div key={item} className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 font-medium text-slate-800">
                 {item}
               </div>
             ))}

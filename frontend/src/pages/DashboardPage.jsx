@@ -20,9 +20,10 @@ export function DashboardPage() {
   }
 
   return (
-    <section className="page-shell space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <section className="page-shell space-y-7">
+      <div className="rounded-[32px] border border-emerald-100 bg-white/86 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur">
+        <p className="text-sm font-semibold uppercase text-emerald-600">Workspace</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">Dashboard</h1>
         <p className="mt-2 text-muted-foreground">A foundation view for platform operations.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">

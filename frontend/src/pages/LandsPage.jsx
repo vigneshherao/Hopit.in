@@ -34,10 +34,11 @@ export function LandsPage() {
   }
 
   return (
-    <section className="page-shell space-y-6">
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+    <section className="page-shell space-y-7">
+      <div className="flex flex-col justify-between gap-4 rounded-[32px] border border-emerald-100 bg-white/86 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur lg:flex-row lg:items-end lg:p-7">
         <div>
-          <h1 className="text-3xl font-bold">Land marketplace</h1>
+          <p className="text-sm font-semibold uppercase text-emerald-600">Marketplace</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">Land marketplace</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
             Discover verified agricultural, commercial, solar, warehouse, and partnership-ready land.
           </p>
@@ -56,7 +57,7 @@ export function LandsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <FilterPanel filters={filters} setFilter={setFilter} />
         <div className="space-y-4">
           <Card>
@@ -73,7 +74,7 @@ export function LandsPage() {
                 />
               </div>
               <select
-                className="h-10 rounded-md border bg-background px-3 text-sm"
+                className="premium-select md:w-52"
                 value={filters.sort ?? 'newest'}
                 onChange={(event) => setFilter('sort', event.target.value)}
               >
@@ -94,14 +95,14 @@ export function LandsPage() {
           {landsQuery.isError ? <ErrorState /> : null}
           {!landsQuery.isLoading && lands.length === 0 ? <EmptyState /> : null}
 
-          <div className={view === 'grid' ? 'grid gap-4 md:grid-cols-2 xl:grid-cols-3' : 'grid gap-4'}>
+          <div className={view === 'grid' ? 'grid gap-5 md:grid-cols-2 xl:grid-cols-3' : 'grid gap-5'}>
             {lands.map((land) => (
               <LandCard key={land._id ?? land.slug} land={land} view={view} />
             ))}
           </div>
 
           {pagination ? (
-            <div className="flex items-center justify-between rounded-md border bg-card p-3">
+            <div className="flex flex-col gap-3 rounded-3xl border border-emerald-100 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
                 Page {pagination.page} of {pagination.totalPages}
               </p>
@@ -131,8 +132,8 @@ export function LandsPage() {
 
 function FilterPanel({ filters, setFilter }) {
   return (
-    <aside className="h-fit rounded-md border bg-card p-4">
-      <div className="mb-4 flex items-center gap-2 font-semibold">
+    <aside className="h-fit rounded-3xl border border-emerald-100 bg-white/90 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur lg:sticky lg:top-24">
+      <div className="mb-4 flex items-center gap-2 font-semibold text-slate-950">
         <Filter className="h-4 w-4" />
         Filters
       </div>
@@ -163,7 +164,7 @@ function FilterSelect({ label, value, options, labels = {}, onChange }) {
   return (
     <label className="grid gap-2 text-sm">
       {label}
-      <select className="h-10 rounded-md border bg-background px-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select className="premium-select" value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">Any</option>
         {options.map((option) => (
           <option key={option} value={option}>{labels[option] ?? option}</option>
@@ -174,13 +175,13 @@ function FilterSelect({ label, value, options, labels = {}, onChange }) {
 }
 
 function SkeletonGrid() {
-  return <div className="grid gap-4 md:grid-cols-3">{[1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-md bg-muted" />)}</div>;
+  return <div className="grid gap-4 md:grid-cols-3">{[1, 2, 3].map((item) => <div key={item} className="h-80 animate-pulse rounded-3xl bg-emerald-50" />)}</div>;
 }
 
 function EmptyState() {
-  return <div className="rounded-md border bg-card p-8 text-center text-muted-foreground">No available land matched these filters.</div>;
+  return <div className="rounded-3xl border border-emerald-100 bg-white/90 p-8 text-center text-muted-foreground shadow-sm">No available land matched these filters.</div>;
 }
 
 function ErrorState() {
-  return <div className="rounded-md border border-destructive/30 bg-card p-8 text-center text-destructive">Unable to load land listings.</div>;
+  return <div className="rounded-3xl border border-destructive/30 bg-white/90 p-8 text-center text-destructive shadow-sm">Unable to load land listings.</div>;
 }

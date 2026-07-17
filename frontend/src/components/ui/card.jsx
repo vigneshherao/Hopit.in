@@ -1,7 +1,15 @@
 import { cn } from '@/utils/cn.js';
 
 export function Card({ className, ...props }) {
-  return <div className={cn('rounded-md border bg-card text-card-foreground shadow-sm', className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        'rounded-3xl border border-white/80 bg-card/95 text-card-foreground shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur',
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function CardHeader({ className, ...props }) {

@@ -10,23 +10,25 @@ export function LandCard({ land, view = 'grid' }) {
   const price = getDisplayPrice(land);
 
   return (
-    <Card className={view === 'list' ? 'overflow-hidden md:grid md:grid-cols-[280px_1fr]' : 'overflow-hidden'}>
-      <img
-        src={image}
-        alt={land.title}
-        className={view === 'list' ? 'h-56 w-full object-cover md:h-full' : 'h-52 w-full object-cover'}
-        loading="lazy"
-      />
+    <Card className={view === 'list' ? 'group overflow-hidden md:grid md:grid-cols-[300px_1fr]' : 'group overflow-hidden'}>
+      <div className={view === 'list' ? 'aspect-[16/10] bg-emerald-50 md:aspect-auto md:h-full' : 'aspect-[16/10] bg-emerald-50'}>
+        <img
+          src={image}
+          alt={land.title}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          loading="lazy"
+        />
+      </div>
       <CardContent className="space-y-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold">{land.title}</h3>
+            <h3 className="line-clamp-2 text-lg font-semibold text-slate-950">{land.title}</h3>
             <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               {land.location?.district}, {land.location?.state}
             </p>
           </div>
-          <button className="rounded-md border p-2 text-muted-foreground" aria-label="Save for later" type="button">
+          <button className="rounded-2xl border border-emerald-100 bg-white p-2 text-muted-foreground shadow-sm transition hover:bg-emerald-50 hover:text-emerald-600" aria-label="Save for later" type="button">
             <Heart className="h-4 w-4" />
           </button>
         </div>
@@ -74,7 +76,7 @@ export function LandCard({ land, view = 'grid' }) {
           ) : null}
         </div>
 
-        <Button asChild className="w-full">
+        <Button asChild className="w-full rounded-2xl">
           <Link to={`/lands/${land.slug ?? land._id}`}>View details</Link>
         </Button>
       </CardContent>

@@ -45,11 +45,11 @@ export function LoginPage() {
   };
 
   return (
-    <section className="page-shell flex justify-center">
+    <section className="page-shell flex min-h-[calc(100vh-96px)] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Access your Hopit workspace.</CardDescription>
+          <CardTitle className="text-3xl">Login</CardTitle>
+          <CardDescription>Access your AgriLink AI workspace.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
@@ -79,7 +79,7 @@ export function LoginPage() {
             <Button className="w-full" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
-            <div className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+            <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Demo accounts</p>
               <p>owner@agrilink.demo / AgriLink@123</p>
               <p>farmer@agrilink.demo / AgriLink@123</p>
@@ -90,7 +90,7 @@ export function LoginPage() {
               Forgot password flow is not enabled yet.
             </button>
             <p className="text-center text-sm text-muted-foreground">
-              New to Hopit?{' '}
+              New to AgriLink AI?{' '}
               <Link className="font-medium text-primary" to="/register">
                 Create account
               </Link>

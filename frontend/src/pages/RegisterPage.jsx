@@ -68,10 +68,10 @@ export function RegisterPage() {
   };
 
   return (
-    <section className="page-shell flex justify-center">
+    <section className="page-shell flex min-h-[calc(100vh-96px)] items-center justify-center">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Create account</CardTitle>
+          <CardTitle className="text-3xl">Create account</CardTitle>
           <CardDescription>Set up the user role that best matches your work.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,7 +99,7 @@ export function RegisterPage() {
               <Label htmlFor="role">Role</Label>
               <select
                 id="role"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="premium-select w-full"
                 {...register('role')}
               >
                 {selfRegisterRoles.map((role) => (

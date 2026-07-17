@@ -29,10 +29,11 @@ export function MyLandsPage() {
   }
 
   return (
-    <section className="page-shell space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <section className="page-shell space-y-7">
+      <div className="flex flex-col justify-between gap-4 rounded-[32px] border border-emerald-100 bg-white/86 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-3xl font-bold">My land listings</h1>
+          <p className="text-sm font-semibold uppercase text-emerald-600">Owner workspace</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">My land listings</h1>
           <p className="mt-2 text-muted-foreground">Manage drafts, verification, availability, and listing status.</p>
         </div>
         <Button asChild><Link to="/lands/new"><Plus className="h-4 w-4" />Create listing</Link></Button>

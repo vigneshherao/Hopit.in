@@ -21,14 +21,18 @@ export function MyApplicationsPage() {
   }
 
   return (
-    <section className="page-shell space-y-6">
-      <h1 className="text-3xl font-bold">My applications</h1>
+    <section className="page-shell space-y-7">
+      <div className="rounded-[32px] border border-emerald-100 bg-white/86 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] backdrop-blur">
+        <p className="text-sm font-semibold uppercase text-emerald-600">Applicant workspace</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">My applications</h1>
+        <p className="mt-2 text-muted-foreground">Track proposals, negotiations, selections, and agreement preparation.</p>
+      </div>
       <div className="grid gap-4 md:grid-cols-4">
         {['total', 'submitted', 'shortlisted', 'accepted'].map((key) => (
           <Card key={key}><CardHeader><CardTitle>{stats.data?.statistics?.[key] ?? 0}</CardTitle><p className="text-sm text-muted-foreground">{key}</p></CardHeader></Card>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 rounded-3xl border border-emerald-100 bg-white/80 p-3 shadow-sm">
         {['', 'draft', 'submitted', 'under-review', 'shortlisted', 'changes-requested', 'agreement-pending'].map((status) => (
           <Button key={status || 'all'} variant={(filters.status ?? '') === status ? 'default' : 'outline'} onClick={() => setStatus(status)}>
             {status ? applicationStatusLabels[status] : 'All'}
