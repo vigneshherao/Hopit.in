@@ -1,4 +1,4 @@
-import { Activity, Bell, Bot, BriefcaseBusiness, CalendarCheck, FileText, LayoutDashboard, Map, Sprout, Tractor, UserRound } from 'lucide-react';
+import { Activity, Bell, Bot, BriefcaseBusiness, CalendarCheck, FileText, LayoutDashboard, Map, MessageCircle, Sprout, Tractor, UserRound } from 'lucide-react';
 
 export const navigationItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -10,6 +10,7 @@ export const navigationItems = [
   { label: 'Farm Planner', href: '/farm-planner', icon: Tractor },
   { label: 'Bookings', href: '/worker-bookings', icon: CalendarCheck },
   { label: 'AI', href: '/ai-analyzer', icon: Bot },
+  { label: 'Messages', href: '/messages', icon: MessageCircle },
   { label: 'Activity', href: '/activity', icon: Activity },
   { label: 'Alerts', href: '/notifications', icon: Bell },
   { label: 'Profile', href: '/profile', icon: UserRound },

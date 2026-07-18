@@ -4,9 +4,15 @@ import { AgreementModel } from '@/models/agreement.model.js';
 import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { ApplicationNegotiationModel } from '@/models/application-negotiation.model.js';
 import { ApplicationModel } from '@/models/application.model.js';
+import { ChatAttachmentModel } from '@/models/chat-attachment.model.js';
+import { ChatLocationModel } from '@/models/chat-location.model.js';
+import { ConversationBlockModel } from '@/models/conversation-block.model.js';
+import { ConversationMemberModel } from '@/models/conversation-member.model.js';
+import { ConversationModel } from '@/models/conversation.model.js';
 import { FarmPlanModel } from '@/models/farm-plan.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
+import { MessageModel } from '@/models/message.model.js';
 import { UserModel } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
 import { generateTasksForFarmPlan } from '@/services/farm-task.service.js';
@@ -123,9 +129,161 @@ async function seed(): Promise<void> {
   await seedApplications(owner._id, admin?._id);
   await seedAIHistory(owner._id);
   await seedFarmPlans(owner._id);
+  await seedChatDemoData();
 
   logger.info('Development demo users seeded. Password: HoptIt@123');
 }
+
+async function seedChatDemoData() {
+  const users = await UserModel.find({ email: { $in: demoUsers.map((user) => user.email) } });
+  const byEmail = new Map(users.map((user) => [user.email, user]));
+  const owner = byEmail.get('owner@hoptit.demo');
+  const farmer = byEmail.get('farmer@hoptit.demo');
+  const worker = byEmail.get('worker@hoptit.demo');
+  const admin = byEmail.get('admin@hoptit.demo');
+  const investor = byEmail.get('investor@hoptit.demo');
+  const dairy = byEmail.get('dairy@hoptit.demo');
+  const solar = byEmail.get('solar@hoptit.demo');
+  if (!owner || !farmer || !worker || !admin || !investor || !dairy || !solar) return;
+
+  const plans = await FarmPlanModel.find({ ownerId: owner._id }).limit(6);
+  const agreements = await AgreementModel.find({ ownerId: owner._id }).limit(6);
+  const tasks = await FarmTaskModel.find({ ownerId: owner._id }).limit(10);
+  const directPairs = [
+    [owner, farmer],
+    [owner, worker],
+    [owner, admin],
+    [owner, investor],
+    [owner, dairy],
+    [owner, solar],
+    [farmer, worker],
+    [investor, solar],
+  ];
+  const conversationSpecs = [
+    ...directPairs.map(([first, second], index) => ({ seedKey: `chat-direct-${index}`, type: 'direct', members: [first, second], directParticipantKey: [first._id.toString(), second._id.toString()].sort().join(':'), title: undefined })),
+    ...plans.map((plan, index) => ({ seedKey: `chat-farm-${index}`, type: 'farm-team', farmPlanId: plan._id, landId: plan.landId, members: [owner, farmer, worker], title: `${plan.selectedCrop} farm team` })),
+    ...agreements.map((agreement, index) => ({ seedKey: `chat-agreement-${index}`, type: 'agreement', agreementId: agreement._id, landId: agreement.landId, members: [owner, farmer, admin], title: `Agreement discussion ${index + 1}` })),
+    ...tasks.map((task, index) => ({ seedKey: `chat-task-${index}`, type: 'task', taskId: task._id, farmPlanId: task.farmPlanId, landId: task.landId, members: [owner, worker], title: task.title })),
+    { seedKey: 'chat-support-1', type: 'admin-support', members: [owner, admin], title: 'Owner support desk' },
+    { seedKey: 'chat-support-2', type: 'admin-support', members: [farmer, admin], title: 'Farmer support desk' },
+    { seedKey: 'chat-group-1', type: 'custom-group', members: [owner, farmer, worker, investor], title: 'Mandya operations group' },
+    { seedKey: 'chat-group-2', type: 'custom-group', members: [owner, dairy, solar, admin], title: 'Expansion planning group' },
+  ];
+
+  let messageIndex = 0;
+  for (const spec of conversationSpecs) {
+    const seedSpec = spec as Record<string, unknown> & { members: typeof users; seedKey: string; type: string; title?: string; directParticipantKey?: string };
+    const conversation = await ConversationModel.findOneAndUpdate(
+      { 'metadata.seedKey': seedSpec.seedKey },
+      {
+        $set: {
+          type: seedSpec.type,
+          title: seedSpec.title,
+          createdBy: spec.members[0]._id,
+          farmPlanId: seedSpec.farmPlanId,
+          landId: seedSpec.landId,
+          agreementId: seedSpec.agreementId,
+          taskId: seedSpec.taskId,
+          directParticipantKey: seedSpec.directParticipantKey,
+          memberCount: spec.members.length,
+          isActive: true,
+          isArchivedGlobally: false,
+          metadata: { seedKey: seedSpec.seedKey, seededDemo: true },
+        },
+      },
+      { upsert: true, new: true },
+    );
+    for (const [index, member] of spec.members.entries()) {
+      await ConversationMemberModel.updateOne(
+        { conversationId: conversation._id, userId: member._id },
+        {
+          $set: {
+            role: index === 0 ? 'owner' : member.role === 'worker' ? 'worker' : member.role === 'admin' ? 'admin' : 'member',
+            status: 'active',
+            unreadCount: index === 0 ? 0 : (messageIndex + index) % 4,
+            isMuted: seedSpec.seedKey === 'chat-group-1' && index === 2,
+            isPinned: seedSpec.seedKey === 'chat-support-1' && index === 0,
+            isArchived: seedSpec.seedKey === 'chat-direct-5' && index === 0,
+            notificationLevel: 'all',
+            permissions: { canSendMessages: true, canUploadFiles: true, canAddMembers: index === 0, canRemoveMembers: index === 0, canEditConversation: index === 0, canViewHistory: true },
+          },
+          $setOnInsert: { addedBy: spec.members[0]._id, joinedAt: new Date() },
+        },
+        { upsert: true },
+      );
+    }
+    const countForConversation = seedSpec.type === 'task' ? 4 : 6;
+    for (let offset = 0; offset < countForConversation; offset += 1) {
+      const sender = spec.members[(messageIndex + offset) % spec.members.length];
+      const createdAt = new Date(Date.now() - (messageIndex + offset) * 60 * 60 * 1000);
+      const text = chatSeedTexts[(messageIndex + offset) % chatSeedTexts.length];
+      await MessageModel.updateOne(
+        { senderId: sender._id, clientMessageId: `seed-chat-message-${messageIndex + offset}` },
+        {
+          $set: {
+            conversationId: conversation._id,
+            senderId: sender._id,
+            type: offset === 0 ? 'system' : 'text',
+            text: offset === 0 ? 'Demo data: conversation created for Hopt It chat testing.' : text,
+            normalizedText: offset === 0 ? 'Demo data conversation created for Hopt It chat testing.' : text,
+            attachments: [],
+            status: offset % 3 === 0 ? 'read' : 'delivered',
+            editVersion: offset === 2 ? 1 : 0,
+            editedAt: offset === 2 ? createdAt : undefined,
+            isDeletedForEveryone: offset === 3 && seedSpec.seedKey === 'chat-group-2',
+            deletedForEveryoneAt: offset === 3 && seedSpec.seedKey === 'chat-group-2' ? createdAt : undefined,
+            metadata: { seededDemo: true },
+            createdAt,
+            updatedAt: createdAt,
+          },
+        },
+        { upsert: true },
+      );
+    }
+    const lastMessage = await MessageModel.findOne({ conversationId: conversation._id }).sort({ createdAt: -1 });
+    if (lastMessage) {
+      conversation.lastMessageId = lastMessage._id as never;
+      conversation.lastMessagePreview = lastMessage.text?.slice(0, 180);
+      conversation.lastMessageAt = lastMessage.createdAt;
+      conversation.lastMessageSenderId = lastMessage.senderId;
+      await conversation.save();
+    }
+    messageIndex += countForConversation;
+  }
+
+  const sampleConversation = await ConversationModel.findOne({ 'metadata.seedKey': 'chat-group-1' });
+  if (sampleConversation) {
+    await ChatAttachmentModel.updateOne(
+      { checksum: 'seed-chat-image' },
+      { $set: { conversationId: sampleConversation._id, uploadedBy: owner._id, type: 'image', originalFileName: 'demo-field.jpg', sanitizedFileName: 'demo-field.jpg', mimeType: 'image/jpeg', sizeBytes: 120000, fileUrl: imageUrls[0], thumbnailUrl: imageUrls[0], checksum: 'seed-chat-image', scanStatus: 'clean', processingStatus: 'completed' } },
+      { upsert: true },
+    );
+    await ChatAttachmentModel.updateOne(
+      { checksum: 'seed-chat-document' },
+      { $set: { conversationId: sampleConversation._id, uploadedBy: owner._id, type: 'document', originalFileName: 'soil-report.pdf', sanitizedFileName: 'soil-report.pdf', mimeType: 'application/pdf', sizeBytes: 95000, fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', checksum: 'seed-chat-document', scanStatus: 'clean', processingStatus: 'completed' } },
+      { upsert: true },
+    );
+    await ChatLocationModel.updateOne(
+      { conversationId: sampleConversation._id, label: 'Demo north field valve' },
+      { $set: { conversationId: sampleConversation._id, sharedBy: owner._id, latitude: 12.9716, longitude: 77.5946, label: 'Demo north field valve', address: 'Demo farm point, Karnataka', sharedAt: new Date() } },
+      { upsert: true },
+    );
+  }
+  await ConversationBlockModel.updateOne({ blockerId: owner._id, blockedUserId: solar._id }, { $set: { reason: 'Demo blocked-user scenario' } }, { upsert: true });
+}
+
+const chatSeedTexts = [
+  'Please check the irrigation line before evening.',
+  'The north field looks healthy after the last rainfall.',
+  'Can we move fertilizer application to tomorrow morning?',
+  'Worker team reached the farm and started land cleaning.',
+  'Market price is stronger this week, harvest timing looks good.',
+  'I uploaded the soil report and will verify water availability.',
+  'Let us inspect the pest traps near the banana block.',
+  'The tractor operator confirmed availability for Friday.',
+  'Please share photos after the disease monitoring round.',
+  'Packing crates should arrive before harvest day.',
+];
 
 async function seedFarmPlans(ownerId: unknown) {
   const lands = await LandModel.find({ ownerId }).limit(8);

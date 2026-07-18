@@ -1,4 +1,5 @@
 import { AgreementModel } from '@/models/agreement.model.js';
+import { ConversationMemberModel } from '@/models/conversation-member.model.js';
 import { FarmPlanModel } from '@/models/farm-plan.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 
@@ -18,6 +19,10 @@ export function taskRoom(taskId: string): string {
   return `task:${taskId}`;
 }
 
+export function chatRoom(conversationId: string): string {
+  return `conversation:${conversationId}`;
+}
+
 export function adminRoom(): string {
   return 'admin';
 }
@@ -25,7 +30,7 @@ export function adminRoom(): string {
 export async function canJoinRoom(input: { room: string; userId: string; role: string }): Promise<boolean> {
   const [kind, id] = input.room.split(':');
   if (!kind) return false;
-  if (input.role === 'admin') return ['user', 'farm', 'agreement', 'task', 'admin'].includes(kind);
+  if (input.role === 'admin') return ['user', 'farm', 'agreement', 'task', 'conversation', 'admin'].includes(kind);
   if (kind === 'user') return id === input.userId;
   if (kind === 'admin') return false;
   if (!id) return false;
@@ -43,6 +48,11 @@ export async function canJoinRoom(input: { room: string; userId: string; role: s
   if (kind === 'task') {
     const task = await FarmTaskModel.findById(id).select('ownerId assignedWorker').lean();
     return Boolean(task && [task.ownerId?.toString(), task.assignedWorker?.toString()].includes(input.userId));
+  }
+
+  if (kind === 'conversation') {
+    const member = await ConversationMemberModel.exists({ conversationId: id, userId: input.userId, status: 'active' });
+    return Boolean(member);
   }
 
   return false;

@@ -237,6 +237,12 @@ Hopt It includes Socket.IO infrastructure for authenticated live notifications, 
 
 See [docs/realtime-notifications.md](/Users/vigneshhe/Desktop/Hopit.in/docs/realtime-notifications.md).
 
+## Chat Messaging
+
+Hopt It includes persisted real-time messaging for direct, farm-team, agreement, task, worker, manager, admin-support, and custom-group conversations.
+
+See [docs/chat-messaging.md](/Users/vigneshhe/Desktop/Hopit.in/docs/chat-messaging.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

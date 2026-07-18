@@ -35,4 +35,20 @@ export interface AppEnvironment {
   remoteMonitoringTempDirectory?: string;
   mapTileBaseUrl?: string;
   signedFileUrlExpiryMinutes: number;
+  chatEnabled: boolean;
+  chatMaxMessageLength: number;
+  chatMaxGroupMembers: number;
+  chatMessageEditWindowMinutes: number;
+  chatDeleteForEveryoneWindowMinutes: number;
+  chatMaxImageSizeMb: number;
+  chatMaxDocumentSizeMb: number;
+  chatMaxVoiceSizeMb: number;
+  chatMaxVoiceDurationSeconds: number;
+  chatMaxAttachmentsPerMessage: number;
+  chatAttachmentUrlExpiryMinutes: number;
+  chatTypingTimeoutSeconds: number;
+  chatMessageRateLimitPerMinute: number;
+  chatConversationCreateLimitPerHour: number;
+  chatSearchLimitPerMinute: number;
+  chatAttachmentScanEnabled: boolean;
 }

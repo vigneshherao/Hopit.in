@@ -35,6 +35,7 @@ import { MyLandsPage } from '@/pages/MyLandsPage.jsx';
 import { MyApplicationsPage } from '@/pages/MyApplicationsPage.jsx';
 import { MyFarmJobsPage } from '@/pages/MyFarmJobsPage.jsx';
 import { MyJobApplicationsPage } from '@/pages/MyJobApplicationsPage.jsx';
+import { MessagesPage } from '@/pages/MessagesPage.jsx';
 import { NotFoundPage } from '@/pages/NotFoundPage.jsx';
 import { NotificationsPage } from '@/pages/NotificationsPage.jsx';
 import { ProfilePage } from '@/pages/ProfilePage.jsx';
@@ -113,6 +114,30 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <NotificationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'messages',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'messages/:conversationId',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'support/messages',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         ),
       },
@@ -203,6 +228,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <AgreementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'agreements/:agreementId/chat',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         ),
       },
@@ -327,6 +360,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FarmTasksPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:farmPlanId/chat',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'tasks/:taskId/chat',
+        element: (
+          <ProtectedRoute>
+            <MessagesPage />
           </ProtectedRoute>
         ),
       },

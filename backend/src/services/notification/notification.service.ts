@@ -25,7 +25,7 @@ function dateFilter(date?: string) {
   return { $gte: start, $lte: date === 'yesterday' ? end : now };
 }
 
-export async function createNotification(input: Partial<Notification> & { receiverId: string | mongoose.Types.ObjectId; title: string; message: string }) {
+export async function createNotification(input: Omit<Partial<Notification>, 'receiverId' | 'senderId'> & { receiverId: string | mongoose.Types.ObjectId; senderId?: string | mongoose.Types.ObjectId; title: string; message: string }) {
   const receiverId = new mongoose.Types.ObjectId(input.receiverId.toString());
   const notification = await NotificationModel.create({
     ...input,
