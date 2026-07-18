@@ -11,6 +11,7 @@ import {
 import { NotificationModel } from '@/models/notification.model.js';
 import { type Land, type LandDocument } from '@/models/land.model.js';
 import * as landRepository from '@/repositories/land.repository.js';
+import { ensureLandModeration } from '@/services/marketplace-moderation.service.js';
 import type { LandAccessContext, LandStatistics } from '@/types/land.types.js';
 import type {
   CreateLandInput,
@@ -165,6 +166,7 @@ export async function submitLandForVerification(id: string, userId: string): Pro
 
   land.status = 'pending-verification';
   await land.save();
+  await ensureLandModeration(id, userId, 'Listing submitted for marketplace moderation.');
   await createLandNotification(
     land,
     'land-submitted',

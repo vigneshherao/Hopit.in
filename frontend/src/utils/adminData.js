@@ -4,6 +4,7 @@ import {
   Bell,
   ClipboardList,
   Eye,
+  Flag,
   LayoutDashboard,
   LockKeyhole,
   Settings,
@@ -16,6 +17,7 @@ import {
 export const adminNavItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Moderation', href: '/admin/moderation', icon: Flag },
   { label: 'Verifications', href: '/admin/verifications', icon: BadgeCheck },
   { label: 'Admins', href: '/admin/admins', icon: ShieldCheck },
   { label: 'Roles', href: '/admin/roles', icon: LockKeyhole },

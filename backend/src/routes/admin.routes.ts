@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ADMIN_PERMISSIONS } from '@/constants/admin.constants.js';
 import { activateAdminController, activeImpersonationController, adminAccountController, adminAccountsController, adminMeController, adminOverviewController, adminOwnSessionsController, adminRoleController, adminRolesController, adminUserController, adminUsersController, approveVerificationController, assignVerificationController, auditLogController, auditLogsController, createAdminController, createNoteController, createRoleController, createSavedViewController, deactivateAdminController, deactivateUserController, deleteNoteController, deleteRoleController, deleteSavedViewController, deleteUserController, loginHistoryController, logoutAllAdminSessionsController, logoutAllUserSessionsController, notesController, permissionsController, permissionOverrideController, reactivateUserController, rejectVerificationController, resubmitVerificationController, restoreUserController, restrictUserController, revokeAdminOwnSessionController, revokeUserSessionController, savedViewsController, startImpersonationController, startVerificationReviewController, stopImpersonationController, suspendUserController, updateAdminController, updateAdminMeController, updateAdminUserController, updateNoteController, updateRoleController, updateSavedViewController, userSessionsController, verificationController, verificationsController } from '@/controllers/admin.controller.js';
+import { archiveModerationController, assignModerationController, approveModerationController, decideModerationController, escalateModerationController, flagListingController, hideModerationController, moderationApprovedController, moderationDetailController, moderationHistoryController, moderationPendingController, moderationQueueController, moderationRejectedController, moderationRevisionController, rejectModerationController, removeModerationController, reviewModerationController, revisionModerationController } from '@/controllers/marketplace-moderation.controller.js';
 import { authenticate } from '@/middleware/auth.js';
 import { requireAdmin } from '@/middleware/adminAuth.middleware.js';
 import { requirePermission } from '@/middleware/requirePermission.middleware.js';
@@ -8,6 +9,7 @@ import { requireAnyPermission } from '@/middleware/requireAnyPermission.middlewa
 import { validateRequest } from '@/middleware/validate-request.js';
 import { asyncHandler } from '@/utils/async-handler.js';
 import { adminCreateSchema, adminIdParamSchema, adminMeUpdateSchema, adminRolesUpdateSchema, adminUpdateSchema, adminUserQuerySchema, adminUserUpdateSchema, auditLogIdParamSchema, auditQuerySchema, impersonationStartSchema, internalNoteSchema, loginHistoryQuerySchema, noteIdParamSchema, permissionOverrideSchema, reasonSchema, restrictUserSchema, roleCreateSchema, roleIdParamSchema, roleUpdateSchema, savedViewIdParamSchema, savedViewSchema, sessionIdParamSchema, suspendUserSchema, userIdParamSchema, verificationApproveSchema, verificationAssignSchema, verificationIdParamSchema, verificationQuerySchema, verificationRejectSchema, verificationResubmitSchema } from '@/validators/admin.validator.js';
+import { moderationAssignSchema, moderationDecisionSchema, moderationEscalateSchema, moderationFlagSchema, moderationIdParamSchema, moderationQueueQuerySchema, moderationReviewSchema, moderationSimpleDecisionSchema } from '@/validators/moderation.validator.js';
 
 export const adminRouter = Router();
 
@@ -18,6 +20,25 @@ adminRouter.get('/me/sessions', requirePermission(ADMIN_PERMISSIONS.USERS_MANAGE
 adminRouter.delete('/me/sessions/:sessionId', requirePermission(ADMIN_PERMISSIONS.SECURITY_SESSIONS_REVOKE), validateRequest({ params: sessionIdParamSchema }), asyncHandler(revokeAdminOwnSessionController));
 adminRouter.post('/logout-all', requirePermission(ADMIN_PERMISSIONS.SECURITY_SESSIONS_REVOKE), asyncHandler(logoutAllAdminSessionsController));
 adminRouter.get('/dashboard/overview', requirePermission(ADMIN_PERMISSIONS.DASHBOARD_VIEW), asyncHandler(adminOverviewController));
+
+adminRouter.get('/moderation/queue', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationQueueController));
+adminRouter.get('/moderation/pending', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationPendingController));
+adminRouter.get('/moderation/approved', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationApprovedController));
+adminRouter.get('/moderation/rejected', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationRejectedController));
+adminRouter.get('/moderation/revision', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationRevisionController));
+adminRouter.get('/moderation/history', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ query: moderationQueueQuerySchema }), asyncHandler(moderationHistoryController));
+adminRouter.get('/moderation/:moderationId', requirePermission(ADMIN_PERMISSIONS.MODERATION_VIEW), validateRequest({ params: moderationIdParamSchema }), asyncHandler(moderationDetailController));
+adminRouter.post('/moderation/assign', requirePermission(ADMIN_PERMISSIONS.MODERATION_ASSIGN), validateRequest({ body: moderationAssignSchema }), asyncHandler(assignModerationController));
+adminRouter.post('/moderation/review', requirePermission(ADMIN_PERMISSIONS.MODERATION_REVIEW), validateRequest({ body: moderationReviewSchema }), asyncHandler(reviewModerationController));
+adminRouter.post('/moderation/decision', requirePermission(ADMIN_PERMISSIONS.MODERATION_REVIEW), validateRequest({ body: moderationDecisionSchema }), asyncHandler(decideModerationController));
+adminRouter.post('/moderation/approve', requirePermission(ADMIN_PERMISSIONS.MODERATION_APPROVE), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(approveModerationController));
+adminRouter.post('/moderation/reject', requirePermission(ADMIN_PERMISSIONS.MODERATION_REVIEW), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(rejectModerationController));
+adminRouter.post('/moderation/revision', requirePermission(ADMIN_PERMISSIONS.MODERATION_REVIEW), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(revisionModerationController));
+adminRouter.post('/moderation/escalate', requirePermission(ADMIN_PERMISSIONS.MODERATION_ESCALATE), validateRequest({ body: moderationEscalateSchema }), asyncHandler(escalateModerationController));
+adminRouter.post('/moderation/archive', requirePermission(ADMIN_PERMISSIONS.MODERATION_APPROVE), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(archiveModerationController));
+adminRouter.post('/moderation/hide', requirePermission(ADMIN_PERMISSIONS.MODERATION_APPROVE), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(hideModerationController));
+adminRouter.post('/moderation/remove', requirePermission(ADMIN_PERMISSIONS.MODERATION_REMOVE), validateRequest({ body: moderationSimpleDecisionSchema }), asyncHandler(removeModerationController));
+adminRouter.post('/moderation/flags', requirePermission(ADMIN_PERMISSIONS.MODERATION_REVIEW), validateRequest({ body: moderationFlagSchema }), asyncHandler(flagListingController));
 
 adminRouter.get('/users', requirePermission(ADMIN_PERMISSIONS.USERS_VIEW), validateRequest({ query: adminUserQuerySchema }), asyncHandler(adminUsersController));
 adminRouter.get('/users/:userId', requirePermission(ADMIN_PERMISSIONS.USERS_VIEW), validateRequest({ params: userIdParamSchema }), asyncHandler(adminUserController));

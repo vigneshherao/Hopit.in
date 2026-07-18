@@ -15,6 +15,7 @@ import {
   AdminVerificationsPage,
 } from '@/pages/AdminPages.jsx';
 import { AdminLayout } from '@/layouts/AdminLayout.jsx';
+import { ModerationDetailPage, ModerationQueuePage } from '@/pages/ModerationPages.jsx';
 import { AppLayout } from '@/layouts/AppLayout.jsx';
 import { AgreementPage } from '@/pages/AgreementPage.jsx';
 import { AiAnalyzerPage } from '@/pages/AiAnalyzerPage.jsx';
@@ -128,6 +129,8 @@ export const router = createBrowserRouter([
           { index: true, element: <AdminDashboardPage /> },
           { path: 'users', element: <AdminUsersPage /> },
           { path: 'users/:userId', element: <AdminUserDetailPage /> },
+          { path: 'moderation', element: <ModerationQueuePage /> },
+          { path: 'moderation/:moderationId', element: <ModerationDetailPage /> },
           { path: 'verifications', element: <AdminVerificationsPage /> },
           { path: 'verifications/:verificationId', element: <AdminVerificationDetailPage /> },
           { path: 'admins', element: <AdminAccountsPage /> },

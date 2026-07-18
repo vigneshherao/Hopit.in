@@ -227,6 +227,12 @@ Hopt It includes a permission-aware admin console for platform overview, user ma
 
 See [docs/admin-foundation.md](/Users/vigneshhe/Desktop/Hopit.in/docs/admin-foundation.md).
 
+## Marketplace Moderation
+
+Hopt It includes an admin marketplace moderation system for land listing queue review, assignment, checklist verification, document review, approval, rejection, revision, escalation, flags, versions, timelines, notifications, socket events, and audit logging.
+
+See [docs/marketplace-moderation.md](/Users/vigneshhe/Desktop/Hopit.in/docs/marketplace-moderation.md).
+
 ## Land Marketplace
 
 Hopt It includes a land marketplace for sale, lease, rent, joint venture, and revenue-share listings. Owners can create drafts, submit for verification, manage statuses, and upload images/documents. Public users can browse available listings with filters and map views.

@@ -20,8 +20,13 @@ import { FarmPlanModel } from '@/models/farm-plan.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { ImpersonationSessionModel } from '@/models/impersonation-session.model.js';
 import { LandModel } from '@/models/land.model.js';
+import { LandModerationModel } from '@/models/land-moderation.model.js';
+import { ListingFlagModel } from '@/models/listing-flag.model.js';
+import { ListingVersionModel } from '@/models/listing-version.model.js';
 import { LoginHistoryModel } from '@/models/login-history.model.js';
 import { MessageModel } from '@/models/message.model.js';
+import { ModerationDecisionModel } from '@/models/moderation-decision.model.js';
+import { ModeratorAssignmentModel } from '@/models/moderator-assignment.model.js';
 import { UserStatusHistoryModel } from '@/models/user-status-history.model.js';
 import { UserVerificationModel } from '@/models/user-verification.model.js';
 import { UserModel } from '@/models/user.model.js';
@@ -117,6 +122,7 @@ async function seed(): Promise<void> {
   await seedAIHistory(owner._id);
   await seedFarmPlans(owner._id);
   await seedAdminFoundation();
+  await seedModerationDemo(owner._id);
   await seedChatDemoData();
 
   logger.info('Development demo users seeded. Password: HoptIt@123');
@@ -584,6 +590,202 @@ async function seedFarmPlans(ownerId: unknown) {
     const plan = await FarmPlanModel.findOne({ ownerId, landId: land._id, selectedCrop: crop });
     if (plan && (await FarmTaskModel.countDocuments({ farmPlanId: plan._id })) === 0) await generateTasksForFarmPlan(plan);
   }
+}
+
+async function seedModerationDemo(ownerId: unknown) {
+  const moderators = await UserModel.find({ email: { $in: ['admin@hoptit.demo', 'security@hoptit.demo', 'support@hoptit.demo'] } });
+  const admin = moderators[0];
+  const statusPlan = [
+    ...Array.from({ length: 80 }, () => 'pending-review'),
+    ...Array.from({ length: 40 }, () => 'approved'),
+    ...Array.from({ length: 30 }, () => 'rejected'),
+    ...Array.from({ length: 20 }, () => 'needs-revision'),
+    ...Array.from({ length: 10 }, () => 'escalated'),
+    ...Array.from({ length: 30 }, () => 'under-verification'),
+    ...Array.from({ length: 20 }, () => 'published'),
+    ...Array.from({ length: 10 }, () => 'hidden'),
+    ...Array.from({ length: 10 }, () => 'archived'),
+  ];
+  const districts = [
+    ['Mandya', 'Karnataka', [76.7047, 12.4237]],
+    ['Mysuru', 'Karnataka', [76.6394, 12.2958]],
+    ['Wayanad', 'Kerala', [76.132, 11.555]],
+    ['Ernakulam', 'Kerala', [76.3516, 10.1076]],
+    ['Coimbatore', 'Tamil Nadu', [77.008, 10.657]],
+    ['Thanjavur', 'Tamil Nadu', [79.104, 10.884]],
+  ] as const;
+  const purposes = ['agriculture', 'organic-farming', 'horticulture', 'dairy', 'poultry', 'solar-project', 'warehouse'] as const;
+  const transactions = ['lease', 'rent', 'sale', 'joint-venture', 'revenue-share'] as const;
+
+  for (const [index, moderationStatus] of statusPlan.entries()) {
+    const [district, state, coordinates] = districts[index % districts.length];
+    const slug = `demo-moderation-land-${String(index + 1).padStart(3, '0')}`;
+    const transactionType = transactions[index % transactions.length];
+    const purpose = purposes[index % purposes.length];
+    const landStatus = moderationLandStatus(moderationStatus);
+    const listing = land(
+      {
+        ownerId,
+        description: `Demo moderation listing ${index + 1} for queue testing, document review, revision workflow, approval workflow, and audit timeline validation.`,
+        shortDescription: 'Demo moderation listing with complete marketplace data.',
+        nearbyFacilities: {
+          nearestMarketKm: 5 + (index % 18),
+          nearestHighwayKm: 8 + (index % 22),
+          nearestTownKm: 4 + (index % 12),
+          nearestRailwayKm: 20 + (index % 35),
+          nearestAirportKm: 60 + (index % 80),
+          nearestColdStorageKm: 10 + (index % 25),
+        },
+        agreementTerms: {
+          minimumDurationMonths: 12,
+          maximumDurationMonths: 60,
+          noticePeriodDays: 45,
+          ownerParticipationAllowed: index % 3 === 0,
+          preferredAgreementType: 'platform-assisted',
+        },
+        media: { images: [imageUrls[index % imageUrls.length], imageUrls[(index + 1) % imageUrls.length]] },
+        documents: [
+          {
+            type: 'ownership-proof',
+            name: `Demo ownership proof ${index + 1}`,
+            url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            verificationStatus: moderationStatus === 'rejected' ? 'rejected' : moderationStatus === 'pending-review' ? 'pending' : 'verified',
+            uploadedAt: new Date(),
+          },
+          {
+            type: 'tax-receipt',
+            name: `Demo tax receipt ${index + 1}`,
+            url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            verificationStatus: moderationStatus === 'needs-revision' ? 'pending' : 'verified',
+            uploadedAt: new Date(),
+          },
+        ],
+        verification: {
+          isOwnerVerified: true,
+          isLandVerified: ['approved', 'published'].includes(moderationStatus),
+          verifiedBy: ['approved', 'published'].includes(moderationStatus) ? admin?._id : undefined,
+          verifiedAt: ['approved', 'published'].includes(moderationStatus) ? new Date() : undefined,
+          rejectionReason: ['rejected', 'needs-revision'].includes(moderationStatus) ? 'Demo moderation feedback requires owner action.' : undefined,
+        },
+        viewCount: 10 + index * 2,
+        favoriteCount: index % 17,
+      },
+      {
+        title: `Demo moderation ${district} ${purpose} land ${index + 1}`,
+        slug,
+        purposes: [purpose],
+        transactionTypes: [transactionType],
+        location: loc(`Demo survey road ${index + 1}`, `${district} Rural`, district, state, [coordinates[0] + index * 0.0001, coordinates[1] + index * 0.0001] as [number, number]),
+        area: { value: 2 + (index % 25), unit: index % 9 === 0 ? 'hectare' : 'acre' },
+        landDetails: details(index % 2 === 0 ? 'loamy' : 'red', index % 4 === 0 ? 'sloped' : 'flat', index % 5 === 0 ? 'seasonal' : 'adequate', index % 4 === 0 ? ['rainwater', 'open-well'] : ['borewell', 'canal']),
+        pricing: pricingFor(transactionType, index),
+        status: landStatus,
+      },
+    );
+    await LandModel.updateOne({ slug }, { $set: listing }, { upsert: true, runValidators: true });
+    const landDoc = await LandModel.findOne({ slug }).lean();
+    if (!landDoc) continue;
+    const moderator = moderators[index % Math.max(moderators.length, 1)];
+    const moderation = await LandModerationModel.findOneAndUpdate(
+      { landId: landDoc._id },
+      {
+        $set: {
+          landId: landDoc._id,
+          submittedBy: ownerId,
+          assignedModerator: moderator?._id,
+          status: moderationStatus,
+          priority: index % 13 === 0 ? 'critical' : index % 5 === 0 ? 'high' : index % 3 === 0 ? 'low' : 'medium',
+          reviewStartedAt: moderationStatus === 'pending-review' ? undefined : new Date(Date.now() - (index + 1) * 60 * 60_000),
+          reviewCompletedAt: ['approved', 'published', 'rejected', 'needs-revision', 'hidden', 'archived'].includes(moderationStatus) ? new Date(Date.now() - index * 45 * 60_000) : undefined,
+          reviewDuration: ['approved', 'published', 'rejected', 'needs-revision'].includes(moderationStatus) ? 45 * 60_000 + index * 1000 : undefined,
+          escalationLevel: moderationStatus === 'escalated' ? 'senior-moderator' : 'moderator',
+          checklist: buildModerationChecklist(moderationStatus, index),
+          documentReviews: buildModerationDocuments(landDoc, moderationStatus, moderator?._id),
+          timeline: buildModerationTimeline(ownerId, moderator?._id, moderationStatus),
+          flagsCount: ['escalated', 'rejected', 'needs-revision'].includes(moderationStatus) ? 1 : 0,
+          currentVersion: 1,
+        },
+      },
+      { upsert: true, new: true },
+    );
+
+    if (moderator) {
+      await ModeratorAssignmentModel.updateOne(
+        { moderationId: moderation._id, moderatorId: moderator._id },
+        { $set: { moderationId: moderation._id, landId: landDoc._id, moderatorId: moderator._id, assignedBy: admin?._id, method: index % 2 === 0 ? 'auto-least-workload' : 'admin', reason: 'Demo moderation assignment.', active: !['approved', 'published', 'rejected'].includes(moderationStatus), assignedAt: new Date() } },
+        { upsert: true },
+      );
+    }
+
+    if (!(await ListingVersionModel.exists({ entityType: 'land', entityId: landDoc._id, version: 1 }))) {
+      await ListingVersionModel.create({ entityType: 'land', entityId: landDoc._id, moderationId: moderation._id, version: 1, snapshot: landDoc, diff: [], updatedBy: ownerId, reason: 'Seeded moderation listing snapshot.' });
+    }
+    if (['approved', 'published', 'rejected', 'needs-revision', 'escalated'].includes(moderationStatus) && !(await ModerationDecisionModel.exists({ moderationId: moderation._id, reason: `Demo ${moderationStatus} decision.` }))) {
+      await ModerationDecisionModel.create({ moderationId: moderation._id, decision: moderationStatus === 'needs-revision' ? 'request-revision' : moderationStatus === 'escalated' ? 'escalate' : moderationStatus === 'rejected' ? 'reject' : 'approve', reason: `Demo ${moderationStatus} decision.`, notes: 'Seeded moderation decision for demo workflows.', reviewerId: moderator?._id ?? admin?._id ?? ownerId });
+    }
+    if (['escalated', 'rejected', 'needs-revision'].includes(moderationStatus)) {
+      await ListingFlagModel.updateOne(
+        { moderationId: moderation._id, reason: index % 2 === 0 ? 'missing-documents' : 'invalid-location' },
+        { $set: { entityType: 'land', entityId: landDoc._id, moderationId: moderation._id, reason: index % 2 === 0 ? 'missing-documents' : 'invalid-location', source: 'manual', priority: moderation.priority, status: 'open', description: 'Seeded moderation flag for demo queue testing.', createdBy: moderator?._id ?? admin?._id } },
+        { upsert: true },
+      );
+    }
+  }
+}
+
+function moderationLandStatus(status: string) {
+  if (['approved', 'published'].includes(status)) return 'available';
+  if (['rejected', 'needs-revision'].includes(status)) return 'rejected';
+  if (['hidden', 'archived', 'removed'].includes(status)) return 'inactive';
+  return 'pending-verification';
+}
+
+function pricingFor(transactionType: string, index: number) {
+  if (transactionType === 'sale') return { salePrice: 2500000 + index * 100000, priceNegotiable: index % 2 === 0 };
+  if (transactionType === 'rent') return { monthlyRent: 18000 + index * 500, securityDeposit: 40000, priceNegotiable: true };
+  if (transactionType === 'revenue-share') return { revenueShareOwnerPercentage: 40, revenueShareFarmerPercentage: 60, priceNegotiable: true };
+  return { annualLeaseAmount: 220000 + index * 8000, securityDeposit: 60000, priceNegotiable: true };
+}
+
+function buildModerationChecklist(status: string, index: number) {
+  const failing = status === 'rejected' || status === 'needs-revision';
+  return ['owner-name', 'location', 'coordinates', 'land-area', 'survey-number', 'ownership-documents', 'crop-type', 'photos', 'price', 'description', 'water-availability', 'electricity', 'road-access'].map((item, itemIndex) => ({
+    item,
+    result: failing && itemIndex % 5 === index % 5 ? 'fail' : status === 'pending-review' ? 'needs-review' : 'pass',
+    notes: failing && itemIndex % 5 === index % 5 ? 'Demo issue for moderator review.' : undefined,
+  }));
+}
+
+function buildModerationDocuments(landDoc: Record<string, unknown>, status: string, reviewerId?: unknown) {
+  const documents = (landDoc.documents as Record<string, unknown>[] | undefined) ?? [];
+  return documents.map((document, index) => ({
+    documentId: `${document.type}-${index}`,
+    type: document.type === 'ownership-proof' ? 'ownership-certificate' : document.type === 'tax-receipt' ? 'tax-receipt' : 'supporting-document',
+    name: String(document.name),
+    url: String(document.url),
+    virusScanStatus: 'clean',
+    ocrStatus: status === 'pending-review' ? 'pending' : 'completed',
+    ocrText: status === 'pending-review' ? undefined : 'Demo OCR text: owner name, survey reference, district and tax receipt details detected.',
+    ocrConfidence: status === 'rejected' ? 58 : 91,
+    reviewStatus: status === 'rejected' ? 'rejected' : status === 'needs-revision' ? 'needs-review' : status === 'pending-review' ? 'pending' : 'verified',
+    verificationResult: status === 'rejected' ? 'Document mismatch found in demo review.' : 'Demo document verified.',
+    reviewerId,
+    reviewedAt: status === 'pending-review' ? undefined : new Date(),
+  }));
+}
+
+function buildModerationTimeline(ownerId: unknown, moderatorId: unknown, status: string) {
+  const timeline = [{ event: 'submitted', actorId: ownerId, message: 'Demo listing submitted for moderation.', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60_000) }];
+  if (moderatorId) timeline.push({ event: 'assigned', actorId: moderatorId, message: 'Demo listing assigned to moderator.', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60_000) });
+  if (status !== 'pending-review') timeline.push({ event: 'reviewed', actorId: moderatorId, message: 'Demo checklist and documents reviewed.', createdAt: new Date(Date.now() - 24 * 60 * 60_000) });
+  if (status === 'needs-revision') timeline.push({ event: 'revision-requested', actorId: moderatorId, message: 'Demo revision requested from owner.', createdAt: new Date() });
+  if (status === 'approved') timeline.push({ event: 'approved', actorId: moderatorId, message: 'Demo listing approved.', createdAt: new Date() });
+  if (status === 'published') timeline.push({ event: 'published', actorId: moderatorId, message: 'Demo listing published.', createdAt: new Date() });
+  if (status === 'rejected') timeline.push({ event: 'rejected', actorId: moderatorId, message: 'Demo listing rejected.', createdAt: new Date() });
+  if (status === 'escalated') timeline.push({ event: 'escalated', actorId: moderatorId, message: 'Demo listing escalated to senior moderator.', createdAt: new Date() });
+  if (status === 'hidden') timeline.push({ event: 'hidden', actorId: moderatorId, message: 'Demo listing hidden from marketplace.', createdAt: new Date() });
+  if (status === 'archived') timeline.push({ event: 'archived', actorId: moderatorId, message: 'Demo listing archived.', createdAt: new Date() });
+  return timeline;
 }
 
 function buildDemoFarmPlanAI(crop: string, startDate: Date, duration: number) {
