@@ -9,6 +9,11 @@ Hopt It is an AI powered agriculture platform foundation connecting land owners,
 - Development: ESLint, Prettier, Husky, lint-staged, dotenv, nodemon
 - Deployment: Vercel frontend and Render backend ready
 
+## Frontend Experience
+
+- Design system: [docs/design-system.md](docs/design-system.md)
+- Frontend architecture: [docs/frontend-architecture.md](docs/frontend-architecture.md)
+
 ## Installation
 
 Run this from the project root:

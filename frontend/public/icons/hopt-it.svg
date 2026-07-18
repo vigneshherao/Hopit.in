@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Hopt It">
+  <rect width="128" height="128" rx="32" fill="#0f172a"/>
+  <path d="M34 76c24-1 41-15 48-42 18 14 18 42-1 57-16 13-39 8-47-15Z" fill="#22c55e"/>
+  <path d="M46 74c15-9 26-20 34-36" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="88" cy="36" r="8" fill="#93c5fd"/>
+</svg>

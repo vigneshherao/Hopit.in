@@ -1,0 +1,17 @@
+{
+  "name": "Hopt It",
+  "short_name": "Hopt It",
+  "description": "AI-powered agriculture marketplace for verified land, workers, planning, and farm operations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/icons/hopt-it.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -9,22 +9,24 @@ import {
   BrainCircuit,
   ChevronRight,
   CloudSun,
+  Quote,
   ShieldCheck,
   Sparkles,
   Sprout,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import {
   analyzerExamplePrompts,
   brandName,
-  cropOrbitItems,
   fadeUp,
   featureCards,
   landingImages,
   platformStats,
   testimonials,
   trustIndicators,
+  usefulnessCards,
   workflowSteps,
 } from '@/utils/homePageData.js';
 
@@ -35,7 +37,7 @@ export function HomePage() {
     <main className="overflow-hidden bg-white text-slate-950">
       <HeroSection />
       <FeatureCarousel cards={carouselCards} />
-      <CropOrbit crops={cropOrbitItems} />
+      <FeatureOrbit cards={usefulnessCards} />
       <AnalyzerSection />
       <HowItWorks />
       <StatsSection />
@@ -238,14 +240,15 @@ function FeatureCarousel({ cards }) {
   );
 }
 
-function CropOrbit({ crops }) {
+function FeatureOrbit({ cards }) {
   return (
     <section className="relative overflow-hidden bg-white py-24">
       <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-100/60 blur-3xl" />
+      <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-blue-100/50 blur-3xl" />
       <SectionIntro
-        eyebrow="Cultivate This"
-        title="Choose your crop. Start your journey."
-        subtitle="Real crop choices orbit around your next farming plan."
+        eyebrow="Why Hopt It"
+        title="One platform for land, AI, teams, and farm operations"
+        subtitle="The circular workflow shows how Hopt It turns agriculture ideas into verified, planned, and trackable execution."
       />
 
       <div className="relative mx-auto mt-14 flex h-[500px] max-w-5xl items-center justify-center px-4 sm:h-[620px]">
@@ -256,16 +259,16 @@ function CropOrbit({ crops }) {
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
             <Sprout className="h-6 w-6" />
           </span>
-          <h3 className="mt-4 text-xl font-semibold text-slate-950 sm:text-2xl">High Yield Crops</h3>
-          <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">Pick a crop and let AI plan the economics.</p>
+          <h3 className="mt-4 text-xl font-semibold text-slate-950 sm:text-2xl">Useful From Day One</h3>
+          <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">Discover land, analyze risk, hire people, and manage execution.</p>
         </div>
 
         <div className="crop-orbit absolute h-[320px] w-[320px] sm:h-[460px] sm:w-[460px]">
-          {crops.map((crop, index) => {
-            const angle = (360 / crops.length) * index;
+          {cards.map((card, index) => {
+            const angle = (360 / cards.length) * index;
             return (
               <div
-                key={crop.name}
+                key={card.title}
                 className="crop-orbit-slot"
                 style={{ transform: `rotate(${angle}deg) translateY(var(--crop-orbit-radius))` }}
               >
@@ -274,18 +277,27 @@ function CropOrbit({ crops }) {
                   className="crop-orbit-card"
                   style={{ '--crop-card-angle': `-${angle}deg` }}
                 >
-                  <span className="crop-orbit-icon" aria-hidden="true">
-                    {crop.icon}
+                  <span className="crop-orbit-icon text-emerald-600" aria-hidden="true">
+                    <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
-                  <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gradient-to-br from-emerald-100 to-lime-100 sm:h-20 sm:w-20">
-                    <img src={crop.image} alt={crop.name} className="h-full w-full object-cover" loading="lazy" />
+                  <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gradient-to-br from-emerald-100 to-blue-50 p-1 sm:h-20 sm:w-20">
+                    <img src={card.image} alt={card.title} className="h-full w-full rounded-full object-contain" loading="lazy" />
                   </div>
-                  <span className="mt-2 max-w-20 truncate text-xs font-semibold text-slate-800">{crop.name}</span>
+                  <span className="mt-2 max-w-24 truncate text-xs font-semibold text-slate-800">{card.shortTitle}</span>
                 </motion.div>
               </div>
             );
           })}
         </div>
+      </div>
+
+      <div className="mx-auto -mt-6 grid max-w-6xl gap-3 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-5 lg:px-8">
+        {cards.map((card) => (
+          <div key={card.metric} className="rounded-3xl border border-emerald-100 bg-white/90 p-4 text-center shadow-[0_14px_45px_rgba(15,23,42,0.06)] backdrop-blur">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-600">{card.metric}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -515,34 +527,81 @@ function StatsSection() {
 
 function TestimonialsSection() {
   return (
-    <section className="bg-white py-24">
-      <SectionIntro
-        eyebrow="Trusted by every role"
-        title="Built for owners, farmers, investors, and workers"
-        subtitle="A premium operating layer for real agricultural collaboration."
-      />
-      <div className="mx-auto mt-12 grid max-w-7xl gap-5 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        {testimonials.map((testimonial) => (
-          <motion.article
-            key={testimonial.name}
-            whileHover={{ y: -8 }}
-            className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.07)]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 font-semibold text-emerald-700">
-                {testimonial.name.slice(0, 1)}
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-950">{testimonial.name}</h3>
-                <p className="text-sm text-emerald-600">{testimonial.role}</p>
-              </div>
+    <section className="relative overflow-hidden bg-white py-24">
+      <div className="absolute left-0 top-20 h-px w-full bg-gradient-to-r from-transparent via-emerald-200 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 rounded-[36px] border border-slate-100 bg-gradient-to-br from-white via-emerald-50/35 to-blue-50/40 p-5 shadow-[0_28px_90px_rgba(15,23,42,0.08)] sm:p-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
+          <div>
+            <Badge className="border-emerald-200 bg-white px-3 py-1.5 text-emerald-700 shadow-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+              Reviews
+            </Badge>
+            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">
+              Trusted by every agriculture role
+            </h2>
+            <p className="mt-4 max-w-lg text-lg leading-8 text-slate-600">
+              Real people, clearer decisions, and a platform experience that makes farm work feel organized.
+            </p>
+            <div className="mt-7 flex -space-x-3">
+              {testimonials.slice(0, 5).map((testimonial) => (
+                <img
+                  key={testimonial.name}
+                  src={testimonial.image}
+                  alt={testimonial.name}
+                  className="h-12 w-12 rounded-full border-4 border-white object-cover shadow-lg"
+                  loading="lazy"
+                />
+              ))}
             </div>
-            <p className="mt-6 leading-7 text-slate-600">{testimonial.quote}</p>
-            <div className="mt-5 flex text-emerald-500" aria-label="Five star rating">
-              {'*****'}
-            </div>
-          </motion.article>
-        ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {testimonials.map((testimonial, index) => (
+              <motion.article
+                key={testimonial.name}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.45, delay: index * 0.05 }}
+                whileHover={{ y: -6 }}
+                className={`group relative overflow-hidden rounded-[30px] border border-white/85 bg-white/90 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl ${
+                  index === 0 ? 'md:row-span-2 md:p-6' : ''
+                }`}
+              >
+                <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition group-hover:scale-105">
+                  <Quote className="h-5 w-5" />
+                </div>
+
+                <div className="flex items-center gap-4 pr-12">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-white bg-emerald-50 shadow-xl shadow-emerald-900/10">
+                    <img src={testimonial.image} alt={testimonial.name} className="h-full w-full object-cover" loading="lazy" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-semibold text-slate-950">{testimonial.name}</h3>
+                    <p className="text-sm font-semibold text-emerald-600">{testimonial.role}</p>
+                    <p className="truncate text-xs font-medium text-slate-400">{testimonial.location}</p>
+                  </div>
+                </div>
+
+                <p className={`${index === 0 ? 'mt-7 text-lg leading-8' : 'mt-5 leading-7'} text-slate-600`}>
+                  {testimonial.quote}
+                </p>
+
+                <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex text-amber-400" aria-label="Five star rating">
+                    {Array.from({ length: 5 }).map((_, starIndex) => (
+                      <Star key={starIndex} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <span className="w-fit rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                    {testimonial.metric}
+                  </span>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

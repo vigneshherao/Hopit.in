@@ -17,15 +17,15 @@ import aiCardImage from '@/assets/3.png';
 import agreementCardImage from '@/assets/4.png';
 import profitCardImage from '@/assets/5.png';
 import aiGif from '@/assets/aigif.gif';
-import appleImage from '@/assets/apple.jpg';
-import bananaImage from '@/assets/banana.jpg';
-import broccoliImage from '@/assets/brocoli.jpg';
-import carrotImage from '@/assets/carrot.webp';
-import pineappleImage from '@/assets/pineapple.jpg';
 import droneImage from '@/assets/drone.png';
 import equipmentImage from '@/assets/equipment.png';
 import farmersImage from '@/assets/farmers.png';
 import logisticsImage from '@/assets/logistics.png';
+import profileOneImage from '@/assets/profile1.jpg';
+import profileTwoImage from '@/assets/profile2.jpeg';
+import profileThreeImage from '@/assets/profile3.jpeg';
+import profileFourImage from '@/assets/profil4.jpeg';
+import profileFiveImage from '@/assets/profile5.jpeg';
 
 export const brandName = 'Hopt It';
 
@@ -87,12 +87,47 @@ export const featureCards = [
   },
 ];
 
-export const cropOrbitItems = [
-  { name: 'Apple', icon: '🍎', image: appleImage },
-  { name: 'Carrot', icon: '🥕', image: carrotImage },
-  { name: 'Broccoli', icon: '🥦', image: broccoliImage },
-  { name: 'Banana', icon: '🍌', image: bananaImage },
-  { name: 'Pineapple', icon: '🍍', image: pineappleImage },
+export const usefulnessCards = [
+  {
+    title: 'Verified Land',
+    shortTitle: 'Find Land',
+    description: 'Compare sale, lease, rent, and partnership land with soil, water, price, and location clarity.',
+    image: landCardImage,
+    icon: MapPin,
+    metric: 'Land clarity',
+  },
+  {
+    title: 'AI Decisions',
+    shortTitle: 'Use AI',
+    description: 'Analyze crop fit, investment, profit, ROI, risk, and next steps before spending money.',
+    image: aiCardImage,
+    icon: BrainCircuit,
+    metric: 'Plan smarter',
+  },
+  {
+    title: 'Trusted Workers',
+    shortTitle: 'Hire Team',
+    description: 'Hire workers, supervisors, specialists, and farm managers for daily or long-term operations.',
+    image: farmersImage,
+    icon: Users,
+    metric: 'Execute better',
+  },
+  {
+    title: 'Agreements',
+    shortTitle: 'Close Deals',
+    description: 'Move proposals into structured agreements with clearer responsibilities and deal terms.',
+    image: agreementCardImage,
+    icon: FileSignature,
+    metric: 'Deal confidence',
+  },
+  {
+    title: 'Farm Operations',
+    shortTitle: 'Track Work',
+    description: 'Manage plans, tasks, progress, expenses, yield, revenue, and profit from one workspace.',
+    image: profitCardImage,
+    icon: LineChart,
+    metric: 'Business control',
+  },
 ];
 
 export const workflowSteps = [
@@ -115,22 +150,42 @@ export const testimonials = [
   {
     role: 'Owner',
     name: 'Meera R.',
+    location: 'Mandya, Karnataka',
+    image: profileOneImage,
+    metric: '3 land deals reviewed',
     quote: 'Hopt It made our idle land visible to serious farmers with clear proposals.',
   },
   {
     role: 'Farmer',
     name: 'Arun P.',
+    location: 'Coimbatore, Tamil Nadu',
+    image: profileTwoImage,
+    metric: 'AI crop plan created',
     quote: 'I found verified lease land, negotiated terms, and planned crops from one dashboard.',
   },
   {
     role: 'Investor',
     name: 'Nikhil S.',
+    location: 'Bengaluru, Karnataka',
+    image: profileThreeImage,
+    metric: 'ROI checked before visit',
     quote: 'The platform turns agriculture opportunities into structured, reviewable deals.',
   },
   {
     role: 'Worker',
     name: 'Devika M.',
+    location: 'Wayanad, Kerala',
+    image: profileFourImage,
+    metric: 'Booked seasonal work',
     quote: 'Farm work discovery feels more organized, transparent, and professional.',
+  },
+  {
+    role: 'Farm Manager',
+    name: 'Rohan K.',
+    location: 'Salem, Tamil Nadu',
+    image: profileFiveImage,
+    metric: 'Remote farm updates',
+    quote: 'Owners can follow farm operations, tasks, and hiring without feeling disconnected.',
   },
 ];
 
