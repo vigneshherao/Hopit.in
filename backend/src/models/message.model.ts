@@ -12,6 +12,12 @@ export interface Message {
   replyToMessageId?: Schema.Types.ObjectId;
   forwardedFromMessageId?: Schema.Types.ObjectId;
   forwardedFromConversationId?: Schema.Types.ObjectId;
+  threadRootMessageId?: Schema.Types.ObjectId;
+  threadReplyCount: number;
+  threadLastReplyAt?: Date;
+  threadResolvedAt?: Date;
+  threadResolvedBy?: Schema.Types.ObjectId;
+  threadParticipantIds: Schema.Types.ObjectId[];
   clientMessageId?: string;
   metadata?: Record<string, unknown>;
   status: (typeof MESSAGE_STATUSES)[number];
@@ -39,6 +45,12 @@ const messageSchema = new Schema<Message>(
     replyToMessageId: { type: Schema.Types.ObjectId, ref: 'Message' },
     forwardedFromMessageId: { type: Schema.Types.ObjectId, ref: 'Message' },
     forwardedFromConversationId: { type: Schema.Types.ObjectId, ref: 'Conversation' },
+    threadRootMessageId: { type: Schema.Types.ObjectId, ref: 'Message', index: true },
+    threadReplyCount: { type: Number, default: 0, min: 0 },
+    threadLastReplyAt: { type: Date },
+    threadResolvedAt: { type: Date },
+    threadResolvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    threadParticipantIds: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     clientMessageId: { type: String, trim: true, sparse: true },
     metadata: { type: Schema.Types.Mixed },
     status: { type: String, enum: MESSAGE_STATUSES, default: 'sent', index: true },
@@ -53,6 +65,7 @@ const messageSchema = new Schema<Message>(
 );
 
 messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index({ conversationId: 1, threadRootMessageId: 1, createdAt: 1 });
 messageSchema.index({ senderId: 1, clientMessageId: 1 }, { unique: true, sparse: true });
 messageSchema.index({ text: 'text', normalizedText: 'text' });
 

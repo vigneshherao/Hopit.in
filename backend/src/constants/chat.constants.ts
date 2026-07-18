@@ -8,6 +8,8 @@ export const CHAT_ATTACHMENT_SCAN_STATUSES = ['pending', 'clean', 'rejected', 'f
 export const CHAT_ATTACHMENT_PROCESSING_STATUSES = ['pending', 'processing', 'completed', 'failed'] as const;
 export const CHAT_AUDIT_ACTIONS = ['conversation-created', 'member-added', 'member-updated', 'member-removed', 'member-left', 'message-edited', 'message-deleted', 'conversation-renamed', 'conversation-archived', 'conversation-unarchived', 'user-blocked', 'user-unblocked'] as const;
 export const CHAT_NOTIFICATION_LEVELS = ['all', 'mentions', 'none'] as const;
+export const CHAT_REACTIONS = ['👍', '❤️', '🔥', '👏', '🎉', '🙏', '🌱', '🚜', '🌾', '🐄'] as const;
+export const ANNOUNCEMENT_PRIORITIES = ['normal', 'important', 'critical'] as const;
 
 export const CHAT_SOCKET_EVENTS = {
   CONVERSATION_JOIN: 'chat:conversation:join',
@@ -20,6 +22,16 @@ export const CHAT_SOCKET_EVENTS = {
   PRESENCE_CONVERSATION: 'chat:presence:conversation',
   MESSAGE_EDIT: 'chat:message:edit',
   MESSAGE_DELETE: 'chat:message:delete',
+  MESSAGE_REACT: 'message-react',
+  MESSAGE_UNREACT: 'message-unreact',
+  MESSAGE_STAR: 'message-star',
+  MESSAGE_UNSTAR: 'message-unstar',
+  MESSAGE_PIN: 'message-pin',
+  MESSAGE_UNPIN: 'message-unpin',
+  THREAD_OPEN: 'thread-open',
+  THREAD_REPLY: 'thread-reply',
+  NOTE_UPDATE: 'note-update',
+  ANNOUNCEMENT_CREATE: 'announcement-create',
   CONVERSATION_NEW: 'chat:conversation:new',
   CONVERSATION_UPDATE: 'chat:conversation:update',
   CONVERSATION_REMOVED: 'chat:conversation:removed',
@@ -30,6 +42,16 @@ export const CHAT_SOCKET_EVENTS = {
   MESSAGE_DELETED: 'chat:message:deleted',
   MESSAGE_READ_UPDATE: 'chat:message:read',
   UNREAD_UPDATE: 'chat:unread:update',
+  REACTION_ADDED: 'reaction-added',
+  REACTION_REMOVED: 'reaction-removed',
+  MENTION_CREATED: 'mention-created',
+  THREAD_UPDATED: 'thread-updated',
+  MESSAGE_PINNED: 'message-pinned',
+  MESSAGE_UNPINNED: 'message-unpinned',
+  MESSAGE_STARRED: 'message-starred',
+  MESSAGE_UNSTARRED: 'message-unstarred',
+  ANNOUNCEMENT_CREATED: 'announcement-created',
+  NOTE_UPDATED: 'note-updated',
   ERROR: 'chat:error',
 } as const;
 

@@ -141,3 +141,113 @@ export async function searchMessages(params) {
   const { data } = await apiClient.get('/chat/search/messages', { params });
   return data.data;
 }
+
+export async function addReaction(payload) {
+  const { data } = await apiClient.post('/chat/reactions', payload);
+  return data.data;
+}
+
+export async function removeReaction(messageId) {
+  const { data } = await apiClient.delete('/chat/reactions', { data: { messageId } });
+  return data.data;
+}
+
+export async function getMentions(params = {}) {
+  const { data } = await apiClient.get('/chat/mentions', { params });
+  return data.data;
+}
+
+export async function getPinnedMessages(params = {}) {
+  const { data } = await apiClient.get('/chat/pins', { params });
+  return data.data;
+}
+
+export async function pinMessage(messageId) {
+  const { data } = await apiClient.post('/chat/pins', { messageId });
+  return data.data;
+}
+
+export async function unpinMessage(messageId) {
+  const { data } = await apiClient.delete('/chat/pins', { data: { messageId } });
+  return data.data;
+}
+
+export async function getStarredMessages(params = {}) {
+  const { data } = await apiClient.get('/chat/starred', { params });
+  return data.data;
+}
+
+export async function starMessage(messageId) {
+  const { data } = await apiClient.post('/chat/starred', { messageId });
+  return data.data;
+}
+
+export async function unstarMessage(messageId) {
+  const { data } = await apiClient.delete('/chat/starred', { data: { messageId } });
+  return data.data;
+}
+
+export async function getThread(params) {
+  const { data } = await apiClient.get('/chat/threads', { params });
+  return data.data;
+}
+
+export async function createThreadReply(payload) {
+  const { data } = await apiClient.post('/chat/threads', payload);
+  return data.data;
+}
+
+export async function getSharedNotes(params = {}) {
+  const { data } = await apiClient.get('/chat/notes', { params });
+  return data.data;
+}
+
+export async function createSharedNote(payload) {
+  const { data } = await apiClient.post('/chat/notes', payload);
+  return data.data;
+}
+
+export async function updateSharedNote({ noteId, payload }) {
+  const { data } = await apiClient.patch(`/chat/notes/${noteId}`, payload);
+  return data.data;
+}
+
+export async function deleteSharedNote(noteId) {
+  const { data } = await apiClient.delete(`/chat/notes/${noteId}`);
+  return data.data;
+}
+
+export async function getAnnouncements(params = {}) {
+  const { data } = await apiClient.get('/chat/announcements', { params });
+  return data.data;
+}
+
+export async function createAnnouncement(payload) {
+  const { data } = await apiClient.post('/chat/announcements', payload);
+  return data.data;
+}
+
+export async function updateAnnouncement({ announcementId, payload }) {
+  const { data } = await apiClient.patch(`/chat/announcements/${announcementId}`, payload);
+  return data.data;
+}
+
+export async function deleteAnnouncement(announcementId) {
+  const { data } = await apiClient.delete(`/chat/announcements/${announcementId}`);
+  return data.data;
+}
+
+export async function getBookmarks(params = {}) {
+  const { data } = await apiClient.get('/chat/bookmarks', { params });
+  return data.data;
+}
+
+export async function createBookmark(payload) {
+  const { data } = await apiClient.post('/chat/bookmarks', payload);
+  return data.data;
+}
+
+export async function deleteBookmark(payload) {
+  const { data } = await apiClient.delete('/chat/bookmarks', { data: payload });
+  return data.data;
+}

@@ -243,6 +243,12 @@ Hopt It includes persisted real-time messaging for direct, farm-team, agreement,
 
 See [docs/chat-messaging.md](/Users/vigneshhe/Desktop/Hopit.in/docs/chat-messaging.md).
 
+## Chat Collaboration
+
+Hopt It chat supports reactions, mentions, pinned messages, starred messages, threads, shared notes, announcements, and bookmarks for farm workspace collaboration.
+
+See [docs/chat-collaboration.md](/Users/vigneshhe/Desktop/Hopit.in/docs/chat-collaboration.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

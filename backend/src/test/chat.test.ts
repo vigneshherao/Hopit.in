@@ -131,4 +131,53 @@ describe('chat messaging API', () => {
     expect(search.status).toBe(200);
     expect(search.body.data.messages.length).toBeGreaterThan(0);
   });
+
+  it('supports reactions, mentions, pins, stars, threads, notes, announcements and bookmarks', async () => {
+    const owner = await register('chat-collab-owner@example.com');
+    const farmer = await register('chat-collab-farmer@example.com', 'farmer');
+    const worker = await register('chat-collab-worker@example.com', 'worker');
+    const group = await request(app).post('/api/v1/chat/conversations/group').set('Authorization', `Bearer ${owner.accessToken}`).send({ title: 'Harvest Workspace', participantIds: [farmer.user.id, worker.user.id] });
+    const conversationId = group.body.data.conversation._id;
+
+    const sent = await request(app).post(`/api/v1/chat/conversations/${conversationId}/messages`).set('Authorization', `Bearer ${owner.accessToken}`).send({ type: 'text', text: `Please check this @${farmer.user.name}` });
+    const messageId = sent.body.data.message._id;
+
+    const reaction = await request(app).post('/api/v1/chat/reactions').set('Authorization', `Bearer ${farmer.accessToken}`).send({ messageId, emoji: '🌱' });
+    expect(reaction.status).toBe(201);
+
+    const changedReaction = await request(app).post('/api/v1/chat/reactions').set('Authorization', `Bearer ${farmer.accessToken}`).send({ messageId, emoji: '🚜' });
+    expect(changedReaction.body.data.reaction.emoji).toBe('🚜');
+
+    const mentions = await request(app).get('/api/v1/chat/mentions').set('Authorization', `Bearer ${farmer.accessToken}`);
+    expect(mentions.status).toBe(200);
+    expect(mentions.body.data.mentions.length).toBeGreaterThan(0);
+
+    const pin = await request(app).post('/api/v1/chat/pins').set('Authorization', `Bearer ${owner.accessToken}`).send({ messageId });
+    expect(pin.status).toBe(201);
+    const pins = await request(app).get(`/api/v1/chat/pins?conversationId=${conversationId}`).set('Authorization', `Bearer ${owner.accessToken}`);
+    expect(pins.body.data.pins.length).toBe(1);
+
+    const star = await request(app).post('/api/v1/chat/starred').set('Authorization', `Bearer ${farmer.accessToken}`).send({ messageId });
+    expect(star.status).toBe(201);
+    const stars = await request(app).get('/api/v1/chat/starred').set('Authorization', `Bearer ${farmer.accessToken}`);
+    expect(stars.body.data.stars.length).toBe(1);
+
+    const thread = await request(app).post('/api/v1/chat/threads').set('Authorization', `Bearer ${farmer.accessToken}`).send({ messageId, text: 'I will inspect it today.' });
+    expect(thread.status).toBe(201);
+    const threadView = await request(app).get(`/api/v1/chat/threads?messageId=${messageId}`).set('Authorization', `Bearer ${owner.accessToken}`);
+    expect(threadView.body.data.replies.length).toBe(1);
+
+    const note = await request(app).post('/api/v1/chat/notes').set('Authorization', `Bearer ${owner.accessToken}`).send({ conversationId, title: 'Harvest note', content: 'Keep crates ready near the east gate.' });
+    expect(note.status).toBe(201);
+    const announcement = await request(app).post('/api/v1/chat/announcements').set('Authorization', `Bearer ${owner.accessToken}`).send({ conversationId, title: 'Harvest starts', message: 'Team starts harvesting at 7 AM.', priority: 'important' });
+    expect(announcement.status).toBe(201);
+
+    const bookmark = await request(app).post('/api/v1/chat/bookmarks').set('Authorization', `Bearer ${farmer.accessToken}`).send({ conversationId, messageId, label: 'Important instruction' });
+    expect(bookmark.status).toBe(201);
+
+    const search = await request(app).get('/api/v1/chat/search/messages?q=Harvest').set('Authorization', `Bearer ${owner.accessToken}`);
+    expect(search.status).toBe(200);
+    expect(search.body.data.notes.length).toBeGreaterThan(0);
+    expect(search.body.data.announcements.length).toBeGreaterThan(0);
+  });
 });

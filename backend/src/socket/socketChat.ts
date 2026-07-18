@@ -1,6 +1,8 @@
 import type { Socket } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from '@/constants/chat.constants.js';
 import { messageCreateSchema, messageDeleteSchema, messageEditSchema, readReceiptSchema } from '@/services/chat/chat.validation.js';
+import { announcementCreateSchema, messageTargetSchema, noteCreateSchema, noteUpdateSchema, reactionSchema, threadReplySchema } from '@/services/chat/chat.collaboration.validation.js';
+import { addReaction, createAnnouncement, createSharedNote, createThreadReply, pinMessage, removeReaction, starMessage, unpinMessage, unstarMessage, updateSharedNote } from '@/services/chat/chat.collaboration.service.js';
 import { deleteMessage, editMessage, markConversationRead, markDelivered, sendMessage } from '@/services/chat/chat.service.js';
 import { getActiveMember } from '@/services/chat/chat.permissions.js';
 import { conversationRoom } from '@/services/chat/chat.socket.js';
@@ -98,5 +100,112 @@ export function registerChatSocketHandlers(socket: Socket): void {
   socket.on(CHAT_SOCKET_EVENTS.TYPING_STOP, (payload: { conversationId?: string }) => {
     if (!payload?.conversationId) return;
     socket.to(conversationRoom(payload.conversationId)).emit(CHAT_SOCKET_EVENTS.TYPING_STOP, { conversationId: payload.conversationId, userId: socket.data.userId });
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_REACT, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = reactionSchema.parse(payload);
+      const result = await addReaction(socket.data.userId as string, parsed);
+      ack?.({ success: true, reaction: result.reaction });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to react to message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_UNREACT, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const result = await removeReaction(socket.data.userId as string, parsed.messageId);
+      ack?.({ success: true, ...result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to remove reaction.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_PIN, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const result = await pinMessage(socket.data.userId as string, parsed.messageId);
+      ack?.({ success: true, pin: result.pin });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to pin message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_UNPIN, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const result = await unpinMessage(socket.data.userId as string, parsed.messageId);
+      ack?.({ success: true, ...result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to unpin message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_STAR, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const result = await starMessage(socket.data.userId as string, parsed.messageId);
+      ack?.({ success: true, star: result.star });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to star message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.MESSAGE_UNSTAR, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const result = await unstarMessage(socket.data.userId as string, parsed.messageId);
+      ack?.({ success: true, ...result });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to unstar message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.THREAD_REPLY, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = threadReplySchema.parse(payload);
+      const result = await createThreadReply(socket.data.userId as string, parsed);
+      ack?.({ success: true, reply: result.reply });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to reply in thread.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.NOTE_UPDATE, async (payload: { noteId?: string; conversationId?: string; title?: string; content?: string }, ack?: (response: unknown) => void) => {
+    try {
+      const result = payload.noteId ? await updateSharedNote(socket.data.userId as string, payload.noteId, noteUpdateSchema.parse(payload)) : await createSharedNote(socket.data.userId as string, noteCreateSchema.parse(payload));
+      ack?.({ success: true, note: result.note });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to update note.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.ANNOUNCEMENT_CREATE, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = announcementCreateSchema.parse(payload);
+      const result = await createAnnouncement(socket.data.userId as string, parsed);
+      ack?.({ success: true, announcement: result.announcement });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to create announcement.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
   });
 }

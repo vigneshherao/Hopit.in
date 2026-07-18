@@ -17,6 +17,12 @@ const mocks = vi.hoisted(() => ({
   archive: { mutate: vi.fn() },
   mute: { mutate: vi.fn() },
   pin: { mutate: vi.fn() },
+  messagePin: { mutate: vi.fn() },
+  star: { mutate: vi.fn() },
+  deleteMessage: { mutate: vi.fn() },
+  reaction: { mutate: vi.fn() },
+  createNote: { mutate: vi.fn() },
+  threadReply: { mutate: vi.fn() },
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -36,6 +42,17 @@ vi.mock('@/hooks/useChat.js', () => ({
   useArchiveConversation: () => mocks.archive,
   useMuteConversation: () => mocks.mute,
   usePinConversation: () => mocks.pin,
+  useReactions: () => ({ addReaction: mocks.reaction, removeReaction: { mutate: vi.fn() } }),
+  usePinMessage: () => mocks.messagePin,
+  useStarMessage: () => mocks.star,
+  useDeleteMessage: () => mocks.deleteMessage,
+  useCreateSharedNote: () => mocks.createNote,
+  useThreadReply: () => mocks.threadReply,
+  usePinnedMessages: () => ({ isLoading: false, data: { pins: [] } }),
+  useStarredMessages: () => ({ isLoading: false, data: { stars: [] } }),
+  useSharedNotes: () => ({ isLoading: false, data: { notes: [] } }),
+  useAnnouncements: () => ({ isLoading: false, data: { announcements: [] } }),
+  useThreads: () => ({ isLoading: false, data: null }),
 }));
 
 function renderPage(ui, initialEntries = ['/messages']) {
@@ -66,6 +83,12 @@ describe('chat frontend pages', () => {
     mocks.archive.mutate.mockReset();
     mocks.mute.mutate.mockReset();
     mocks.pin.mutate.mockReset();
+    mocks.messagePin.mutate.mockReset();
+    mocks.star.mutate.mockReset();
+    mocks.deleteMessage.mutate.mockReset();
+    mocks.reaction.mutate.mockReset();
+    mocks.createNote.mutate.mockReset();
+    mocks.threadReply.mutate.mockReset();
   });
 
   it('protects messages route', () => {

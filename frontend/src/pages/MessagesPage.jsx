@@ -5,10 +5,12 @@ import { ConversationHeader } from '@/components/chat/ConversationHeader.jsx';
 import { ConversationSidebar } from '@/components/chat/ConversationSidebar.jsx';
 import { EmptyConversationState } from '@/components/chat/EmptyConversationState.jsx';
 import { ChatSkeleton } from '@/components/chat/ChatSkeleton.jsx';
+import { AnnouncementBanner } from '@/components/chat/AnnouncementBanner.jsx';
 import { MessageBubble } from '@/components/chat/MessageBubble.jsx';
 import { MessageComposer } from '@/components/chat/MessageComposer.jsx';
+import { ThreadSidebar } from '@/components/chat/ThreadSidebar.jsx';
 import { Button } from '@/components/ui/button.jsx';
-import { useArchiveConversation, useConversation, useConversationMembers, useConversations, useCreateDirectConversation, useMessages, useMuteConversation, usePinConversation } from '@/hooks/useChat.js';
+import { useArchiveConversation, useAnnouncements, useConversation, useConversationMembers, useConversations, useCreateDirectConversation, useCreateSharedNote, useDeleteMessage, useMessages, useMuteConversation, usePinConversation, usePinMessage, usePinnedMessages, useReactions, useSharedNotes, useStarMessage, useStarredMessages, useThreadReply, useThreads } from '@/hooks/useChat.js';
 import { useConversationSocketEvents, useReadReceiptSocket } from '@/hooks/useChatSocket.js';
 import { useAuth } from '@/context/AuthContext.jsx';
 
@@ -19,6 +21,8 @@ export function MessagesPage() {
   const activeId = params.conversationId;
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [activeThreadMessage, setActiveThreadMessage] = useState(null);
+  const [replyToMessage, setReplyToMessage] = useState(null);
   const conversationFilters = useMemo(() => ({ search, type: filter === 'all' ? undefined : filter }), [filter, search]);
   const { data: conversationsData, isLoading: loadingConversations } = useConversations(conversationFilters);
   const { data: conversationData } = useConversation(activeId);
@@ -28,6 +32,17 @@ export function MessagesPage() {
   const muteConversation = useMuteConversation();
   const pinConversation = usePinConversation();
   const createDirect = useCreateDirectConversation();
+  const { addReaction } = useReactions();
+  const pinMessage = usePinMessage();
+  const starMessage = useStarMessage();
+  const deleteMessage = useDeleteMessage();
+  const createNote = useCreateSharedNote();
+  const threadReply = useThreadReply();
+  const { data: pinsData } = usePinnedMessages({ conversationId: activeId });
+  const { data: starsData } = useStarredMessages({ conversationId: activeId });
+  const { data: notesData } = useSharedNotes({ conversationId: activeId });
+  const { data: announcementsData } = useAnnouncements({ conversationId: activeId });
+  const { data: threadData } = useThreads(activeThreadMessage?._id);
   const { typingUsers } = useConversationSocketEvents(activeId);
   const { markRead } = useReadReceiptSocket(activeId);
 
@@ -64,13 +79,41 @@ export function MessagesPage() {
                   onMute={() => muteConversation.mutate({ id: activeId, duration: '1-day' })}
                   onPin={() => pinConversation.mutate(activeId)}
                 />
+                <AnnouncementBanner announcements={announcementsData?.announcements ?? []} />
                 <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-6" onMouseEnter={() => markRead(messages.at(-1)?._id)}>
-                  {loadingMessages ? <ChatSkeleton /> : messages.map((message) => <MessageBubble key={message._id} message={message} isOwn={message.senderId === user?.id} />)}
+                  {loadingMessages ? <ChatSkeleton /> : messages.map((message) => (
+                    <MessageBubble
+                      key={message._id}
+                      message={message}
+                      isOwn={message.senderId === user?.id}
+                      onReact={(item, emoji) => addReaction.mutate({ messageId: item._id, emoji })}
+                      onPin={(item) => pinMessage.mutate(item._id)}
+                      onStar={(item) => starMessage.mutate(item._id)}
+                      onThread={(item) => setActiveThreadMessage(item)}
+                      onReply={(item) => setReplyToMessage(item)}
+                      onDelete={(item) => deleteMessage.mutate({ id: item._id, scope: 'self' })}
+                    />
+                  ))}
                   {!loadingMessages && !messages.length && <div className="rounded-3xl border border-dashed border-emerald-200 bg-white p-8 text-center text-sm text-slate-500">No messages yet. Send the first update.</div>}
                 </div>
-                <MessageComposer conversationId={activeId} />
+                <MessageComposer conversationId={activeId} members={membersData?.members ?? []} replyToMessage={replyToMessage} onClearReply={() => setReplyToMessage(null)} />
               </div>
-              <ConversationDetailsPanel conversation={conversation} members={membersData?.members ?? []} />
+              <ConversationDetailsPanel
+                conversation={conversation}
+                members={membersData?.members ?? []}
+                pins={pinsData?.pins ?? []}
+                stars={starsData?.stars ?? []}
+                notes={notesData?.notes ?? []}
+                announcements={announcementsData?.announcements ?? []}
+                onCreateNote={(payload) => createNote.mutate(payload)}
+                onOpenPinned={(messageId) => setActiveThreadMessage(messages.find((message) => message._id === messageId) ?? { _id: messageId })}
+              />
+              <ThreadSidebar
+                messageId={activeThreadMessage?._id}
+                thread={threadData}
+                onClose={() => setActiveThreadMessage(null)}
+                onReply={(payload) => threadReply.mutate(payload)}
+              />
             </div>
           ) : loadingConversations ? (
             <ChatSkeleton />

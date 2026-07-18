@@ -2,17 +2,21 @@ import mongoose, { type FilterQuery } from 'mongoose';
 import { DEFAULT_CHAT_PERMISSIONS } from '@/constants/chat.constants.js';
 import { env } from '@/config/env.js';
 import { ChatLocationModel } from '@/models/chat-location.model.js';
+import { AnnouncementModel } from '@/models/announcement.model.js';
 import { ConversationBlockModel } from '@/models/conversation-block.model.js';
 import { ConversationMemberModel } from '@/models/conversation-member.model.js';
 import { ConversationModel, type Conversation } from '@/models/conversation.model.js';
 import { MessageReceiptModel } from '@/models/message-receipt.model.js';
 import { MessageModel, type Message } from '@/models/message.model.js';
+import { MessageReactionModel } from '@/models/message-reaction.model.js';
 import { ChatAttachmentModel } from '@/models/chat-attachment.model.js';
+import { SharedNoteModel } from '@/models/shared-note.model.js';
 import { auditChat } from '@/services/chat/chat.audit.service.js';
 import { mapConversation, mapMember, mapMessage } from '@/services/chat/chat.mapper.js';
 import { ensureNotBlocked, getActiveMember, requireManageMembers, requireSendPermission } from '@/services/chat/chat.permissions.js';
 import { emitChatMessage, emitChatUnread, emitChatUpdate } from '@/services/chat/chat.socket.js';
 import { notifyConversationMembers } from '@/services/chat/chat.notification.service.js';
+import { createMentionsFromText } from '@/services/chat/chat.mention.service.js';
 import { createActivity } from '@/services/activity/activity.service.js';
 import { AppError } from '@/utils/app-error.js';
 
@@ -197,7 +201,17 @@ export async function listMessages(conversationId: string, userId: string, query
   if (query.senderId) filter.senderId = query.senderId;
   if (query.search) filter.normalizedText = new RegExp(escapeRegex(String(query.search)), 'i');
   const messages = await MessageModel.find(filter).sort({ createdAt: -1 }).limit(limit).populate('attachments').populate('locationId').lean();
-  return { messages: messages.reverse().map(mapMessage), nextCursor: messages.at(-1)?._id?.toString() ?? null };
+  const messageIds = messages.map((message) => message._id);
+  const reactions = await MessageReactionModel.find({ messageId: { $in: messageIds } }).lean();
+  const reactionsByMessage = new Map<string, typeof reactions>();
+  reactions.forEach((reaction) => {
+    const key = reaction.messageId.toString();
+    reactionsByMessage.set(key, [...(reactionsByMessage.get(key) ?? []), reaction]);
+  });
+  return {
+    messages: messages.reverse().map((message) => ({ ...mapMessage(message), reactions: reactionsByMessage.get(message._id.toString()) ?? [] })),
+    nextCursor: messages.at(-1)?._id?.toString() ?? null,
+  };
 }
 
 export async function getMessage(messageId: string, userId: string) {
@@ -207,7 +221,7 @@ export async function getMessage(messageId: string, userId: string) {
   return { message: mapMessage(message) };
 }
 
-export async function sendMessage(conversationId: string, userId: string, input: { type: Message['type']; text?: string; attachmentIds?: string[]; location?: { latitude: number; longitude: number; label?: string; address?: string; accuracyMeters?: number }; replyToMessageId?: string; forwardedFromMessageId?: string; clientMessageId?: string }) {
+export async function sendMessage(conversationId: string, userId: string, input: { type: Message['type']; text?: string; attachmentIds?: string[]; location?: { latitude: number; longitude: number; label?: string; address?: string; accuracyMeters?: number }; replyToMessageId?: string; forwardedFromMessageId?: string; threadRootMessageId?: string; clientMessageId?: string }) {
   await requireSendPermission(conversationId, userId);
   await ensureNotBlocked(conversationId, userId);
   if (input.clientMessageId) {
@@ -230,7 +244,7 @@ export async function sendMessage(conversationId: string, userId: string, input:
     locationId = location._id;
   }
   const normalizedText = normalizeText(input.text);
-  const message = await MessageModel.create({ conversationId, senderId: userId, type: input.type, text: normalizedText, normalizedText, attachments: attachmentIds, locationId, replyToMessageId: input.replyToMessageId, forwardedFromMessageId: input.forwardedFromMessageId, clientMessageId: input.clientMessageId, status: 'sent' });
+  const message = await MessageModel.create({ conversationId, senderId: userId, type: input.type, text: normalizedText, normalizedText, attachments: attachmentIds, locationId, replyToMessageId: input.replyToMessageId, forwardedFromMessageId: input.forwardedFromMessageId, threadRootMessageId: input.threadRootMessageId, clientMessageId: input.clientMessageId, status: 'sent' });
   if (locationId) await ChatLocationModel.findByIdAndUpdate(locationId, { messageId: message._id });
   if (attachmentIds.length) await ChatAttachmentModel.updateMany({ _id: { $in: attachmentIds } }, { messageId: message._id });
 
@@ -243,6 +257,7 @@ export async function sendMessage(conversationId: string, userId: string, input:
   ]);
   const hydrated = await MessageModel.findById(message._id).populate('attachments').populate('locationId').lean();
   const mapped = mapMessage(hydrated);
+  await createMentionsFromText({ conversationId, messageId: message._id.toString(), mentionedBy: userId, text: normalizedText });
   emitChatMessage(conversationId, mapped);
   emitChatUnread(conversationId, { conversationId });
   await notifyConversationMembers({ conversationId, senderId: userId, title: 'New chat message', preview });
@@ -353,5 +368,16 @@ export async function searchMessages(userId: string, query: Record<string, unkno
   if (query.q) filter.normalizedText = new RegExp(escapeRegex(String(query.q)), 'i');
   if (query.dateFrom || query.dateTo) filter.createdAt = { ...(query.dateFrom ? { $gte: query.dateFrom } : {}), ...(query.dateTo ? { $lte: query.dateTo } : {}) };
   const messages = await MessageModel.find(filter).sort({ createdAt: -1 }).limit(Number(query.limit ?? 20)).lean();
-  return { messages: messages.map(mapMessage) };
+  const sharedFilter: FilterQuery<unknown> = { conversationId: { $in: conversationIds } };
+  if (query.conversationId) Object.assign(sharedFilter, { conversationId: query.conversationId });
+  if (query.q) {
+    const regex = new RegExp(escapeRegex(String(query.q)), 'i');
+    Object.assign(sharedFilter, { $or: [{ title: regex }, { content: regex }, { message: regex }] });
+  }
+  const [notes, announcements] = await Promise.all([
+    SharedNoteModel.find(sharedFilter).sort({ updatedAt: -1 }).limit(10).lean(),
+    AnnouncementModel.find(sharedFilter).sort({ createdAt: -1 }).limit(10).lean(),
+  ]);
+  const threadReplies = messages.filter((message) => message.threadRootMessageId);
+  return { messages: messages.map(mapMessage), threads: threadReplies.map(mapMessage), notes, announcements };
 }

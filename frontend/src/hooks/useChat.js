@@ -9,6 +9,13 @@ export const chatKeys = {
   members: (conversationId) => ['chat', 'members', conversationId],
   searchMessages: (filters = {}) => ['chat', 'search', 'messages', filters],
   blockedUsers: ['chat', 'blocked-users'],
+  mentions: (filters = {}) => ['chat', 'mentions', filters],
+  pins: (filters = {}) => ['chat', 'pins', filters],
+  starred: (filters = {}) => ['chat', 'starred', filters],
+  thread: (messageId) => ['chat', 'thread', messageId],
+  notes: (filters = {}) => ['chat', 'notes', filters],
+  announcements: (filters = {}) => ['chat', 'announcements', filters],
+  bookmarks: (filters = {}) => ['chat', 'bookmarks', filters],
 };
 
 export function useConversations(filters = {}) {
@@ -140,4 +147,91 @@ export function useSearchConversations(filters) {
 
 export function useSearchMessages(filters) {
   return useQuery({ queryKey: chatKeys.searchMessages(filters), queryFn: () => chatService.searchMessages(filters), enabled: Boolean(filters?.q) });
+}
+
+export function useReactions() {
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: chatKeys.all });
+  return {
+    addReaction: useMutation({ mutationFn: chatService.addReaction, onSuccess: invalidate }),
+    removeReaction: useMutation({ mutationFn: chatService.removeReaction, onSuccess: invalidate }),
+  };
+}
+
+export function useMentions(filters = {}) {
+  return useQuery({ queryKey: chatKeys.mentions(filters), queryFn: () => chatService.getMentions(filters) });
+}
+
+export function usePinnedMessages(filters = {}) {
+  return useQuery({ queryKey: chatKeys.pins(filters), queryFn: () => chatService.getPinnedMessages(filters), enabled: Boolean(filters?.conversationId) });
+}
+
+export function usePinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.pinMessage, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useUnpinMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.unpinMessage, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useStarredMessages(filters = {}) {
+  return useQuery({ queryKey: chatKeys.starred(filters), queryFn: () => chatService.getStarredMessages(filters) });
+}
+
+export function useStarMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.starMessage, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useUnstarMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.unstarMessage, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useThreads(messageId) {
+  return useQuery({ queryKey: chatKeys.thread(messageId), queryFn: () => chatService.getThread({ messageId }), enabled: Boolean(messageId) });
+}
+
+export function useThreadReply() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.createThreadReply, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useSharedNotes(filters = {}) {
+  return useQuery({ queryKey: chatKeys.notes(filters), queryFn: () => chatService.getSharedNotes(filters), enabled: Boolean(filters?.conversationId) });
+}
+
+export function useCreateSharedNote() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.createSharedNote, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useUpdateSharedNote() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.updateSharedNote, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useDeleteSharedNote() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.deleteSharedNote, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useAnnouncements(filters = {}) {
+  return useQuery({ queryKey: chatKeys.announcements(filters), queryFn: () => chatService.getAnnouncements(filters), enabled: Boolean(filters?.conversationId) });
+}
+
+export function useCreateAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.createAnnouncement, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useBookmarks(filters = {}) {
+  return useQuery({ queryKey: chatKeys.bookmarks(filters), queryFn: () => chatService.getBookmarks(filters) });
+}
+
+export function useCreateBookmark() {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: chatService.createBookmark, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
 }
