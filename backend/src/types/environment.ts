@@ -4,11 +4,14 @@ export interface AppEnvironment {
   nodeEnv: NodeEnvironment;
   port: number;
   clientUrl: string;
+  allowedOrigins: string[];
   mongoUri: string;
   jwtAccessSecret: string;
   jwtAccessExpiresIn: string;
   jwtRefreshSecret: string;
   jwtRefreshExpiresIn: string;
+  jwtIssuer: string;
+  jwtAudience: string;
   cookieSecure: boolean;
   cookieSameSite: 'lax' | 'strict' | 'none';
   cloudinaryCloudName?: string;

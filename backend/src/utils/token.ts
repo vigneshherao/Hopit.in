@@ -6,11 +6,18 @@ import type { JwtAccessPayload } from '@/types/http.js';
 export function signAccessToken(payload: JwtAccessPayload): string {
   return jwt.sign(payload, env.jwtAccessSecret, {
     expiresIn: env.jwtAccessExpiresIn,
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
+    algorithm: 'HS256',
   } as jwt.SignOptions);
 }
 
 export function verifyAccessToken(token: string): JwtAccessPayload {
-  return jwt.verify(token, env.jwtAccessSecret) as JwtAccessPayload;
+  return jwt.verify(token, env.jwtAccessSecret, {
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
+    algorithms: ['HS256'],
+  }) as JwtAccessPayload;
 }
 
 export function createRefreshToken(): string {

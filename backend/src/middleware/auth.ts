@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { UserRole } from '@/constants/auth.constants.js';
+import { UserModel } from '@/models/user.model.js';
 import { AppError } from '@/utils/app-error.js';
 import { verifyAccessToken } from '@/utils/token.js';
 
@@ -8,7 +9,7 @@ function getBearerToken(req: Request): string | undefined {
   return header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 }
 
-export function authenticate(req: Request, _res: Response, next: NextFunction): void {
+export async function authenticate(req: Request, _res: Response, next: NextFunction): Promise<void> {
   const token = getBearerToken(req);
 
   if (!token) {
@@ -18,10 +19,12 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
 
   try {
     const decoded = verifyAccessToken(token);
+    const user = await UserModel.findById(decoded.sub).select('email role isActive').lean();
+    if (!user?.isActive) throw new AppError('Authentication session is no longer valid.', 401);
     req.user = {
       id: decoded.sub,
-      email: decoded.email,
-      role: decoded.role,
+      email: user.email,
+      role: user.role,
     };
     next();
   } catch (error) {

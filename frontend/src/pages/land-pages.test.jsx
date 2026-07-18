@@ -88,6 +88,7 @@ describe('land marketplace frontend', () => {
     );
 
     expect(screen.getByText('Land marketplace')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /smart filters/i }));
     await userEvent.selectOptions(screen.getByLabelText(/transaction/i), 'lease');
     expect(screen.getByText('Mandya organic farm land')).toBeInTheDocument();
   });

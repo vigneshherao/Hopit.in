@@ -8,5 +8,6 @@ export const authRateLimit = rateLimit({
   message: {
     success: false,
     message: 'Too many authentication attempts. Please try again shortly.',
+    error: { code: 'RATE_LIMITED', message: 'Too many authentication attempts. Please try again shortly.' },
   },
 });

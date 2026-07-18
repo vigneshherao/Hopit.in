@@ -36,6 +36,7 @@ vi.mock('@/hooks/useChatSocket.js', () => ({
 }));
 vi.mock('@/hooks/useChat.js', () => ({
   useConversations: () => ({ isLoading: false, data: mocks.conversations }),
+  useChatUsers: () => ({ isLoading: false, data: { users: [] } }),
   useConversation: () => ({ isLoading: false, data: mocks.conversation }),
   useMessages: () => ({ isLoading: false, data: mocks.messages }),
   useConversationMembers: () => ({ isLoading: false, data: mocks.members }),

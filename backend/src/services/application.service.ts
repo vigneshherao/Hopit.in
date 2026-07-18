@@ -416,7 +416,7 @@ async function findApplicationLand(landId: string) {
 }
 
 function assertApplicantRole(role: string): void {
-  if (!['farmer', 'worker', 'owner', 'admin'].includes(role)) throw new AppError('Only authenticated Hopt It users can submit land proposals.', 403);
+  if (!['farmer', 'owner', 'admin'].includes(role)) throw new AppError('Workers cannot submit land applications.', 403);
 }
 
 function assertLandAcceptsApplications(land: LandDocument): void {

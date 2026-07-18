@@ -1,5 +1,7 @@
 # Hopt It
 
+Hardening references: [security](docs/security.md), [performance](docs/performance.md), [testing](docs/testing.md), and [demo stability](docs/demo-stability.md).
+
 Hopt It is an AI powered agriculture platform foundation connecting land owners, farmers, and farm workers. The project is organized as a modular monolith with a React frontend and an Express API backend.
 
 ## Tech Stack

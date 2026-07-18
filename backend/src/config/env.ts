@@ -9,6 +9,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5000),
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
   CLIENT_ORIGIN: z.string().url().optional(),
+  ALLOWED_ORIGINS: z.string().optional(),
   MONGODB_URI: z
     .string()
     .min(1, 'MONGODB_URI is required')
@@ -23,6 +24,8 @@ const envSchema = z.object({
     .min(24, 'JWT_REFRESH_SECRET must be at least 24 characters')
     .default('development-hopit-refresh-secret-change-me'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_ISSUER: z.string().trim().min(1).default('hopit-api'),
+  JWT_AUDIENCE: z.string().trim().min(1).default('hopit-web'),
   COOKIE_SECURE: z
     .enum(['true', 'false'])
     .default('false')
@@ -89,15 +92,37 @@ if (!parsed.success) {
   throw new Error(`Invalid environment configuration: ${details}`);
 }
 
+const developmentSecrets = [
+  'development-hopit-access-secret-change-me',
+  'development-hopit-refresh-secret-change-me',
+];
+if (
+  parsed.data.NODE_ENV === 'production' &&
+  (developmentSecrets.includes(parsed.data.JWT_ACCESS_SECRET) ||
+    developmentSecrets.includes(parsed.data.JWT_REFRESH_SECRET) ||
+    parsed.data.JWT_ACCESS_SECRET === parsed.data.JWT_REFRESH_SECRET)
+) {
+  throw new Error('Invalid environment configuration: production JWT secrets must be unique and explicitly configured.');
+}
+
+const clientUrl = parsed.data.CLIENT_ORIGIN ?? parsed.data.CLIENT_URL;
+const allowedOrigins = [...new Set([
+  clientUrl,
+  ...(parsed.data.ALLOWED_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean),
+])];
+
 export const env: AppEnvironment = {
   nodeEnv: parsed.data.NODE_ENV,
   port: parsed.data.PORT,
-  clientUrl: parsed.data.CLIENT_ORIGIN ?? parsed.data.CLIENT_URL,
+  clientUrl,
+  allowedOrigins,
   mongoUri: parsed.data.MONGODB_URI,
   jwtAccessSecret: parsed.data.JWT_ACCESS_SECRET,
   jwtAccessExpiresIn: parsed.data.JWT_ACCESS_EXPIRES_IN,
   jwtRefreshSecret: parsed.data.JWT_REFRESH_SECRET,
   jwtRefreshExpiresIn: parsed.data.JWT_REFRESH_EXPIRES_IN,
+  jwtIssuer: parsed.data.JWT_ISSUER,
+  jwtAudience: parsed.data.JWT_AUDIENCE,
   cookieSecure: parsed.data.COOKIE_SECURE,
   cookieSameSite: parsed.data.COOKIE_SAME_SITE,
   cloudinaryCloudName: parsed.data.CLOUDINARY_CLOUD_NAME,

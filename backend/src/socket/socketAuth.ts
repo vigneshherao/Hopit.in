@@ -29,7 +29,7 @@ export async function authenticateSocket(socket: Socket, next: (error?: Error) =
     if (!user?.isActive) throw new Error('User account is inactive.');
 
     socket.data.userId = decoded.sub;
-    socket.data.role = decoded.role;
+    socket.data.role = user.role;
     socket.data.device = typeof socket.handshake.auth?.device === 'string' ? socket.handshake.auth.device : 'web';
     socket.data.connectedAt = new Date();
     socket.data.lastSeen = new Date();

@@ -5,6 +5,7 @@ import { getAccessToken, notifyUnauthorized, setAccessToken } from '@/services/t
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
   withCredentials: true,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,6 +28,8 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  config.headers['X-Request-ID'] = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
   return config;
 });
