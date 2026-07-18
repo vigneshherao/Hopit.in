@@ -38,6 +38,7 @@ export function FarmPlannerDetailPage() {
           <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/insights`}>Insights</Link></Button>
           <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/disease`}>Disease Check</Link></Button>
           <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/weather`}>Weather</Link></Button>
+          <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/monitoring`}>Monitoring</Link></Button>
           <Button variant="outline" disabled={recalculate.isPending} onClick={() => recalculate.mutate({ id: plan._id, payload: { reason: 'Dashboard recalculation' } })}><RefreshCcw className="h-4 w-4" /> Recalculate</Button>
           <Button onClick={() => updatePlan.mutate({ id: plan._id, payload: { status: plan.status === 'active' ? 'paused' : 'active' } })}>{plan.status === 'active' ? 'Pause' : 'Activate'}</Button>
         </div>

@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FarmAssistantPage } from '@/pages/FarmAssistantPage.jsx';
 import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
+import { FarmMonitoringPage } from '@/pages/FarmMonitoringPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
@@ -49,6 +50,14 @@ const mocks = vi.hoisted(() => ({
   weatherWater: null,
   weatherHealth: null,
   refreshWeather: { isPending: false, mutate: vi.fn() },
+  monitoringDashboard: null,
+  monitoringZones: null,
+  monitoringScenes: null,
+  monitoringReports: null,
+  requestSatelliteScene: { isPending: false, mutate: vi.fn() },
+  createZoneTask: { mutate: vi.fn() },
+  createFieldObservation: { mutate: vi.fn() },
+  generateMonitoringReport: { isPending: false, mutate: vi.fn() },
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -98,6 +107,16 @@ vi.mock('@/hooks/useWeather.js', () => ({
   useWaterPrediction: () => ({ isLoading: false, data: mocks.weatherWater }),
   useFarmHealthForecast: () => ({ isLoading: false, data: mocks.weatherHealth }),
   useRefreshWeather: () => mocks.refreshWeather,
+}));
+vi.mock('@/hooks/useRemoteMonitoring.js', () => ({
+  useMonitoringDashboard: () => ({ isLoading: false, data: mocks.monitoringDashboard }),
+  useMonitoringZones: () => ({ isLoading: false, data: mocks.monitoringZones }),
+  useRemoteMonitoringScenes: () => ({ isLoading: false, data: mocks.monitoringScenes }),
+  useMonitoringReports: () => ({ isLoading: false, data: mocks.monitoringReports }),
+  useRequestSatelliteScene: () => mocks.requestSatelliteScene,
+  useCreateZoneTask: () => mocks.createZoneTask,
+  useCreateFieldObservation: () => mocks.createFieldObservation,
+  useGenerateMonitoringReport: () => mocks.generateMonitoringReport,
 }));
 
 function renderPage(ui, initialEntries = ['/']) {
@@ -251,6 +270,25 @@ describe('farm planner frontend', () => {
     mocks.weatherHealth = { forecast: [{ days: 3, expectedCropHealth: 76 }, { days: 7, expectedCropHealth: 72 }] };
     mocks.refreshWeather.isPending = false;
     mocks.refreshWeather.mutate.mockReset();
+    mocks.monitoringDashboard = {
+      overallHealth: { score: 76, label: 'Good', confidenceScore: 71 },
+      coverage: { healthy: 62, moderate: 22, stressed: 11, bareSoil: 3, unavailable: 2 },
+      zones: { total: 2, critical: 1, high: 1, resolved: 0 },
+      dataQuality: { score: 82, cloudCoverage: 18, imageAgeDays: 4, isSimulated: true },
+      trends: { healthScore: [{ date: new Date().toISOString(), value: 76 }] },
+      recommendedActions: ['Inspect possible water stress zone'],
+      recentScenes: [{ _id: 'scene1', title: 'Simulated satellite scene', sourceType: 'demo', capturedAt: new Date().toISOString(), spatialResolutionMeters: 10, cloudCoverage: 18, isSimulated: true }],
+      alerts: [],
+    };
+    mocks.monitoringZones = { zones: [{ _id: 'zone1', title: 'Possible water stress zone', zoneType: 'water-stress', severity: 'high', confidenceScore: 68, description: 'Reduced crop-health signal.', recommendedActions: ['Inspect irrigation'] }] };
+    mocks.monitoringScenes = { scenes: mocks.monitoringDashboard.recentScenes };
+    mocks.monitoringReports = { reports: [] };
+    mocks.requestSatelliteScene.isPending = false;
+    mocks.requestSatelliteScene.mutate.mockReset();
+    mocks.createZoneTask.mutate.mockReset();
+    mocks.createFieldObservation.mutate.mockReset();
+    mocks.generateMonitoringReport.isPending = false;
+    mocks.generateMonitoringReport.mutate.mockReset();
   });
 
   it('protects farm planner route', () => {
@@ -337,5 +375,16 @@ describe('farm planner frontend', () => {
     expect(screen.getByText('Disease risk prediction')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /refresh weather/i }));
     expect(mocks.refreshWeather.mutate).toHaveBeenCalledWith({ farmPlanId: 'plan1', force: true });
+  });
+
+  it('renders remote monitoring dashboard and creates actions from zones', async () => {
+    renderPage(<Routes><Route path="/farm-planner/:farmPlanId/monitoring" element={<FarmMonitoringPage />} /></Routes>, ['/farm-planner/plan1/monitoring']);
+    expect(screen.getByText('Geospatial crop-health monitoring')).toBeInTheDocument();
+    expect(screen.getAllByText('Simulated data').length).toBeGreaterThan(0);
+    expect(screen.getByText('Possible water stress zone')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /request demo imagery/i }));
+    expect(mocks.requestSatelliteScene.mutate).toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /create task/i }));
+    expect(mocks.createZoneTask.mutate).toHaveBeenCalledWith({ zoneId: 'zone1', payload: {} });
   });
 });

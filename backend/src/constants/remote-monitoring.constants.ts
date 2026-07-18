@@ -1,0 +1,17 @@
+export const BOUNDARY_SOURCES = ['land-listing', 'manual-draw', 'uploaded-geojson', 'admin-verified'] as const;
+export const BOUNDARY_VERIFICATION_STATUSES = ['unverified', 'pending', 'verified', 'rejected'] as const;
+export const SCENE_SOURCE_TYPES = ['satellite', 'drone', 'orthomosaic', 'manual-image', 'demo'] as const;
+export const SCENE_PROCESSING_STATUSES = ['pending', 'uploading', 'processing', 'completed', 'partially-completed', 'failed'] as const;
+export const DRONE_SURVEY_STATUSES = ['draft', 'uploading', 'processing', 'completed', 'failed', 'archived'] as const;
+export const IMAGE_METADATA_STATUSES = ['complete', 'partial', 'missing'] as const;
+export const VEGETATION_ANALYSIS_TYPES = ['ndvi', 'ndre', 'gndvi', 'moisture', 'thermal', 'rgb-health', 'combined'] as const;
+export const VEGETATION_SOURCES = ['calculated', 'provider', 'ai-estimated', 'simulated'] as const;
+export const ZONE_TYPES = ['healthy', 'moderate', 'water-stress', 'nutrient-stress', 'possible-disease', 'possible-pest', 'bare-soil', 'flood-risk', 'poor-growth', 'inspection-required', 'custom'] as const;
+export const ZONE_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
+export const ZONE_DETECTED_BY = ['rule-engine', 'ai', 'manual', 'provider'] as const;
+export const ZONE_STATUSES = ['new', 'reviewed', 'inspection-scheduled', 'action-created', 'resolved', 'dismissed'] as const;
+export const OBSERVED_CONDITIONS = ['healthy', 'dry', 'waterlogged', 'nutrient-deficiency', 'possible-disease', 'possible-pest', 'weed-growth', 'physical-damage', 'unknown'] as const;
+export const OBSERVATION_SEVERITIES = ['none', 'low', 'medium', 'high', 'critical'] as const;
+export const OBSERVATION_VERIFICATION_STATUSES = ['unverified', 'farmer-verified', 'manager-verified', 'expert-verified'] as const;
+export const MONITORING_REPORT_TYPES = ['scene-analysis', 'weekly-monitoring', 'monthly-monitoring', 'comparison', 'inspection', 'complete'] as const;
+export const MONITORING_REPORT_GENERATORS = ['system', 'ai', 'user'] as const;

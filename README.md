@@ -54,6 +54,15 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 AI_REQUEST_TIMEOUT_MS=30000
 AI_DAILY_REQUEST_LIMIT=25
+SATELLITE_PROVIDER=demo
+SATELLITE_REQUEST_TIMEOUT_MS=30000
+SATELLITE_CACHE_TTL_MINUTES=360
+REMOTE_MONITORING_DEMO_MODE=true
+REMOTE_MONITORING_MAX_IMAGE_SIZE_MB=15
+REMOTE_MONITORING_MAX_ORTHOMOSAIC_SIZE_MB=250
+REMOTE_MONITORING_MAX_IMAGES_PER_SURVEY=50
+MAP_TILE_BASE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
+SIGNED_FILE_URL_EXPIRY_MINUTES=30
 ```
 
 ## Running Frontend
@@ -215,6 +224,12 @@ Planner routes:
 - `DELETE /api/v1/farm-planner/plans/:id`
 - `POST /api/v1/farm-planner/plans/:id/recalculate`
 - `GET /api/v1/farm-planner/plans/:id/dashboard`
+
+## Remote Monitoring
+
+Hopt It includes farm-boundary mapping, demo satellite imagery requests, drone survey metadata, vegetation analysis, monitoring zones, field observations, comparisons, reports, and a crop-health dashboard for farm plans.
+
+See [docs/remote-monitoring.md](/Users/vigneshhe/Desktop/Hopit.in/docs/remote-monitoring.md).
 
 ## Database Models
 

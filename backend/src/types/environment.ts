@@ -21,4 +21,18 @@ export interface AppEnvironment {
   weatherProvider: string;
   openWeatherApiKey?: string;
   weatherCacheTtlMinutes: number;
+  satelliteProvider: string;
+  satelliteApiKey?: string;
+  satelliteApiSecret?: string;
+  satelliteApiBaseUrl?: string;
+  satelliteRequestTimeoutMs: number;
+  satelliteCacheTtlMinutes: number;
+  remoteMonitoringDemoMode: boolean;
+  remoteMonitoringMaxImageSizeMb: number;
+  remoteMonitoringMaxOrthomosaicSizeMb: number;
+  remoteMonitoringMaxImagesPerSurvey: number;
+  remoteMonitoringProcessingEnabled: boolean;
+  remoteMonitoringTempDirectory?: string;
+  mapTileBaseUrl?: string;
+  signedFileUrlExpiryMinutes: number;
 }

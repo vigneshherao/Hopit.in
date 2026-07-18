@@ -16,6 +16,7 @@ import { FarmManagementPage } from '@/pages/FarmManagementPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
 import { FarmDiseasePage } from '@/pages/FarmDiseasePage.jsx';
 import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
+import { FarmMonitoringPage } from '@/pages/FarmMonitoringPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmProgressReportCreatePage } from '@/pages/FarmProgressReportCreatePage.jsx';
@@ -372,6 +373,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FarmWeatherPage />
+          </ProtectedRoute>
+        ),
+      },
+      ...['monitoring', 'monitoring/map', 'monitoring/scenes', 'monitoring/drone-surveys', 'monitoring/drone-surveys/new', 'monitoring/zones', 'monitoring/observations', 'monitoring/comparison', 'monitoring/reports'].map((path) => ({
+        path: `farm-planner/:farmPlanId/${path}`,
+        element: (
+          <ProtectedRoute>
+            <FarmMonitoringPage />
+          </ProtectedRoute>
+        ),
+      })),
+      {
+        path: 'farm-planner/:farmPlanId/monitoring/scenes/:sceneId',
+        element: (
+          <ProtectedRoute>
+            <FarmMonitoringPage />
           </ProtectedRoute>
         ),
       },

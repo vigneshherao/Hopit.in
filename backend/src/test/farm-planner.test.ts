@@ -10,6 +10,9 @@ import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
 import { WeatherAlertModel } from '@/models/weather-alert.model.js';
 import { WeatherForecastModel } from '@/models/weather-forecast.model.js';
+import { FarmBoundaryModel } from '@/models/farm-boundary.model.js';
+import { RemoteSensingSceneModel } from '@/models/remote-sensing-scene.model.js';
+import { MonitoringZoneModel } from '@/models/monitoring-zone.model.js';
 
 const app = createApp();
 const password = 'HoptIt@123';
@@ -344,5 +347,45 @@ describe('farm planner API', () => {
     const refreshed = await request(app).post('/api/v1/weather/refresh').set('Authorization', `Bearer ${owner.token}`).send({ farmPlanId: planId, force: true });
     expect(refreshed.status).toBe(200);
     expect(refreshed.body.data.cached).toBe(false);
+  });
+
+  it('runs remote monitoring demo scenes, dashboard, zones, tasks, observations and reports', async () => {
+    mockFarmPlanResponse();
+    const owner = await register('owner', 'monitoring-owner@example.com');
+    const other = await register('owner', 'monitoring-other@example.com');
+    const land = await createLand(owner.user?._id, 'monitoring-land');
+    const generated = await request(app).post('/api/v1/farm-planner/generate-plan').set('Authorization', `Bearer ${owner.token}`).send({ landId: land._id.toString(), selectedCrop: 'Tomato', selectedSeason: 'monsoon', startDate: new Date().toISOString() });
+    const planId = generated.body.data.plan._id;
+    const polygon = { type: 'Polygon', coordinates: [[[77.5, 12.9], [77.6, 12.9], [77.6, 13.0], [77.5, 13.0], [77.5, 12.9]]] };
+
+    const forbidden = await request(app).get(`/api/v1/remote-monitoring/plans/${planId}/dashboard`).set('Authorization', `Bearer ${other.token}`);
+    expect(forbidden.status).toBe(404);
+
+    const boundary = await request(app).post(`/api/v1/remote-monitoring/plans/${planId}/boundary`).set('Authorization', `Bearer ${owner.token}`).send({ geometry: polygon, source: 'manual-draw' });
+    expect(boundary.status).toBe(201);
+    expect(boundary.body.data.boundary.calculatedArea).toBeGreaterThan(0);
+    expect(await FarmBoundaryModel.countDocuments({ farmPlanId: planId, isActive: true })).toBe(1);
+
+    const scenes = await request(app).post(`/api/v1/remote-monitoring/plans/${planId}/satellite/request`).set('Authorization', `Bearer ${owner.token}`).send({ dateRange: { startDate: new Date(Date.now() - 30 * 86400000).toISOString(), endDate: new Date().toISOString() }, maximumCloudCoverage: 80, analysisTypes: ['ndvi'] });
+    expect(scenes.status).toBe(201);
+    expect(scenes.body.data.isSimulated).toBe(true);
+    expect(await RemoteSensingSceneModel.countDocuments({ farmPlanId: planId })).toBeGreaterThan(0);
+    expect(await MonitoringZoneModel.countDocuments({ farmPlanId: planId })).toBeGreaterThan(0);
+
+    const zones = await request(app).get(`/api/v1/remote-monitoring/plans/${planId}/zones`).set('Authorization', `Bearer ${owner.token}`);
+    const zoneId = zones.body.data.zones[0]._id;
+    const task = await request(app).post(`/api/v1/remote-monitoring/zones/${zoneId}/create-task`).set('Authorization', `Bearer ${owner.token}`).send({});
+    expect(task.status).toBe(201);
+    expect(task.body.data.task.category).toBe('Inspection');
+
+    const observation = await request(app).post(`/api/v1/remote-monitoring/plans/${planId}/observations`).set('Authorization', `Bearer ${owner.token}`).send({ monitoringZoneId: zoneId, title: 'Zone inspection note', observedCondition: 'dry', severity: 'medium', imageUrls: [] });
+    expect(observation.status).toBe(201);
+
+    const dashboard = await request(app).get(`/api/v1/remote-monitoring/plans/${planId}/dashboard`).set('Authorization', `Bearer ${owner.token}`);
+    expect(dashboard.status).toBe(200);
+    expect(dashboard.body.data.dataQuality.isSimulated).toBe(true);
+
+    const report = await request(app).post(`/api/v1/remote-monitoring/plans/${planId}/reports`).set('Authorization', `Bearer ${owner.token}`).send({ reportType: 'weekly-monitoring' });
+    expect(report.status).toBe(201);
   });
 });
