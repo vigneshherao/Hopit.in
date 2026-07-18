@@ -4,6 +4,13 @@ import { AgreementModel } from '@/models/agreement.model.js';
 import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { ApplicationNegotiationModel } from '@/models/application-negotiation.model.js';
 import { ApplicationModel } from '@/models/application.model.js';
+import { ADMIN_PERMISSIONS } from '@/constants/admin.constants.js';
+import { AdminActionLogModel } from '@/models/admin-action-log.model.js';
+import { AdminInternalNoteModel } from '@/models/admin-internal-note.model.js';
+import { AdminNotificationPreferenceModel } from '@/models/admin-notification-preference.model.js';
+import { AdminProfileModel } from '@/models/admin-profile.model.js';
+import { AdminRoleModel } from '@/models/admin-role.model.js';
+import { AdminSavedViewModel } from '@/models/admin-saved-view.model.js';
 import { ChatAttachmentModel } from '@/models/chat-attachment.model.js';
 import { ChatLocationModel } from '@/models/chat-location.model.js';
 import { ConversationBlockModel } from '@/models/conversation-block.model.js';
@@ -11,11 +18,16 @@ import { ConversationMemberModel } from '@/models/conversation-member.model.js';
 import { ConversationModel } from '@/models/conversation.model.js';
 import { FarmPlanModel } from '@/models/farm-plan.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
+import { ImpersonationSessionModel } from '@/models/impersonation-session.model.js';
 import { LandModel } from '@/models/land.model.js';
+import { LoginHistoryModel } from '@/models/login-history.model.js';
 import { MessageModel } from '@/models/message.model.js';
+import { UserStatusHistoryModel } from '@/models/user-status-history.model.js';
+import { UserVerificationModel } from '@/models/user-verification.model.js';
 import { UserModel } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
 import { generateTasksForFarmPlan } from '@/services/farm-task.service.js';
+import { ensureSystemAdminRoles } from '@/utils/adminPermission.util.js';
 import { logger } from '@/utils/logger.js';
 
 const demoPassword = 'HoptIt@123';
@@ -29,6 +41,10 @@ const demoUsers = [
   { name: 'Demo Investor', email: 'investor@hoptit.demo', role: 'owner' },
   { name: 'Demo Dairy Farmer', email: 'dairy@hoptit.demo', role: 'farmer' },
   { name: 'Demo Solar Entrepreneur', email: 'solar@hoptit.demo', role: 'owner' },
+  { name: 'Demo Farm Manager', email: 'manager@hoptit.demo', role: 'worker' },
+  { name: 'Demo Supervisor', email: 'supervisor@hoptit.demo', role: 'worker' },
+  { name: 'Demo Security Admin', email: 'security@hoptit.demo', role: 'admin' },
+  { name: 'Demo Support Admin', email: 'support@hoptit.demo', role: 'admin' },
 ] as const;
 
 const imageUrls = [
@@ -68,42 +84,13 @@ async function seed(): Promise<void> {
     await user.save();
 
     if (demoUser.role === 'worker') {
+      const workerPreset = workerProfilePreset(demoUser.email);
       await WorkerProfileModel.updateOne(
         { userId: user._id },
         {
-          $setOnInsert: {
+          $set: {
             userId: user._id,
-            headline: 'Experienced farm worker for sowing and harvest support',
-            bio: 'Reliable agriculture worker with practical field experience in sowing, harvesting, irrigation support, and daily farm operations.',
-            professionalRoles: ['general-farm-worker', 'seasonal-worker'],
-            skills: ['sowing', 'harvesting'],
-            experienceYears: 3,
-            languages: ['Kannada', 'Tamil'],
-            location: {
-              city: 'Mandya',
-              district: 'Mandya',
-              state: 'Karnataka',
-              country: 'India',
-            },
-            availability: {
-              status: 'available',
-              preferredDurationTypes: ['daily', 'seasonal'],
-              willingToRelocate: false,
-              willingToStayOnFarm: true,
-              maximumTravelDistanceKm: 25,
-            },
-            pricing: {
-              dailyWage: 750,
-              negotiable: true,
-            },
-            workPreferences: {
-              preferredCrops: ['Paddy', 'Sugarcane', 'Vegetables'],
-              preferredWorkTypes: ['sowing', 'harvesting', 'irrigation'],
-              acceptsIndividualWork: true,
-              acceptsTeamWork: true,
-              acceptsFarmManagement: false,
-              acceptsNightStay: true,
-            },
+            ...workerPreset,
           },
         },
         { upsert: true },
@@ -129,6 +116,7 @@ async function seed(): Promise<void> {
   await seedApplications(owner._id, admin?._id);
   await seedAIHistory(owner._id);
   await seedFarmPlans(owner._id);
+  await seedAdminFoundation();
   await seedChatDemoData();
 
   logger.info('Development demo users seeded. Password: HoptIt@123');
@@ -284,6 +272,259 @@ const chatSeedTexts = [
   'Please share photos after the disease monitoring round.',
   'Packing crates should arrive before harvest day.',
 ];
+
+function workerProfilePreset(email: string) {
+  const presets: Record<string, Record<string, unknown>> = {
+    'manager@hoptit.demo': {
+      headline: 'Full-time farm manager for remote landowners',
+      bio: 'Experienced farm manager who can supervise daily operations, workers, input purchase, crop schedules, and owner progress updates for remote landowners.',
+      professionalRoles: ['farm-manager', 'farm-supervisor'],
+      skills: ['worker-management', 'crop-planning', 'farm-accounting', 'reporting', 'inventory-management'],
+      experienceYears: 9,
+      experienceDescription: 'Managed vegetable, banana, and coconut farms across Karnataka and Tamil Nadu.',
+      languages: ['Kannada', 'Tamil', 'English'],
+      profileImage: imageUrls[1],
+      coverImage: imageUrls[0],
+      location: { address: 'Demo manager village road', village: 'Srirangapatna', city: 'Mandya', district: 'Mandya', state: 'Karnataka', country: 'India', pincode: '571438', coordinates: { type: 'Point', coordinates: [76.7047, 12.4237] } },
+      availability: { status: 'available', availableFrom: new Date(), preferredDurationTypes: ['monthly', 'long-term', 'contract'], willingToRelocate: true, willingToStayOnFarm: true, maximumTravelDistanceKm: 250 },
+      pricing: { monthlySalary: 42000, seasonalRate: 180000, negotiable: true },
+      workPreferences: { preferredCrops: ['Tomato', 'Banana', 'Coconut', 'Vegetables'], preferredWorkTypes: ['worker-management', 'crop-planning', 'reporting'], acceptsIndividualWork: true, acceptsTeamWork: true, acceptsFarmManagement: true, acceptsNightStay: true },
+      identityVerification: { status: 'verified', verifiedAt: new Date() },
+      documents: [{ type: 'identity-proof', name: 'Demo Aadhaar verification', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', verificationStatus: 'verified', uploadedAt: new Date() }],
+      portfolio: [{ title: 'Remote tomato farm management', description: 'Managed irrigation, labour, harvest and weekly owner reporting.', images: [imageUrls[0]], cropOrWorkType: 'Tomato', location: 'Mandya', completedAt: new Date() }],
+      rating: { average: 4.8, count: 24 },
+      completedJobs: 38,
+      profileViews: 410,
+      responseRate: 96,
+      isFeatured: true,
+      isActive: true,
+    },
+    'supervisor@hoptit.demo': {
+      headline: 'Field supervisor for irrigation, harvesting and labour teams',
+      bio: 'Hands-on farm supervisor for daily field inspection, irrigation rounds, fertilizer schedules, harvesting teams, packing and transport coordination.',
+      professionalRoles: ['farm-supervisor', 'irrigation-specialist'],
+      skills: ['irrigation', 'fertilizer-application', 'harvesting', 'worker-management', 'disease-identification'],
+      experienceYears: 6,
+      experienceDescription: 'Supervised paddy, vegetable, poultry feed, and horticulture operations.',
+      languages: ['Tamil', 'Malayalam', 'English'],
+      profileImage: imageUrls[2],
+      coverImage: imageUrls[3],
+      location: { address: 'Demo supervisor lane', village: 'Pollachi', city: 'Pollachi', district: 'Coimbatore', state: 'Tamil Nadu', country: 'India', pincode: '642001', coordinates: { type: 'Point', coordinates: [77.008, 10.657] } },
+      availability: { status: 'partially-available', availableFrom: new Date(), preferredDurationTypes: ['weekly', 'monthly', 'seasonal'], willingToRelocate: true, willingToStayOnFarm: false, maximumTravelDistanceKm: 120 },
+      pricing: { dailyWage: 1200, weeklyRate: 7500, monthlySalary: 32000, negotiable: true },
+      workPreferences: { preferredCrops: ['Paddy', 'Vegetables', 'Banana'], preferredWorkTypes: ['irrigation', 'harvesting', 'fertilizer-application'], acceptsIndividualWork: true, acceptsTeamWork: true, acceptsFarmManagement: false, acceptsNightStay: false },
+      identityVerification: { status: 'pending' },
+      documents: [{ type: 'experience-certificate', name: 'Demo supervisor experience letter', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', verificationStatus: 'pending', uploadedAt: new Date() }],
+      portfolio: [{ title: 'Harvest team supervision', description: 'Coordinated harvest, grading and crate dispatch.', images: [imageUrls[2]], cropOrWorkType: 'Harvesting', location: 'Coimbatore', completedAt: new Date() }],
+      rating: { average: 4.5, count: 18 },
+      completedJobs: 27,
+      profileViews: 260,
+      responseRate: 91,
+      isFeatured: true,
+      isActive: true,
+    },
+  };
+
+  return presets[email] ?? {
+    headline: 'Experienced farm worker for sowing and harvest support',
+    bio: 'Reliable agriculture worker with practical field experience in sowing, harvesting, irrigation support, and daily farm operations.',
+    professionalRoles: ['general-farm-worker', 'seasonal-worker'],
+    skills: ['sowing', 'harvesting', 'irrigation', 'weeding'],
+    experienceYears: 3,
+    experienceDescription: 'Worked with paddy, sugarcane, vegetables and seasonal harvest teams.',
+    languages: ['Kannada', 'Tamil'],
+    profileImage: imageUrls[0],
+    coverImage: imageUrls[1],
+    location: { city: 'Mandya', district: 'Mandya', state: 'Karnataka', country: 'India', coordinates: { type: 'Point', coordinates: [76.7047, 12.4237] } },
+    availability: { status: 'available', availableFrom: new Date(), preferredDurationTypes: ['daily', 'seasonal'], willingToRelocate: false, willingToStayOnFarm: true, maximumTravelDistanceKm: 25 },
+    pricing: { dailyWage: 750, weeklyRate: 4800, negotiable: true },
+    workPreferences: { preferredCrops: ['Paddy', 'Sugarcane', 'Vegetables'], preferredWorkTypes: ['sowing', 'harvesting', 'irrigation'], acceptsIndividualWork: true, acceptsTeamWork: true, acceptsFarmManagement: false, acceptsNightStay: true },
+    identityVerification: { status: 'verified', verifiedAt: new Date() },
+    documents: [{ type: 'identity-proof', name: 'Demo worker identity proof', url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', verificationStatus: 'verified', uploadedAt: new Date() }],
+    portfolio: [{ title: 'Seasonal harvest support', description: 'Supported paddy and vegetable harvest teams.', images: [imageUrls[3]], cropOrWorkType: 'Harvesting', location: 'Mandya', completedAt: new Date() }],
+    rating: { average: 4.4, count: 12 },
+    completedJobs: 21,
+    profileViews: 190,
+    responseRate: 88,
+    isFeatured: false,
+    isActive: true,
+  };
+}
+
+async function seedAdminFoundation() {
+  await ensureSystemAdminRoles();
+  const users = await UserModel.find({ email: { $in: demoUsers.map((user) => user.email) } });
+  const byEmail = new Map(users.map((user) => [user.email, user]));
+  const admin = byEmail.get('admin@hoptit.demo');
+  const securityAdmin = byEmail.get('security@hoptit.demo');
+  const supportAdmin = byEmail.get('support@hoptit.demo');
+  const owner = byEmail.get('owner@hoptit.demo');
+  const farmer = byEmail.get('farmer@hoptit.demo');
+  const worker = byEmail.get('worker@hoptit.demo');
+  const supervisor = byEmail.get('supervisor@hoptit.demo');
+  if (!admin || !owner || !farmer || !worker) return;
+
+  const superRole = await AdminRoleModel.findOne({ slug: 'super-admin' });
+  const securityRole = await AdminRoleModel.findOne({ slug: 'security-admin' });
+  const supportRole = await AdminRoleModel.findOne({ slug: 'support-admin' });
+  const adminSpecs = [
+    { user: admin, role: superRole, code: 'ADM-DEMO-ROOT', department: 'Platform', jobTitle: 'Demo Super Admin' },
+    { user: securityAdmin, role: securityRole, code: 'ADM-DEMO-SEC', department: 'Security', jobTitle: 'Demo Security Admin' },
+    { user: supportAdmin, role: supportRole, code: 'ADM-DEMO-SUP', department: 'Support', jobTitle: 'Demo Support Admin' },
+  ].filter((spec) => spec.user && spec.role);
+
+  for (const spec of adminSpecs) {
+    await AdminProfileModel.updateOne(
+      { userId: spec.user!._id },
+      {
+        $set: {
+          userId: spec.user!._id,
+          adminCode: spec.code,
+          displayName: spec.user!.name,
+          roleIds: [spec.role!._id],
+          status: 'active',
+          department: spec.department,
+          jobTitle: spec.jobTitle,
+          permissionsVersion: 1,
+          activatedAt: new Date(),
+          createdBy: admin._id,
+          updatedBy: admin._id,
+          metadata: { seededDemo: true },
+        },
+      },
+      { upsert: true },
+    );
+  }
+
+  const adminProfile = await AdminProfileModel.findOne({ userId: admin._id });
+  await AdminNotificationPreferenceModel.updateOne(
+    { adminId: admin._id },
+    { $set: { adminId: admin._id, digestFrequency: 'instant', channels: ['in-app', 'email'], categories: { verifications: true, users: true, security: true, support: true } } },
+    { upsert: true },
+  );
+
+  const savedViews = [
+    { name: 'Pending verifications', resourceType: 'verifications', filters: { status: 'pending' }, sort: 'newest', columns: ['user', 'type', 'status', 'submittedAt'], isDefault: true },
+    { name: 'Active owners', resourceType: 'users', filters: { role: 'owner', status: 'active' }, sort: 'last-login', columns: ['name', 'email', 'role', 'createdAt'], isDefault: false },
+    { name: 'Failed security events', resourceType: 'audit-logs', filters: { result: 'failed' }, sort: 'newest', columns: ['action', 'targetType', 'result', 'createdAt'], isDefault: false },
+  ] as const;
+
+  for (const view of savedViews) {
+    await AdminSavedViewModel.updateOne({ adminId: admin._id, resourceType: view.resourceType, name: view.name }, { $set: { adminId: admin._id, ...view } }, { upsert: true });
+  }
+
+  const verificationTargets = [
+    { user: owner, type: 'land-owner', status: 'approved', notes: 'Demo owner profile verified.' },
+    { user: farmer, type: 'farmer', status: 'pending', notes: 'Demo farmer verification waiting for review.' },
+    { user: worker, type: 'worker', status: 'approved', notes: 'Demo worker identity verified.' },
+    { user: supervisor, type: 'farm-manager', status: 'under-review', notes: 'Demo supervisor experience under review.' },
+  ].filter((item) => item.user);
+
+  for (const item of verificationTargets) {
+    await UserVerificationModel.updateOne(
+      { userId: item.user!._id, verificationType: item.type },
+      {
+        $set: {
+          userId: item.user!._id,
+          verificationType: item.type,
+          status: item.status,
+          submittedDocuments: [{ documentType: `${item.type}-document`, submittedAt: new Date() }],
+          reviewNotes: item.notes,
+          reviewedBy: item.status === 'approved' ? admin._id : undefined,
+          reviewedAt: item.status === 'approved' ? new Date() : undefined,
+          metadata: { seededDemo: true },
+        },
+      },
+      { upsert: true },
+    );
+  }
+
+  const notes = [
+    { userId: owner._id, visibility: 'support', content: 'Demo note: owner prefers WhatsApp-style updates and weekly land verification summaries.' },
+    { userId: farmer._id, visibility: 'admin', content: 'Demo note: farmer is interested in lease and revenue-share listings near Mandya.' },
+    { userId: worker._id, visibility: 'security', content: 'Demo note: worker identity has been reviewed with no risk flags.' },
+  ] as const;
+  for (const note of notes) {
+    await AdminInternalNoteModel.updateOne({ userId: note.userId, authorId: admin._id, content: note.content }, { $set: { ...note, authorId: admin._id } }, { upsert: true });
+  }
+
+  const now = Date.now();
+  for (const [index, user] of [admin, owner, farmer, worker, securityAdmin, supportAdmin].filter(Boolean).entries()) {
+    await LoginHistoryModel.updateOne(
+      { userId: user!._id, email: user!.email, 'createdAt': { $gte: new Date(now - 14 * 24 * 60 * 60_000) } },
+      {
+        $set: {
+          userId: user!._id,
+          email: user!.email,
+          success: index % 5 !== 4,
+          failureReasonCategory: index % 5 === 4 ? 'invalid-credentials' : undefined,
+          device: index % 2 === 0 ? 'Chrome on macOS' : 'Mobile Safari',
+          browser: index % 2 === 0 ? 'Chrome' : 'Safari',
+          platform: index % 2 === 0 ? 'macOS' : 'iOS',
+          ip: `127.0.0.${index + 1}`,
+          approximateLocation: index % 2 === 0 ? 'Bengaluru, Karnataka' : 'Coimbatore, Tamil Nadu',
+          riskFlags: index % 5 === 4 ? ['failed-demo-login'] : [],
+          createdAt: new Date(now - index * 6 * 60 * 60_000),
+        },
+      },
+      { upsert: true },
+    );
+  }
+
+  await createStatusHistoryOnce({ userId: farmer._id, previousStatus: 'pending', newStatus: 'active', reason: 'Demo account activated after profile review.', changedBy: admin._id, metadata: { seededDemo: true, seedKey: 'demo-status-farmer-active' } });
+  await createStatusHistoryOnce({ userId: worker._id, previousStatus: 'active', newStatus: 'restricted', reason: 'Demo temporary restriction for documentation refresh.', changedBy: admin._id, expiresAt: new Date(now + 7 * 24 * 60 * 60_000), metadata: { seededDemo: true, seedKey: 'demo-status-worker-restricted' } });
+
+  await ImpersonationSessionModel.updateOne(
+    { adminId: admin._id, targetUserId: owner._id, ticketReference: 'DEMO-IMP-001' },
+    { $set: { adminId: admin._id, targetUserId: owner._id, reason: 'Demo support troubleshooting session record.', ticketReference: 'DEMO-IMP-001', status: 'ended', startedAt: new Date(now - 2 * 24 * 60 * 60_000), expiresAt: new Date(now - 2 * 24 * 60 * 60_000 + 15 * 60_000), endedAt: new Date(now - 2 * 24 * 60 * 60_000 + 8 * 60_000), endedBy: admin._id, ip: '127.0.0.10', device: 'Demo admin console' } },
+    { upsert: true },
+  );
+
+  await createAuditLogOnce({
+    seedKey: 'demo-audit-admin-login',
+    adminId: admin._id,
+    adminProfileId: adminProfile?._id,
+    action: 'admin-login-reviewed',
+    targetType: 'login-history',
+    permissionUsed: ADMIN_PERMISSIONS.SECURITY_LOGIN_HISTORY_VIEW,
+    result: 'success',
+    reason: 'Demo seeded audit event.',
+  });
+  await createAuditLogOnce({
+    seedKey: 'demo-audit-verification',
+    adminId: admin._id,
+    adminProfileId: adminProfile?._id,
+    action: 'verification-approved',
+    targetType: 'user-verification',
+    targetId: owner._id,
+    permissionUsed: ADMIN_PERMISSIONS.USERS_VERIFY,
+    result: 'success',
+    reason: 'Demo owner verification approved.',
+  });
+  await createAuditLogOnce({
+    seedKey: 'demo-audit-user-note',
+    adminId: admin._id,
+    adminProfileId: adminProfile?._id,
+    action: 'admin-note-created',
+    targetType: 'user',
+    targetId: farmer._id,
+    permissionUsed: ADMIN_PERMISSIONS.SUPPORT_NOTES_CREATE,
+    result: 'success',
+    reason: 'Demo support note created.',
+  });
+}
+
+async function createStatusHistoryOnce(input: Record<string, unknown>) {
+  const seedKey = (input.metadata as Record<string, unknown> | undefined)?.seedKey;
+  if (seedKey && (await UserStatusHistoryModel.exists({ 'metadata.seedKey': seedKey }))) return;
+  await UserStatusHistoryModel.create(input);
+}
+
+async function createAuditLogOnce(input: Record<string, unknown> & { seedKey: string }) {
+  if (await AdminActionLogModel.exists({ 'metadata.seedKey': input.seedKey })) return;
+  const { seedKey, ...payload } = input;
+  await AdminActionLogModel.create({ ...payload, requestId: seedKey, ip: '127.0.0.1', userAgent: 'Hopt It demo seed', metadata: { seededDemo: true, seedKey } });
+}
 
 async function seedFarmPlans(ownerId: unknown) {
   const lands = await LandModel.find({ ownerId }).limit(8);

@@ -5,6 +5,7 @@ import { aiAssistantRouter } from '@/routes/ai-assistant.routes.js';
 import { aiRouter } from '@/routes/ai.routes.js';
 import { applicationRouter } from '@/routes/application.routes.js';
 import { authRouter } from '@/routes/auth.routes.js';
+import { adminRouter } from '@/routes/admin.routes.js';
 import { chatRouter } from '@/routes/chat.routes.js';
 import { diseaseRouter } from '@/routes/disease.routes.js';
 import { farmJobRouter } from '@/routes/farm-job.routes.js';
@@ -23,6 +24,7 @@ import { workerRouter } from '@/routes/worker.routes.js';
 export const apiRouter = Router();
 
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/admin', adminRouter);
 apiRouter.use('/activity', activityRouter);
 apiRouter.use('/applications', applicationRouter);
 apiRouter.use('/chat', chatRouter);

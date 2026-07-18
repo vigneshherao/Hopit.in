@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { env } from '@/config/env.js';
 import { REFRESH_TOKEN_COOKIE_NAME } from '@/constants/auth.constants.js';
+import { LoginHistoryModel } from '@/models/login-history.model.js';
 import { RefreshTokenModel } from '@/models/refresh-token.model.js';
 import { UserModel, type UserDocument } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
@@ -73,15 +74,18 @@ export async function loginUser(input: LoginInput, req: Request): Promise<AuthRe
   const user = await UserModel.findOne({ email: input.email }).select('+password');
 
   if (!user || !(await user.comparePassword(input.password))) {
+    await recordLoginAttempt(req, { email: input.email, success: false, failureReasonCategory: 'invalid-credentials' });
     throw new AppError('Invalid email or password.', 401);
   }
 
   if (!user.isActive) {
+    await recordLoginAttempt(req, { userId: user._id, email: user.email, success: false, failureReasonCategory: 'inactive-account' });
     throw new AppError('Invalid email or password.', 401);
   }
 
   user.lastLoginAt = new Date();
   await user.save();
+  await recordLoginAttempt(req, { userId: user._id, email: user.email, success: true });
 
   return issueAuthResponse(user, req);
 }
@@ -201,4 +205,24 @@ async function issueAuthResponse(
     accessToken,
     refreshToken,
   };
+}
+
+async function recordLoginAttempt(
+  req: Request,
+  input: { userId?: unknown; email?: string; success: boolean; failureReasonCategory?: string },
+) {
+  try {
+    const userAgent = req.get('user-agent') ?? '';
+    await LoginHistoryModel.create({
+      userId: input.userId,
+      email: input.email,
+      success: input.success,
+      failureReasonCategory: input.failureReasonCategory,
+      device: userAgent.slice(0, 240),
+      ip: req.ip,
+      riskFlags: [],
+    });
+  } catch {
+    // Login audit logging should never block authentication.
+  }
 }

@@ -51,4 +51,16 @@ export interface AppEnvironment {
   chatConversationCreateLimitPerHour: number;
   chatSearchLimitPerMinute: number;
   chatAttachmentScanEnabled: boolean;
+  adminModuleEnabled: boolean;
+  adminImpersonationEnabled: boolean;
+  adminImpersonationMaxMinutes: number;
+  adminRecentAuthWindowMinutes: number;
+  adminMaxBulkActionSize: number;
+  adminAuditRetentionDays: number;
+  adminDashboardCacheSeconds: number;
+  adminUserExportMaxRows: number;
+  adminRequire2fa: boolean;
+  adminIpAllowlistEnabled: boolean;
+  adminLoginAlertsEnabled: boolean;
+  verificationSignedUrlExpiryMinutes: number;
 }

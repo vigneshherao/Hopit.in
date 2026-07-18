@@ -1,5 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { ActivityPage } from '@/pages/ActivityPage.jsx';
+import {
+  AdminAccountsPage,
+  AdminAuditLogPage,
+  AdminDashboardPage,
+  AdminNotificationsPage,
+  AdminProfilePage,
+  AdminRolesPage,
+  AdminSavedViewsPage,
+  AdminSettingsPage,
+  AdminUserDetailPage,
+  AdminUsersPage,
+  AdminVerificationDetailPage,
+  AdminVerificationsPage,
+} from '@/pages/AdminPages.jsx';
+import { AdminLayout } from '@/layouts/AdminLayout.jsx';
 import { AppLayout } from '@/layouts/AppLayout.jsx';
 import { AgreementPage } from '@/pages/AgreementPage.jsx';
 import { AiAnalyzerPage } from '@/pages/AiAnalyzerPage.jsx';
@@ -101,6 +116,28 @@ export const router = createBrowserRouter([
             <RoleDashboardPage role="admin" />
           </RoleRoute>
         ),
+      },
+      {
+        path: 'admin',
+        element: (
+          <RoleRoute allowedRoles={['admin']}>
+            <AdminLayout />
+          </RoleRoute>
+        ),
+        children: [
+          { index: true, element: <AdminDashboardPage /> },
+          { path: 'users', element: <AdminUsersPage /> },
+          { path: 'users/:userId', element: <AdminUserDetailPage /> },
+          { path: 'verifications', element: <AdminVerificationsPage /> },
+          { path: 'verifications/:verificationId', element: <AdminVerificationDetailPage /> },
+          { path: 'admins', element: <AdminAccountsPage /> },
+          { path: 'roles', element: <AdminRolesPage /> },
+          { path: 'audit-logs', element: <AdminAuditLogPage /> },
+          { path: 'saved-views', element: <AdminSavedViewsPage /> },
+          { path: 'notifications', element: <AdminNotificationsPage /> },
+          { path: 'profile', element: <AdminProfilePage /> },
+          { path: 'settings', element: <AdminSettingsPage /> },
+        ],
       },
       {
         path: 'profile',

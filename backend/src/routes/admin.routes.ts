@@ -1,0 +1,71 @@
+import { Router } from 'express';
+import { ADMIN_PERMISSIONS } from '@/constants/admin.constants.js';
+import { activateAdminController, activeImpersonationController, adminAccountController, adminAccountsController, adminMeController, adminOverviewController, adminOwnSessionsController, adminRoleController, adminRolesController, adminUserController, adminUsersController, approveVerificationController, assignVerificationController, auditLogController, auditLogsController, createAdminController, createNoteController, createRoleController, createSavedViewController, deactivateAdminController, deactivateUserController, deleteNoteController, deleteRoleController, deleteSavedViewController, deleteUserController, loginHistoryController, logoutAllAdminSessionsController, logoutAllUserSessionsController, notesController, permissionsController, permissionOverrideController, reactivateUserController, rejectVerificationController, resubmitVerificationController, restoreUserController, restrictUserController, revokeAdminOwnSessionController, revokeUserSessionController, savedViewsController, startImpersonationController, startVerificationReviewController, stopImpersonationController, suspendUserController, updateAdminController, updateAdminMeController, updateAdminUserController, updateNoteController, updateRoleController, updateSavedViewController, userSessionsController, verificationController, verificationsController } from '@/controllers/admin.controller.js';
+import { authenticate } from '@/middleware/auth.js';
+import { requireAdmin } from '@/middleware/adminAuth.middleware.js';
+import { requirePermission } from '@/middleware/requirePermission.middleware.js';
+import { requireAnyPermission } from '@/middleware/requireAnyPermission.middleware.js';
+import { validateRequest } from '@/middleware/validate-request.js';
+import { asyncHandler } from '@/utils/async-handler.js';
+import { adminCreateSchema, adminIdParamSchema, adminMeUpdateSchema, adminRolesUpdateSchema, adminUpdateSchema, adminUserQuerySchema, adminUserUpdateSchema, auditLogIdParamSchema, auditQuerySchema, impersonationStartSchema, internalNoteSchema, loginHistoryQuerySchema, noteIdParamSchema, permissionOverrideSchema, reasonSchema, restrictUserSchema, roleCreateSchema, roleIdParamSchema, roleUpdateSchema, savedViewIdParamSchema, savedViewSchema, sessionIdParamSchema, suspendUserSchema, userIdParamSchema, verificationApproveSchema, verificationAssignSchema, verificationIdParamSchema, verificationQuerySchema, verificationRejectSchema, verificationResubmitSchema } from '@/validators/admin.validator.js';
+
+export const adminRouter = Router();
+
+adminRouter.use(authenticate, requireAdmin);
+adminRouter.get('/me', asyncHandler(adminMeController));
+adminRouter.patch('/me', validateRequest({ body: adminMeUpdateSchema }), asyncHandler(updateAdminMeController));
+adminRouter.get('/me/sessions', requirePermission(ADMIN_PERMISSIONS.USERS_MANAGE_SESSIONS), asyncHandler(adminOwnSessionsController));
+adminRouter.delete('/me/sessions/:sessionId', requirePermission(ADMIN_PERMISSIONS.SECURITY_SESSIONS_REVOKE), validateRequest({ params: sessionIdParamSchema }), asyncHandler(revokeAdminOwnSessionController));
+adminRouter.post('/logout-all', requirePermission(ADMIN_PERMISSIONS.SECURITY_SESSIONS_REVOKE), asyncHandler(logoutAllAdminSessionsController));
+adminRouter.get('/dashboard/overview', requirePermission(ADMIN_PERMISSIONS.DASHBOARD_VIEW), asyncHandler(adminOverviewController));
+
+adminRouter.get('/users', requirePermission(ADMIN_PERMISSIONS.USERS_VIEW), validateRequest({ query: adminUserQuerySchema }), asyncHandler(adminUsersController));
+adminRouter.get('/users/:userId', requirePermission(ADMIN_PERMISSIONS.USERS_VIEW), validateRequest({ params: userIdParamSchema }), asyncHandler(adminUserController));
+adminRouter.patch('/users/:userId', requirePermission(ADMIN_PERMISSIONS.USERS_UPDATE), validateRequest({ params: userIdParamSchema, body: adminUserUpdateSchema }), asyncHandler(updateAdminUserController));
+adminRouter.post('/users/:userId/suspend', requirePermission(ADMIN_PERMISSIONS.USERS_SUSPEND), validateRequest({ params: userIdParamSchema, body: suspendUserSchema }), asyncHandler(suspendUserController));
+adminRouter.post('/users/:userId/restrict', requirePermission(ADMIN_PERMISSIONS.USERS_SUSPEND), validateRequest({ params: userIdParamSchema, body: restrictUserSchema }), asyncHandler(restrictUserController));
+adminRouter.post('/users/:userId/restore', requirePermission(ADMIN_PERMISSIONS.USERS_RESTORE), validateRequest({ params: userIdParamSchema, body: reasonSchema }), asyncHandler(restoreUserController));
+adminRouter.post('/users/:userId/deactivate', requirePermission(ADMIN_PERMISSIONS.USERS_SUSPEND), validateRequest({ params: userIdParamSchema, body: reasonSchema }), asyncHandler(deactivateUserController));
+adminRouter.post('/users/:userId/reactivate', requirePermission(ADMIN_PERMISSIONS.USERS_RESTORE), validateRequest({ params: userIdParamSchema, body: reasonSchema }), asyncHandler(reactivateUserController));
+adminRouter.delete('/users/:userId', requirePermission(ADMIN_PERMISSIONS.USERS_DELETE), validateRequest({ params: userIdParamSchema }), asyncHandler(deleteUserController));
+adminRouter.get('/users/:userId/sessions', requirePermission(ADMIN_PERMISSIONS.USERS_MANAGE_SESSIONS), validateRequest({ params: userIdParamSchema }), asyncHandler(userSessionsController));
+adminRouter.delete('/users/:userId/sessions/:sessionId', requirePermission(ADMIN_PERMISSIONS.USERS_MANAGE_SESSIONS), validateRequest({ params: userIdParamSchema.merge(sessionIdParamSchema) }), asyncHandler(revokeUserSessionController));
+adminRouter.post('/users/:userId/logout-all', requirePermission(ADMIN_PERMISSIONS.USERS_MANAGE_SESSIONS), validateRequest({ params: userIdParamSchema }), asyncHandler(logoutAllUserSessionsController));
+adminRouter.get('/users/:userId/login-history', requirePermission(ADMIN_PERMISSIONS.SECURITY_LOGIN_HISTORY_VIEW), validateRequest({ params: userIdParamSchema, query: loginHistoryQuerySchema }), asyncHandler(loginHistoryController));
+adminRouter.get('/users/:userId/notes', requirePermission(ADMIN_PERMISSIONS.SUPPORT_USERS_VIEW), validateRequest({ params: userIdParamSchema }), asyncHandler(notesController));
+adminRouter.post('/users/:userId/notes', requirePermission(ADMIN_PERMISSIONS.SUPPORT_NOTES_CREATE), validateRequest({ params: userIdParamSchema, body: internalNoteSchema }), asyncHandler(createNoteController));
+adminRouter.patch('/users/:userId/notes/:noteId', requirePermission(ADMIN_PERMISSIONS.SUPPORT_NOTES_CREATE), validateRequest({ params: userIdParamSchema.merge(noteIdParamSchema), body: internalNoteSchema.partial() }), asyncHandler(updateNoteController));
+adminRouter.delete('/users/:userId/notes/:noteId', requirePermission(ADMIN_PERMISSIONS.SUPPORT_NOTES_CREATE), validateRequest({ params: userIdParamSchema.merge(noteIdParamSchema) }), asyncHandler(deleteNoteController));
+adminRouter.post('/users/:userId/impersonate', requirePermission(ADMIN_PERMISSIONS.USERS_IMPERSONATE), validateRequest({ params: userIdParamSchema, body: impersonationStartSchema }), asyncHandler(startImpersonationController));
+
+adminRouter.get('/verifications', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ query: verificationQuerySchema }), asyncHandler(verificationsController));
+adminRouter.get('/verifications/:verificationId', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema }), asyncHandler(verificationController));
+adminRouter.post('/verifications/:verificationId/assign', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema, body: verificationAssignSchema }), asyncHandler(assignVerificationController));
+adminRouter.post('/verifications/:verificationId/start-review', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema }), asyncHandler(startVerificationReviewController));
+adminRouter.post('/verifications/:verificationId/approve', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema, body: verificationApproveSchema }), asyncHandler(approveVerificationController));
+adminRouter.post('/verifications/:verificationId/reject', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema, body: verificationRejectSchema }), asyncHandler(rejectVerificationController));
+adminRouter.post('/verifications/:verificationId/request-resubmission', requirePermission(ADMIN_PERMISSIONS.USERS_VERIFY), validateRequest({ params: verificationIdParamSchema, body: verificationResubmitSchema }), asyncHandler(resubmitVerificationController));
+
+adminRouter.get('/admins', requirePermission(ADMIN_PERMISSIONS.ADMINS_VIEW), asyncHandler(adminAccountsController));
+adminRouter.post('/admins', requirePermission(ADMIN_PERMISSIONS.ADMINS_CREATE), validateRequest({ body: adminCreateSchema }), asyncHandler(createAdminController));
+adminRouter.get('/admins/:adminId', requirePermission(ADMIN_PERMISSIONS.ADMINS_VIEW), validateRequest({ params: adminIdParamSchema }), asyncHandler(adminAccountController));
+adminRouter.patch('/admins/:adminId', requirePermission(ADMIN_PERMISSIONS.ADMINS_UPDATE), validateRequest({ params: adminIdParamSchema, body: adminUpdateSchema }), asyncHandler(updateAdminController));
+adminRouter.post('/admins/:adminId/activate', requirePermission(ADMIN_PERMISSIONS.ADMINS_UPDATE), validateRequest({ params: adminIdParamSchema }), asyncHandler(activateAdminController));
+adminRouter.post('/admins/:adminId/deactivate', requirePermission(ADMIN_PERMISSIONS.ADMINS_DEACTIVATE), validateRequest({ params: adminIdParamSchema }), asyncHandler(deactivateAdminController));
+adminRouter.post('/admins/:adminId/roles', requirePermission(ADMIN_PERMISSIONS.ADMINS_ASSIGN_ROLES), validateRequest({ params: adminIdParamSchema, body: adminRolesUpdateSchema }), asyncHandler(updateAdminController));
+adminRouter.post('/admins/:adminId/permission-overrides', requirePermission(ADMIN_PERMISSIONS.ADMINS_ASSIGN_PERMISSIONS), validateRequest({ params: adminIdParamSchema, body: permissionOverrideSchema }), asyncHandler(permissionOverrideController));
+
+adminRouter.get('/roles', requirePermission(ADMIN_PERMISSIONS.ADMINS_VIEW), asyncHandler(adminRolesController));
+adminRouter.post('/roles', requirePermission(ADMIN_PERMISSIONS.ADMINS_ASSIGN_ROLES), validateRequest({ body: roleCreateSchema }), asyncHandler(createRoleController));
+adminRouter.get('/roles/:roleId', requirePermission(ADMIN_PERMISSIONS.ADMINS_VIEW), validateRequest({ params: roleIdParamSchema }), asyncHandler(adminRoleController));
+adminRouter.patch('/roles/:roleId', requirePermission(ADMIN_PERMISSIONS.ADMINS_ASSIGN_ROLES), validateRequest({ params: roleIdParamSchema, body: roleUpdateSchema }), asyncHandler(updateRoleController));
+adminRouter.delete('/roles/:roleId', requirePermission(ADMIN_PERMISSIONS.ADMINS_ASSIGN_ROLES), validateRequest({ params: roleIdParamSchema }), asyncHandler(deleteRoleController));
+adminRouter.get('/permissions', requirePermission(ADMIN_PERMISSIONS.ADMINS_VIEW), asyncHandler(permissionsController));
+adminRouter.get('/audit-logs', requireAnyPermission(ADMIN_PERMISSIONS.SECURITY_AUDIT_VIEW, ADMIN_PERMISSIONS.ADMINS_VIEW_AUDIT), validateRequest({ query: auditQuerySchema }), asyncHandler(auditLogsController));
+adminRouter.get('/audit-logs/:auditLogId', requireAnyPermission(ADMIN_PERMISSIONS.SECURITY_AUDIT_VIEW, ADMIN_PERMISSIONS.ADMINS_VIEW_AUDIT), validateRequest({ params: auditLogIdParamSchema }), asyncHandler(auditLogController));
+adminRouter.get('/saved-views', asyncHandler(savedViewsController));
+adminRouter.post('/saved-views', validateRequest({ body: savedViewSchema }), asyncHandler(createSavedViewController));
+adminRouter.patch('/saved-views/:viewId', validateRequest({ params: savedViewIdParamSchema, body: savedViewSchema.partial() }), asyncHandler(updateSavedViewController));
+adminRouter.delete('/saved-views/:viewId', validateRequest({ params: savedViewIdParamSchema }), asyncHandler(deleteSavedViewController));
+adminRouter.get('/impersonation/active', requirePermission(ADMIN_PERMISSIONS.USERS_IMPERSONATE), asyncHandler(activeImpersonationController));
+adminRouter.post('/impersonation/stop', requirePermission(ADMIN_PERMISSIONS.USERS_IMPERSONATE), asyncHandler(stopImpersonationController));

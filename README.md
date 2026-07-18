@@ -63,6 +63,18 @@ REMOTE_MONITORING_MAX_ORTHOMOSAIC_SIZE_MB=250
 REMOTE_MONITORING_MAX_IMAGES_PER_SURVEY=50
 MAP_TILE_BASE_URL=https://tile.openstreetmap.org/{z}/{x}/{y}.png
 SIGNED_FILE_URL_EXPIRY_MINUTES=30
+ADMIN_MODULE_ENABLED=true
+ADMIN_IMPERSONATION_ENABLED=false
+ADMIN_IMPERSONATION_MAX_MINUTES=15
+ADMIN_RECENT_AUTH_WINDOW_MINUTES=10
+ADMIN_MAX_BULK_ACTION_SIZE=100
+ADMIN_AUDIT_RETENTION_DAYS=2555
+ADMIN_DASHBOARD_CACHE_SECONDS=60
+ADMIN_USER_EXPORT_MAX_ROWS=10000
+ADMIN_REQUIRE_2FA=false
+ADMIN_IP_ALLOWLIST_ENABLED=false
+ADMIN_LOGIN_ALERTS_ENABLED=true
+VERIFICATION_SIGNED_URL_EXPIRY_MINUTES=10
 ```
 
 ## Running Frontend
@@ -126,7 +138,7 @@ Backend:
 - `npm run build --workspace backend`: compile TypeScript to `dist`.
 - `npm start --workspace backend`: run compiled server.
 - `npm run lint --workspace backend`: run ESLint.
-- `npm run seed --workspace backend`: seed development demo users.
+- `npm run seed --workspace backend`: seed demo users, admin profiles, lands, applications, AI history, farm plans, tasks, workers, chat, verification records, saved views, and audit data.
 - `npm run test --workspace backend`: run API tests.
 - `npm run test --workspace frontend`: run frontend auth tests.
 
@@ -181,11 +193,39 @@ Use `backend` as the service root.
 
 ## Notes
 
+## Demo Data
+
+Run MongoDB locally or set `MONGODB_URI` to your hosted database, then seed the app:
+
+```bash
+npm run seed --workspace backend
+```
+
+Demo password for seeded users:
+
+```text
+HoptIt@123
+```
+
+Useful demo accounts:
+
+- `owner@hoptit.demo`
+- `farmer@hoptit.demo`
+- `worker@hoptit.demo`
+- `manager@hoptit.demo`
+- `admin@hoptit.demo`
+
 ## Authentication Architecture
 
 Hopt It uses JWT access tokens plus rotating refresh tokens. Access tokens are short lived and sent with `Authorization: Bearer <token>`. Refresh tokens are random secrets stored only as SHA-256 hashes in MongoDB and sent to the browser through an HTTP-only cookie.
 
 See [docs/authentication.md](/Users/vigneshhe/Desktop/Hopit.in/docs/authentication.md) for the full flow.
+
+## Admin Foundation
+
+Hopt It includes a permission-aware admin console for platform overview, user management, verification review, admin roles, permission overrides, saved views, login history, impersonation records, internal notes, and audit logs.
+
+See [docs/admin-foundation.md](/Users/vigneshhe/Desktop/Hopit.in/docs/admin-foundation.md).
 
 ## Land Marketplace
 
