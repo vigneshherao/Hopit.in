@@ -12,6 +12,8 @@ import { FarmJobDetailPage } from '@/pages/FarmJobDetailPage.jsx';
 import { FarmJobsPage } from '@/pages/FarmJobsPage.jsx';
 import { FarmManagementDetailPage } from '@/pages/FarmManagementDetailPage.jsx';
 import { FarmManagementPage } from '@/pages/FarmManagementPage.jsx';
+import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
+import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmProgressReportCreatePage } from '@/pages/FarmProgressReportCreatePage.jsx';
 import { HomePage } from '@/pages/HomePage.jsx';
 import { LandApplyPage } from '@/pages/LandApplyPage.jsx';
@@ -276,6 +278,22 @@ export const router = createBrowserRouter([
         element: (
           <RoleRoute allowedRoles={['worker', 'admin']}>
             <FarmProgressReportCreatePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'farm-planner',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <FarmPlannerPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <FarmPlannerDetailPage />
           </RoleRoute>
         ),
       },

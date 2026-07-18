@@ -202,6 +202,20 @@ Hopt It includes authenticated AI land analysis, crop recommendation, business r
 
 See [docs/ai-land-analyzer.md](/Users/vigneshhe/Desktop/Hopit.in/docs/ai-land-analyzer.md).
 
+## AI Farm Planner
+
+Hopt It can convert a selected land and crop into a versioned farming execution plan with preparation, seeds, workers, equipment, expenses, timeline, harvest, risk, and profit projections.
+
+Planner routes:
+
+- `POST /api/v1/farm-planner/generate-plan`
+- `GET /api/v1/farm-planner/plans`
+- `GET /api/v1/farm-planner/plans/:id`
+- `PATCH /api/v1/farm-planner/plans/:id`
+- `DELETE /api/v1/farm-planner/plans/:id`
+- `POST /api/v1/farm-planner/plans/:id/recalculate`
+- `GET /api/v1/farm-planner/plans/:id/dashboard`
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

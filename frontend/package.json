@@ -25,15 +25,16 @@
     "react-hook-form": "^7.53.2",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.1.1",
+    "recharts": "^3.9.2",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",
-    "@vitejs/plugin-react": "^4.3.4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.16.0",
     "eslint-plugin-react": "^7.37.2",
