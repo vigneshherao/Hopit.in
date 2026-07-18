@@ -34,8 +34,10 @@ export const WORKER_BOOKING_STATUSES = [
   'completed',
 ] as const;
 export const AI_HISTORY_FEATURES = [
+  'land-analysis',
   'chat',
   'crop-recommendation',
+  'business-recommendation',
   'farm-plan',
   'profit-calculation',
   'disease-analysis',

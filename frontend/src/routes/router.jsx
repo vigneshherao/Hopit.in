@@ -1,7 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/layouts/AppLayout.jsx';
 import { AgreementPage } from '@/pages/AgreementPage.jsx';
+import { AiAnalyzerPage } from '@/pages/AiAnalyzerPage.jsx';
+import { AiHistoryPage } from '@/pages/AiHistoryPage.jsx';
 import { AiPage } from '@/pages/AiPage.jsx';
+import { AiResultsPage } from '@/pages/AiResultsPage.jsx';
 import { ApplicationDetailPage } from '@/pages/ApplicationDetailPage.jsx';
 import { DashboardPage } from '@/pages/DashboardPage.jsx';
 import { FarmJobCreatePage } from '@/pages/FarmJobCreatePage.jsx';
@@ -277,6 +280,30 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'ai', element: <AiPage /> },
+      {
+        path: 'ai-analyzer',
+        element: (
+          <ProtectedRoute>
+            <AiAnalyzerPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'ai-results/:id',
+        element: (
+          <ProtectedRoute>
+            <AiResultsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'ai-history',
+        element: (
+          <ProtectedRoute>
+            <AiHistoryPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: 'not-found', element: <NotFoundPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

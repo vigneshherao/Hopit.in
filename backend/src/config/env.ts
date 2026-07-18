@@ -31,6 +31,10 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(120000).default(30000),
+  AI_DAILY_REQUEST_LIMIT: z.coerce.number().int().positive().max(500).default(25),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -54,4 +58,8 @@ export const env: AppEnvironment = {
   cloudinaryCloudName: parsed.data.CLOUDINARY_CLOUD_NAME,
   cloudinaryApiKey: parsed.data.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: parsed.data.CLOUDINARY_API_SECRET,
+  openaiApiKey: parsed.data.OPENAI_API_KEY,
+  openaiModel: parsed.data.OPENAI_MODEL,
+  aiRequestTimeoutMs: parsed.data.AI_REQUEST_TIMEOUT_MS,
+  aiDailyRequestLimit: parsed.data.AI_DAILY_REQUEST_LIMIT,
 };

@@ -1,6 +1,7 @@
 import { connectDatabase, disconnectDatabase } from '@/config/database.js';
 import { env } from '@/config/env.js';
 import { AgreementModel } from '@/models/agreement.model.js';
+import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { ApplicationNegotiationModel } from '@/models/application-negotiation.model.js';
 import { ApplicationModel } from '@/models/application.model.js';
 import { LandModel } from '@/models/land.model.js';
@@ -117,8 +118,72 @@ async function seed(): Promise<void> {
   }
 
   await seedApplications(owner._id, admin?._id);
+  await seedAIHistory(owner._id);
 
   logger.info('Development demo users seeded. Password: HoptIt@123');
+}
+
+async function seedAIHistory(ownerId: unknown) {
+  const lands = await LandModel.find({ ownerId }).limit(6);
+  for (const [index, land] of lands.entries()) {
+    const cropName = ['Tomato', 'Banana', 'Turmeric', 'Coconut', 'Green chilli', 'Fodder maize'][index] ?? 'Vegetables';
+    await AIHistoryModel.updateOne(
+      { userId: ownerId, 'metadata.seedKey': `demo-ai-${land.slug}` },
+      {
+        $set: {
+          userId: ownerId,
+          landId: land._id,
+          feature: 'crop-recommendation',
+          prompt: 'Seeded demo crop recommendation for Hopt It demo data.',
+          input: {
+            landId: land._id,
+            soilType: land.landDetails.soilType,
+            landArea: land.area.value,
+            areaUnit: land.area.unit,
+            state: land.location.state,
+            district: land.location.district,
+            waterAvailability: land.landDetails.waterAvailability,
+            seededDemo: true,
+          },
+          response: buildDemoAIResponse(cropName),
+          provider: 'seed',
+          model: 'demo-data',
+          durationMs: 0,
+          metadata: { seededDemo: true, seedKey: `demo-ai-${land.slug}` },
+        },
+      },
+      { upsert: true },
+    );
+  }
+}
+
+function buildDemoAIResponse(topCrop: string) {
+  const crops = [topCrop, 'Okra', 'Groundnut', 'Marigold', 'Finger millet'];
+  return {
+    summary: `Demo data: ${topCrop} is ranked highest based on the seeded land profile, water availability, road access, and regional market assumptions.`,
+    topRecommendedCrop: topCrop,
+    recommendations: crops.map((crop, index) => ({
+      cropName: crop,
+      suitabilityScore: 88 - index * 6,
+      reason: `Demo data: ${crop} fits the land profile with manageable input cost and local demand.`,
+      idealSeason: index % 2 === 0 ? 'Monsoon' : 'Rabi',
+      estimatedDuration: `${90 + index * 20} days`,
+      waterRequirement: index < 2 ? 'medium' : 'low',
+      investmentRange: { minimum: 45000 + index * 8000, maximum: 85000 + index * 10000, currency: 'INR' },
+      expectedYieldRange: { minimum: 4 + index, maximum: 8 + index, unit: 'tons per acre' },
+      expectedRevenueRange: { minimum: 120000 + index * 15000, maximum: 220000 + index * 20000, currency: 'INR' },
+      expectedProfitRange: { minimum: 55000 + index * 7000, maximum: 125000 + index * 9000, currency: 'INR' },
+      roiRange: { minimum: 35 + index * 3, maximum: 80 + index * 4, unit: 'percentage' },
+      marketDemand: index < 3 ? 'high' : 'medium',
+      majorRisks: ['Price fluctuation', 'Pest pressure', 'Weather variability'],
+      soilPreparation: ['Deep ploughing', 'Add compost', 'Prepare drainage channels'],
+      seedRecommendation: `Use certified ${crop} seed from a trusted local supplier.`,
+      irrigationPlan: ['Irrigate lightly after sowing', 'Use drip irrigation where possible', 'Avoid waterlogging'],
+      fertilizerPlan: ['Apply farmyard manure', 'Use soil-test based NPK', 'Add micronutrients if deficiency appears'],
+      labourRequirement: '2 to 4 workers per acre during peak operations',
+      confidenceScore: 82 - index * 3,
+    })),
+  };
 }
 
 async function seedApplications(ownerId: unknown, adminId: unknown) {

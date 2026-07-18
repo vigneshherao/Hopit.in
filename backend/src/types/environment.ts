@@ -14,4 +14,8 @@ export interface AppEnvironment {
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
   cloudinaryApiSecret?: string;
+  openaiApiKey?: string;
+  openaiModel: string;
+  aiRequestTimeoutMs: number;
+  aiDailyRequestLimit: number;
 }

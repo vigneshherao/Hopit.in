@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { agreementRouter } from '@/routes/agreement.routes.js';
+import { aiRouter } from '@/routes/ai.routes.js';
 import { applicationRouter } from '@/routes/application.routes.js';
 import { authRouter } from '@/routes/auth.routes.js';
 import { farmJobRouter } from '@/routes/farm-job.routes.js';
@@ -14,6 +15,7 @@ export const apiRouter = Router();
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/applications', applicationRouter);
 apiRouter.use('/agreements', agreementRouter);
+apiRouter.use('/ai', aiRouter);
 apiRouter.use('/farm-jobs', farmJobRouter);
 apiRouter.use('/farm-management', farmManagementRouter);
 apiRouter.use('/health', healthRouter);

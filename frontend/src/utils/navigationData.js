@@ -8,6 +8,6 @@ export const navigationItems = [
   { label: 'Workers', href: '/workers', icon: BriefcaseBusiness },
   { label: 'Farm Jobs', href: '/farm-jobs', icon: Sprout },
   { label: 'Bookings', href: '/worker-bookings', icon: CalendarCheck },
-  { label: 'AI', href: '/ai', icon: Bot },
+  { label: 'AI', href: '/ai-analyzer', icon: Bot },
   { label: 'Profile', href: '/profile', icon: UserRound },
 ];

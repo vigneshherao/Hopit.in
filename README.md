@@ -50,6 +50,10 @@ COOKIE_SAME_SITE=lax
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+AI_REQUEST_TIMEOUT_MS=30000
+AI_DAILY_REQUEST_LIMIT=25
 ```
 
 ## Running Frontend
@@ -191,6 +195,12 @@ See [docs/application-workflow.md](/Users/vigneshhe/Desktop/Hopit.in/docs/applic
 Hopt It now supports a hiring marketplace for farm managers, supervisors, skilled agriculture workers, teams, farm jobs, worker bookings, and farm-management progress reporting.
 
 See [docs/worker-hiring.md](/Users/vigneshhe/Desktop/Hopit.in/docs/worker-hiring.md).
+
+## AI Land Analyzer
+
+Hopt It includes authenticated AI land analysis, crop recommendation, business recommendation, chat, and saved history workflows. The frontend never receives AI provider secrets; all provider calls run through the backend.
+
+See [docs/ai-land-analyzer.md](/Users/vigneshhe/Desktop/Hopit.in/docs/ai-land-analyzer.md).
 
 ## Database Models
 
