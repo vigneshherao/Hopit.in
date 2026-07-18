@@ -8,6 +8,8 @@ import { FarmCalendarEventModel } from '@/models/farm-calendar-event.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
+import { WeatherAlertModel } from '@/models/weather-alert.model.js';
+import { WeatherForecastModel } from '@/models/weather-forecast.model.js';
 
 const app = createApp();
 const password = 'HoptIt@123';
@@ -309,5 +311,38 @@ describe('farm planner API', () => {
     const stats = await request(app).get('/api/v1/disease/statistics').set('Authorization', `Bearer ${owner.token}`);
     expect(stats.status).toBe(200);
     expect(stats.body.data.totalAnalyses).toBe(1);
+  });
+
+  it('retrieves weather forecasts, creates predictions and protects farm ownership', async () => {
+    mockFarmPlanResponse();
+    const owner = await register('owner', 'weather-owner@example.com');
+    const other = await register('owner', 'weather-other@example.com');
+    const land = await createLand(owner.user?._id, 'weather-land');
+    const generated = await request(app).post('/api/v1/farm-planner/generate-plan').set('Authorization', `Bearer ${owner.token}`).send({ landId: land._id.toString(), selectedCrop: 'Tomato', selectedSeason: 'monsoon', startDate: new Date().toISOString() });
+    const planId = generated.body.data.plan._id;
+
+    const forbidden = await request(app).get(`/api/v1/weather/current?farmPlanId=${planId}`).set('Authorization', `Bearer ${other.token}`);
+    expect(forbidden.status).toBe(404);
+
+    const forecast = await request(app).get(`/api/v1/weather/forecast?farmPlanId=${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(forecast.status).toBe(200);
+    expect(forecast.body.data.forecasts.length).toBeGreaterThanOrEqual(3);
+    expect(await WeatherForecastModel.countDocuments({ farmPlanId: planId })).toBeGreaterThanOrEqual(3);
+
+    const alerts = await request(app).get(`/api/v1/weather/alerts?farmPlanId=${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(alerts.status).toBe(200);
+    expect(await WeatherAlertModel.countDocuments({ farmPlanId: planId })).toBe(alerts.body.data.alerts.length);
+
+    const pests = await request(app).get(`/api/v1/weather/predictions/pests?farmPlanId=${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(pests.status).toBe(200);
+    expect(pests.body.data.predictions.length).toBeGreaterThan(0);
+
+    const water = await request(app).get(`/api/v1/weather/predictions/water?farmPlanId=${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(water.status).toBe(200);
+    expect(water.body.data.water.waterNeededLitresPerDay).toBeGreaterThanOrEqual(0);
+
+    const refreshed = await request(app).post('/api/v1/weather/refresh').set('Authorization', `Bearer ${owner.token}`).send({ farmPlanId: planId, force: true });
+    expect(refreshed.status).toBe(200);
+    expect(refreshed.body.data.cached).toBe(false);
   });
 });

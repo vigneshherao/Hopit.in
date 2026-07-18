@@ -20,6 +20,7 @@ import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmProgressReportCreatePage } from '@/pages/FarmProgressReportCreatePage.jsx';
 import { FarmTasksPage } from '@/pages/FarmTasksPage.jsx';
+import { FarmWeatherPage } from '@/pages/FarmWeatherPage.jsx';
 import { HomePage } from '@/pages/HomePage.jsx';
 import { LandApplyPage } from '@/pages/LandApplyPage.jsx';
 import { LandCreatePage } from '@/pages/LandCreatePage.jsx';
@@ -339,6 +340,38 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FarmDiseasePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/weather',
+        element: (
+          <ProtectedRoute>
+            <FarmWeatherPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/weather/forecast',
+        element: (
+          <ProtectedRoute>
+            <FarmWeatherPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/weather/alerts',
+        element: (
+          <ProtectedRoute>
+            <FarmWeatherPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/weather/insights',
+        element: (
+          <ProtectedRoute>
+            <FarmWeatherPage />
           </ProtectedRoute>
         ),
       },

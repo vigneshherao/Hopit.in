@@ -10,6 +10,7 @@ import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
 import { FarmDiseasePage } from '@/pages/FarmDiseasePage.jsx';
 import { FarmTasksPage } from '@/pages/FarmTasksPage.jsx';
+import { FarmWeatherPage } from '@/pages/FarmWeatherPage.jsx';
 import { ProtectedRoute } from '@/routes/ProtectedRoute.jsx';
 
 const mocks = vi.hoisted(() => ({
@@ -38,6 +39,16 @@ const mocks = vi.hoisted(() => ({
   diseaseHistory: null,
   diseaseStatistics: null,
   farmDiseaseHistory: null,
+  weatherCurrent: null,
+  weatherForecast: null,
+  weatherInsights: null,
+  weatherAlerts: null,
+  weatherPests: null,
+  weatherDiseases: null,
+  weatherStress: null,
+  weatherWater: null,
+  weatherHealth: null,
+  refreshWeather: { isPending: false, mutate: vi.fn() },
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -75,6 +86,18 @@ vi.mock('@/hooks/useDisease.js', () => ({
   useDiseaseHistory: () => ({ isLoading: false, data: mocks.diseaseHistory }),
   useDiseaseStatistics: () => ({ isLoading: false, data: mocks.diseaseStatistics }),
   useFarmDiseaseHistory: () => ({ isLoading: false, data: mocks.farmDiseaseHistory }),
+}));
+vi.mock('@/hooks/useWeather.js', () => ({
+  useCurrentWeather: () => ({ isLoading: false, data: mocks.weatherCurrent }),
+  useWeatherForecast: () => ({ isLoading: false, data: mocks.weatherForecast }),
+  useWeatherInsights: () => ({ isLoading: false, data: mocks.weatherInsights }),
+  useWeatherAlerts: () => ({ isLoading: false, data: mocks.weatherAlerts }),
+  usePestPrediction: () => ({ isLoading: false, data: mocks.weatherPests }),
+  useDiseasePrediction: () => ({ isLoading: false, data: mocks.weatherDiseases }),
+  useStressPrediction: () => ({ isLoading: false, data: mocks.weatherStress }),
+  useWaterPrediction: () => ({ isLoading: false, data: mocks.weatherWater }),
+  useFarmHealthForecast: () => ({ isLoading: false, data: mocks.weatherHealth }),
+  useRefreshWeather: () => mocks.refreshWeather,
 }));
 
 function renderPage(ui, initialEntries = ['/']) {
@@ -203,6 +226,31 @@ describe('farm planner frontend', () => {
     };
     mocks.diseaseStatistics = { totalAnalyses: 1, averageHealthScore: 68, healthyCrops: 0, mostCommonDisease: 'Leaf spot' };
     mocks.farmDiseaseHistory = { timeline: [{ createdAt: new Date().toISOString(), healthScore: 68 }] };
+    const forecastDay = new Date().toISOString();
+    mocks.weatherCurrent = {
+      current: { temperature: 30, humidity: 82, windSpeed: 18, rainProbability: 70, weatherCondition: 'Light rain', forecastDate: forecastDay },
+      summary: { averageTemperature: 30, averageHumidity: 82, totalRainfall: 24, maxWindSpeed: 24, riskLevel: 'High', riskScore: 68 },
+    };
+    mocks.weatherForecast = {
+      forecasts: [
+        { _id: 'weather1', temperature: 30, humidity: 82, windSpeed: 18, rainProbability: 70, rainfall: 12, weatherCondition: 'Light rain', forecastDate: forecastDay },
+        { _id: 'weather2', temperature: 32, humidity: 78, windSpeed: 22, rainProbability: 60, rainfall: 8, weatherCondition: 'Cloudy', forecastDate: forecastDay },
+      ],
+      charts: [
+        { date: 'Today', temperature: 30, humidity: 82, rainfall: 12, windSpeed: 18, risk: 68 },
+        { date: 'Tomorrow', temperature: 32, humidity: 78, rainfall: 8, windSpeed: 22, risk: 55 },
+      ],
+      summary: { averageTemperature: 31, averageHumidity: 80, totalRainfall: 20, maxWindSpeed: 22, riskLevel: 'High', riskScore: 68 },
+    };
+    mocks.weatherInsights = { insights: [{ _id: 'insight-weather', title: 'Disease risk high', priority: 'High', recommendation: 'Inspect leaves tomorrow morning.' }] };
+    mocks.weatherAlerts = { alerts: [{ _id: 'alert1', title: 'High rain expected', priority: 'High', message: 'Rain is likely tomorrow.', recommendedAction: 'Delay irrigation.' }] };
+    mocks.weatherPests = { predictions: [{ _id: 'pest1', pestName: 'Aphids', riskLevel: 'High', confidence: 82, estimatedDamage: 'Moderate damage possible.' }] };
+    mocks.weatherDiseases = { predictions: [{ _id: 'disease1', diseaseName: 'Leaf Spot', riskLevel: 'High', confidence: 84, reasons: ['High humidity'] }] };
+    mocks.weatherStress = { stress: { waterStress: 40, heatStress: 25, nutrientStress: 30, growthStress: 32 }, recommendedActions: ['Monitor humidity.'] };
+    mocks.weatherWater = { water: { waterNeededLitresPerDay: 1800, nextIrrigation: 'Skip irrigation for 24 hours.', action: 'Reduce irrigation' } };
+    mocks.weatherHealth = { forecast: [{ days: 3, expectedCropHealth: 76 }, { days: 7, expectedCropHealth: 72 }] };
+    mocks.refreshWeather.isPending = false;
+    mocks.refreshWeather.mutate.mockReset();
   });
 
   it('protects farm planner route', () => {
@@ -279,5 +327,15 @@ describe('farm planner frontend', () => {
     await userEvent.upload(screen.getByLabelText(/drop crop images or browse/i), file);
     await userEvent.click(screen.getByRole('button', { name: /analyze crop images/i }));
     expect(mocks.diseaseAnalyze.mutate).toHaveBeenCalled();
+  });
+
+  it('renders weather intelligence dashboard and refreshes forecasts', async () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/weather" element={<FarmWeatherPage />} /></Routes>, ['/farm-planner/plan1/weather']);
+    expect(screen.getByText('Prevent pest, disease and crop stress before it starts')).toBeInTheDocument();
+    expect(screen.getByText('Water requirement')).toBeInTheDocument();
+    expect(screen.getByText('Pest risk prediction')).toBeInTheDocument();
+    expect(screen.getByText('Disease risk prediction')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /refresh weather/i }));
+    expect(mocks.refreshWeather.mutate).toHaveBeenCalledWith({ farmPlanId: 'plan1', force: true });
   });
 });

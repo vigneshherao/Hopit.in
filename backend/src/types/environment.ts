@@ -18,4 +18,7 @@ export interface AppEnvironment {
   openaiModel: string;
   aiRequestTimeoutMs: number;
   aiDailyRequestLimit: number;
+  weatherProvider: string;
+  openWeatherApiKey?: string;
+  weatherCacheTtlMinutes: number;
 }

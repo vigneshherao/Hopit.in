@@ -35,6 +35,9 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(120000).default(30000),
   AI_DAILY_REQUEST_LIMIT: z.coerce.number().int().positive().max(500).default(25),
+  WEATHER_PROVIDER: z.string().trim().default('local'),
+  OPENWEATHER_API_KEY: z.string().optional(),
+  WEATHER_CACHE_TTL_MINUTES: z.coerce.number().int().positive().max(360).default(60),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -62,4 +65,7 @@ export const env: AppEnvironment = {
   openaiModel: parsed.data.OPENAI_MODEL,
   aiRequestTimeoutMs: parsed.data.AI_REQUEST_TIMEOUT_MS,
   aiDailyRequestLimit: parsed.data.AI_DAILY_REQUEST_LIMIT,
+  weatherProvider: parsed.data.WEATHER_PROVIDER,
+  openWeatherApiKey: parsed.data.OPENWEATHER_API_KEY,
+  weatherCacheTtlMinutes: parsed.data.WEATHER_CACHE_TTL_MINUTES,
 };

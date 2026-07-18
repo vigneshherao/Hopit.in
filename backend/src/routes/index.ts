@@ -11,6 +11,7 @@ import { farmManagementRouter } from '@/routes/farm-management.routes.js';
 import { farmPlannerRouter } from '@/routes/farm-planner.routes.js';
 import { healthRouter } from '@/routes/health.routes.js';
 import { landRouter } from '@/routes/land.routes.js';
+import { weatherRouter } from '@/routes/weather.routes.js';
 import { workerBookingRouter } from '@/routes/worker-booking.routes.js';
 import { workerRouter } from '@/routes/worker.routes.js';
 
@@ -28,5 +29,6 @@ apiRouter.use('/farm-management', farmManagementRouter);
 apiRouter.use('/farm-planner', farmPlannerRouter);
 apiRouter.use('/health', healthRouter);
 apiRouter.use('/lands', landRouter);
+apiRouter.use('/weather', weatherRouter);
 apiRouter.use('/worker-bookings', workerBookingRouter);
 apiRouter.use('/workers', workerRouter);
