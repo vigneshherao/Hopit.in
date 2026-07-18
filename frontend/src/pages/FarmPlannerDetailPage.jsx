@@ -1,5 +1,5 @@
 import { Calendar, Droplets, RefreshCcw, Tractor, Users } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Button } from '@/components/ui/button.jsx';
@@ -32,6 +32,8 @@ export function FarmPlannerDetailPage() {
           <div className="mt-4 flex flex-wrap gap-2"><Badge>{labelize(plan.status)}</Badge><Badge variant="secondary">{labelize(plan.currentStage)}</Badge><span className={`rounded-full px-3 py-1 text-xs font-semibold ${riskTone(plan.riskLevel)}`}>{labelize(plan.riskLevel)} risk</span></div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/tasks`}>Tasks</Link></Button>
+          <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}/calendar`}>Calendar</Link></Button>
           <Button variant="outline" disabled={recalculate.isPending} onClick={() => recalculate.mutate({ id: plan._id, payload: { reason: 'Dashboard recalculation' } })}><RefreshCcw className="h-4 w-4" /> Recalculate</Button>
           <Button onClick={() => updatePlan.mutate({ id: plan._id, payload: { status: plan.status === 'active' ? 'paused' : 'active' } })}>{plan.status === 'active' ? 'Pause' : 'Activate'}</Button>
         </div>

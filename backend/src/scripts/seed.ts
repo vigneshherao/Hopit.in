@@ -4,9 +4,12 @@ import { AgreementModel } from '@/models/agreement.model.js';
 import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { ApplicationNegotiationModel } from '@/models/application-negotiation.model.js';
 import { ApplicationModel } from '@/models/application.model.js';
+import { FarmPlanModel } from '@/models/farm-plan.model.js';
+import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
+import { generateTasksForFarmPlan } from '@/services/farm-task.service.js';
 import { logger } from '@/utils/logger.js';
 
 const demoPassword = 'HoptIt@123';
@@ -119,8 +122,115 @@ async function seed(): Promise<void> {
 
   await seedApplications(owner._id, admin?._id);
   await seedAIHistory(owner._id);
+  await seedFarmPlans(owner._id);
 
   logger.info('Development demo users seeded. Password: HoptIt@123');
+}
+
+async function seedFarmPlans(ownerId: unknown) {
+  const lands = await LandModel.find({ ownerId }).limit(8);
+  const crops = ['Tomato', 'Banana', 'Turmeric', 'Coconut', 'Green Chilli', 'Fodder Maize', 'Brinjal', 'Marigold'];
+  for (const [index, land] of lands.entries()) {
+    const crop = crops[index] ?? 'Vegetables';
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - index * 7);
+    const expectedHarvestDate = new Date(startDate);
+    expectedHarvestDate.setDate(expectedHarvestDate.getDate() + 110 + index * 10);
+    const aiRecommendation = buildDemoFarmPlanAI(crop, startDate, 110 + index * 10);
+    await FarmPlanModel.updateOne(
+      { ownerId, landId: land._id, selectedCrop: crop, 'versions.reason': 'seed-demo' },
+      {
+        $set: {
+          ownerId,
+          landId: land._id,
+          selectedCrop: crop,
+          selectedSeason: index % 2 === 0 ? 'monsoon' : 'rabi',
+          planTitle: `${crop} demo execution plan`,
+          description: `Demo plan for ${crop} cultivation generated for scheduler testing.`,
+          startDate,
+          expectedHarvestDate,
+          farmDurationDays: 110 + index * 10,
+          farmDurationMonths: Number(((110 + index * 10) / 30).toFixed(1)),
+          currentStage: 'planning',
+          status: index % 3 === 0 ? 'active' : 'draft',
+          AIRecommendation: aiRecommendation,
+          estimatedInvestment: aiRecommendation.estimatedInvestment,
+          estimatedRevenue: aiRecommendation.estimatedRevenue,
+          estimatedProfit: aiRecommendation.estimatedProfit,
+          expectedROI: aiRecommendation.expectedROI,
+          labourRequirement: aiRecommendation.labourRequirement,
+          equipmentRequirement: aiRecommendation.equipmentRequirement,
+          fertilizerRequirement: aiRecommendation.fertilizerRequirement,
+          waterRequirement: aiRecommendation.waterRequirement,
+          riskLevel: aiRecommendation.riskAnalysis.riskLevel,
+          riskScore: aiRecommendation.riskAnalysis.riskScore,
+          weatherNotes: aiRecommendation.weatherNotes,
+          progress: { percentage: 0, completedStages: [], nextAction: 'Land cleaning', updatedAt: new Date() },
+          versions: [
+            {
+              version: 1,
+              reason: 'seed-demo',
+              AIRecommendation: aiRecommendation,
+              estimatedInvestment: aiRecommendation.estimatedInvestment,
+              estimatedRevenue: aiRecommendation.estimatedRevenue,
+              estimatedProfit: aiRecommendation.estimatedProfit,
+              expectedROI: aiRecommendation.expectedROI,
+              createdAt: new Date(),
+            },
+          ],
+        },
+      },
+      { upsert: true },
+    );
+    const plan = await FarmPlanModel.findOne({ ownerId, landId: land._id, selectedCrop: crop });
+    if (plan && (await FarmTaskModel.countDocuments({ farmPlanId: plan._id })) === 0) await generateTasksForFarmPlan(plan);
+  }
+}
+
+function buildDemoFarmPlanAI(crop: string, startDate: Date, duration: number) {
+  const expectedHarvestDate = new Date(startDate);
+  expectedHarvestDate.setDate(expectedHarvestDate.getDate() + duration);
+  return {
+    planTitle: `${crop} demo execution plan`,
+    description: `Demo data: practical ${crop} execution plan with preparation, sowing, inputs, monitoring, harvest and logistics.`,
+    farmDurationDays: duration,
+    farmDurationMonths: Number((duration / 30).toFixed(1)),
+    expectedHarvestDate,
+    currentStage: 'planning',
+    landPreparation: ['Land cleaning', 'Ploughing', 'Rotavator pass', 'Leveling', 'Water channel preparation'],
+    seedRecommendation: { variety: `Certified ${crop} variety`, seedRate: 'As per local agriculture officer guidance', notes: ['Buy from trusted supplier', 'Treat seed before sowing'] },
+    sowing: { method: 'Line sowing or transplanting based on crop', spacing: 'Crop-specific spacing', steps: ['Prepare nursery if needed', 'Sow in moist soil', 'Maintain spacing'] },
+    waterSchedule: [{ stage: 'Initial', frequency: 'Every 2 days', notes: 'Avoid waterlogging' }, { stage: 'Growth', frequency: 'Weekly', notes: 'Adjust for rainfall' }],
+    fertilizerSchedule: [{ day: 20, item: 'Compost', quantity: '2 tons', purpose: 'Soil health' }, { day: 40, item: 'NPK', quantity: 'Soil-test based', purpose: 'Crop growth' }],
+    pesticideSchedule: [{ stage: 'Vegetative', treatment: 'Neem spray', notes: 'Prevent pest attack' }, { stage: 'Flowering', treatment: 'Disease inspection', notes: 'Spray only when needed' }],
+    harvestSchedule: { expectedWindow: `${duration - 10} to ${duration} days`, steps: ['Prepare crates', 'Harvest mature produce'], postHarvest: ['Grade', 'Pack', 'Transport'] },
+    labourRequirement: { totalWorkers: 3, peakWorkers: 8, notes: ['More workers during harvest'] },
+    equipmentRequirement: { items: ['Tractor', 'Rotavator', 'Sprayer', 'Crates'], estimatedCost: { minimum: 15000, maximum: 45000, currency: 'INR' } },
+    fertilizerRequirement: { items: ['Compost', 'NPK', 'Micronutrients'], estimatedCost: { minimum: 12000, maximum: 35000, currency: 'INR' } },
+    waterRequirement: { level: 'medium', estimatedLitresPerDay: 2500, notes: ['Use drip irrigation where possible'] },
+    timeline: [
+      { day: 1, stage: 'Land Preparation', activity: 'Land Cleaning', expectedCost: 3000, progressWeight: 5 },
+      { day: 3, stage: 'Ploughing', activity: 'Ploughing', expectedCost: 8000, progressWeight: 8 },
+      { day: 5, stage: 'Rotavator', activity: 'Rotavator', expectedCost: 6000, progressWeight: 8 },
+      { day: 7, stage: 'Seed Purchase', activity: 'Seed Purchase', expectedCost: 5000, progressWeight: 5 },
+      { day: 8, stage: 'Seed Treatment', activity: 'Seed Treatment', expectedCost: 1000, progressWeight: 4 },
+      { day: 10, stage: 'Sowing', activity: 'Sowing', expectedCost: 9000, progressWeight: 10 },
+      { day: 14, stage: 'Irrigation', activity: 'First Irrigation', expectedCost: 2000, progressWeight: 5 },
+      { day: 20, stage: 'Fertilizer', activity: 'Fertilizer', expectedCost: 7000, progressWeight: 8 },
+      { day: 25, stage: 'Disease Monitoring', activity: 'Disease Inspection', expectedCost: 1500, progressWeight: 5 },
+      { day: 40, stage: 'Fertilizer', activity: 'Second Fertilizer', expectedCost: 9000, progressWeight: 10 },
+      { day: duration - 15, stage: 'Inspection', activity: 'Harvest Preparation', expectedCost: 2500, progressWeight: 7 },
+      { day: duration - 2, stage: 'Harvesting', activity: 'Harvest', expectedCost: 12000, progressWeight: 15 },
+      { day: duration - 1, stage: 'Packing', activity: 'Packing', expectedCost: 5000, progressWeight: 5 },
+      { day: duration, stage: 'Transportation', activity: 'Transport', expectedCost: 6000, progressWeight: 5 },
+    ],
+    riskAnalysis: { riskLevel: 'medium', riskScore: 42, risks: ['Rainfall variation', 'Market price changes'], mitigation: ['Maintain drainage', 'Plan staggered harvest'] },
+    weatherNotes: 'Demo data: monitor rainfall and keep drainage clear during critical stages.',
+    estimatedInvestment: 85000,
+    estimatedRevenue: 210000,
+    estimatedProfit: 125000,
+    expectedROI: 147,
+  };
 }
 
 async function seedAIHistory(ownerId: unknown) {

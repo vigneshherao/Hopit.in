@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
+import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
+import { FarmTasksPage } from '@/pages/FarmTasksPage.jsx';
 import { ProtectedRoute } from '@/routes/ProtectedRoute.jsx';
 
 const mocks = vi.hoisted(() => ({
@@ -14,6 +16,15 @@ const mocks = vi.hoisted(() => ({
   recalculatePlan: { isPending: false, mutate: vi.fn() },
   plans: [],
   dashboard: null,
+  taskBoard: null,
+  calendar: null,
+  updateTask: { mutate: vi.fn() },
+  createTask: { mutate: vi.fn() },
+  deleteTask: { mutate: vi.fn() },
+  completeTask: { mutate: vi.fn() },
+  startTask: { mutate: vi.fn() },
+  cancelTask: { mutate: vi.fn() },
+  updateCalendarEvent: { mutate: vi.fn() },
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -26,6 +37,17 @@ vi.mock('@/hooks/useFarmPlanner.js', () => ({
   useFarmDashboard: () => ({ isLoading: false, data: mocks.dashboard }),
   useUpdatePlan: () => mocks.updatePlan,
   useRecalculatePlan: () => mocks.recalculatePlan,
+}));
+vi.mock('@/hooks/useFarmTasks.js', () => ({
+  useTaskBoard: () => ({ isLoading: false, data: mocks.taskBoard }),
+  useFarmCalendar: () => ({ isLoading: false, data: mocks.calendar }),
+  useUpdateTask: () => mocks.updateTask,
+  useCreateTask: () => mocks.createTask,
+  useDeleteTask: () => mocks.deleteTask,
+  useCompleteTask: () => mocks.completeTask,
+  useStartTask: () => mocks.startTask,
+  useCancelTask: () => mocks.cancelTask,
+  useUpdateCalendarEvent: () => mocks.updateCalendarEvent,
 }));
 
 function renderPage(ui, initialEntries = ['/']) {
@@ -72,6 +94,14 @@ function farmPlan() {
   };
 }
 
+function farmTasks() {
+  return [
+    { _id: 'task1', title: 'Land Cleaning', category: 'Land Preparation', priority: 'High', status: 'Scheduled', progress: 0, startDate: new Date().toISOString(), endDate: new Date().toISOString() },
+    { _id: 'task2', title: 'Sowing', category: 'Sowing', priority: 'High', status: 'In Progress', progress: 35, startDate: new Date().toISOString(), endDate: new Date().toISOString(), assignedWorker: { name: 'Ravi' } },
+    { _id: 'task3', title: 'Harvest', category: 'Harvesting', priority: 'Critical', status: 'Completed', progress: 100, startDate: new Date().toISOString(), endDate: new Date().toISOString() },
+  ];
+}
+
 describe('farm planner frontend', () => {
   beforeEach(() => {
     mocks.authState.isAuthenticated = true;
@@ -92,6 +122,19 @@ describe('farm planner frontend', () => {
         },
       },
     };
+    const tasks = farmTasks();
+    mocks.taskBoard = {
+      tasks,
+      board: {
+        Pending: [],
+        Scheduled: [tasks[0]],
+        'In Progress': [tasks[1]],
+        Completed: [tasks[2]],
+        Cancelled: [],
+      },
+      widgets: { today: 2, thisWeek: 3, overdue: 0, completedPercentage: 33, pendingPercentage: 33 },
+    };
+    mocks.calendar = { events: [{ _id: 'event1', title: 'Land Cleaning', description: 'Prepare land', startDate: new Date().toISOString(), endDate: new Date().toISOString(), eventColor: '#059669' }] };
   });
 
   it('protects farm planner route', () => {
@@ -125,5 +168,23 @@ describe('farm planner frontend', () => {
     expect(screen.getByText('Investment, revenue and profit')).toBeInTheDocument();
     expect(screen.getByText('Execution resources')).toBeInTheDocument();
     expect(screen.getByText('Plan versions')).toBeInTheDocument();
+  });
+
+  it('renders task Kanban and updates status by drag and drop', () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/tasks" element={<FarmTasksPage />} /></Routes>, ['/farm-planner/plan1/tasks']);
+    expect(screen.getByText('Farm execution board')).toBeInTheDocument();
+    expect(screen.getByText('Land Cleaning')).toBeInTheDocument();
+    const card = screen.getByText('Land Cleaning').closest('article');
+    const completedColumn = screen.getByTestId('task-column-Completed');
+    const dataTransfer = { data: {}, setData(key, value) { this.data[key] = value; }, getData(key) { return this.data[key]; } };
+    fireEvent.dragStart(card, { dataTransfer });
+    fireEvent.drop(completedColumn, { dataTransfer });
+    expect(mocks.updateTask.mutate).toHaveBeenCalledWith({ id: 'task1', payload: { status: 'Completed' } });
+  });
+
+  it('renders calendar view and events', () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/calendar" element={<FarmCalendarPage />} /></Routes>, ['/farm-planner/plan1/calendar']);
+    expect(screen.getByText('Calendar and timeline')).toBeInTheDocument();
+    expect(screen.getByText('Land Cleaning')).toBeInTheDocument();
   });
 });

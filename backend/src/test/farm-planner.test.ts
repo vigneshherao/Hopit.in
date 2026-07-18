@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '@/app.js';
+import { FarmCalendarEventModel } from '@/models/farm-calendar-event.model.js';
+import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
 
@@ -124,6 +126,16 @@ describe('farm planner API', () => {
     expect(generated.body.data.plan.selectedCrop).toBe('Tomato');
 
     const planId = generated.body.data.plan._id;
+    const tasksResponse = await request(app).get(`/api/v1/farm-planner/plans/${planId}/tasks`).set('Authorization', `Bearer ${owner.token}`);
+    expect(tasksResponse.status).toBe(200);
+    expect(tasksResponse.body.data.tasks.length).toBeGreaterThan(10);
+    expect(await FarmCalendarEventModel.countDocuments({ farmPlanId: planId })).toBe(tasksResponse.body.data.tasks.length);
+
+    const harvest = await FarmTaskModel.findOne({ farmPlanId: planId, category: 'Harvesting' });
+    expect(harvest).toBeTruthy();
+    const blockedHarvest = await request(app).post(`/api/v1/farm-planner/tasks/${harvest?._id.toString()}/complete`).set('Authorization', `Bearer ${owner.token}`);
+    expect(blockedHarvest.status).toBe(400);
+
     const dashboard = await request(app).get(`/api/v1/farm-planner/plans/${planId}/dashboard`).set('Authorization', `Bearer ${owner.token}`);
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.dashboard.profit).toBe(110000);

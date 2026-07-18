@@ -2,6 +2,7 @@ import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { FarmPlanModel, type FarmPlanDocument } from '@/models/farm-plan.model.js';
 import { LandModel, type LandDocument } from '@/models/land.model.js';
 import { getAIProvider } from '@/services/ai-provider.service.js';
+import { generateTasksForFarmPlan } from '@/services/farm-task.service.js';
 import type { AuthenticatedUser } from '@/types/http.js';
 import { AppError } from '@/utils/app-error.js';
 import {
@@ -17,6 +18,7 @@ export async function generateFarmPlan(input: GenerateFarmPlanInput, user: Authe
   const aiHistory = input.aiHistoryId ? await getAIHistoryForPlanner(input.aiHistoryId, user) : undefined;
   const ai = await generateAIPlan({ input, land, priorRecommendation: aiHistory?.response });
   const plan = await FarmPlanModel.create(toFarmPlanDocument(input, user.id, land, ai, 1));
+  await generateTasksForFarmPlan(plan);
   return { plan };
 }
 
