@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
-import { useCropRecommendation } from '@/hooks/useAI.js';
+import { useAnalyzeLand } from '@/hooks/useAI.js';
 import { useMyLands } from '@/hooks/useLands.js';
 import { analysisStages, areaUnits, experienceLevels, farmingTypes, labelize, seasons, soilTypes, waterAvailabilityOptions } from '@/utils/aiData.js';
 
@@ -46,7 +46,7 @@ export function AiAnalyzerPage() {
   const [stageIndex, setStageIndex] = useState(0);
   const navigate = useNavigate();
   const landsQuery = useMyLands({ limit: 50 });
-  const cropRecommendation = useCropRecommendation();
+  const landAnalysis = useAnalyzeLand();
   const lands = useMemo(() => landsQuery.data?.lands ?? [], [landsQuery.data?.lands]);
   const form = useForm({
     resolver: zodResolver(schema),
@@ -81,7 +81,7 @@ export function AiAnalyzerPage() {
     setStageIndex(0);
     const interval = window.setInterval(() => setStageIndex((value) => Math.min(value + 1, analysisStages.length - 1)), 900);
     try {
-      const result = await cropRecommendation.mutateAsync({
+      const result = await landAnalysis.mutateAsync({
         ...values,
         landId: values.landId || undefined,
         preferredCrops: splitValues(values.preferredCrops),
@@ -123,11 +123,11 @@ export function AiAnalyzerPage() {
               {step === 3 ? <BudgetStep form={form} /> : null}
               {step === 4 ? <PreferenceStep form={form} /> : null}
               {step === 5 ? <ReviewStep values={form.getValues()} selectedLand={selectedLand} /> : null}
-              {cropRecommendation.error ? <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{cropRecommendation.error.response?.data?.message ?? cropRecommendation.error.message}</p> : null}
-              {cropRecommendation.isPending ? <ScanningStage stage={analysisStages[stageIndex]} /> : null}
+              {landAnalysis.error ? <p className="rounded-2xl bg-rose-50 p-3 text-sm text-rose-700">{landAnalysis.error.response?.data?.message ?? landAnalysis.error.message}</p> : null}
+              {landAnalysis.isPending ? <ScanningStage stage={analysisStages[stageIndex]} /> : null}
               <div className="flex flex-wrap justify-between gap-3">
-                <Button type="button" variant="outline" disabled={step === 0 || cropRecommendation.isPending} onClick={() => setStep((value) => value - 1)}><ArrowLeft className="h-4 w-4" /> Back</Button>
-                {step < steps.length - 1 ? <Button type="button" onClick={nextStep}>Next <ArrowRight className="h-4 w-4" /></Button> : <Button type="submit" disabled={cropRecommendation.isPending}><Sparkles className="h-4 w-4" /> Generate recommendation</Button>}
+                <Button type="button" variant="outline" disabled={step === 0 || landAnalysis.isPending} onClick={() => setStep((value) => value - 1)}><ArrowLeft className="h-4 w-4" /> Back</Button>
+                {step < steps.length - 1 ? <Button type="button" onClick={nextStep}>Next <ArrowRight className="h-4 w-4" /></Button> : <Button type="submit" disabled={landAnalysis.isPending}><Sparkles className="h-4 w-4" /> Analyze land</Button>}
               </div>
             </form>
           </CardContent>

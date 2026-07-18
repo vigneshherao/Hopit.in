@@ -212,11 +212,11 @@ export function SearchTrigger({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="hidden h-10 min-w-[230px] items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/85 px-3 text-left text-sm font-semibold text-slate-400 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/50 md:flex"
+      className="hidden h-10 min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/85 px-3 text-left text-sm font-semibold text-slate-500 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/50 xl:min-w-[170px] md:flex"
     >
       <span className="inline-flex items-center gap-2">
         <Search className="h-4 w-4" />
-        Search everywhere
+        <span className="hidden xl:inline">Search</span>
       </span>
       <Chip className="hidden border-slate-100 px-2 py-0.5 text-[10px] text-slate-400 lg:inline-flex">
         <Command className="h-3 w-3" />
@@ -249,10 +249,12 @@ export function OfflineBanner() {
 }
 
 export function ShellStatusPill({ isAuthenticated, user }) {
+  if (!isAuthenticated) return null;
+
   return (
     <div className="hidden items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/70 px-3 py-1.5 text-xs font-bold text-emerald-700 xl:flex">
       <Sparkles className="h-3.5 w-3.5" />
-      {isAuthenticated ? `${user?.role ?? 'member'} workspace` : 'demo-ready platform'}
+      {`${user?.role ?? 'member'} workspace`}
     </div>
   );
 }

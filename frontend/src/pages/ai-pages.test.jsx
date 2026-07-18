@@ -22,6 +22,7 @@ vi.mock('@/hooks/useLands.js', () => ({
   useMyLands: () => ({ data: { lands: [{ _id: 'land1', title: 'Mandya farm', location: { district: 'Mandya', state: 'Karnataka' }, area: { value: 5, unit: 'acre' }, landDetails: { soilType: 'loamy' } }] } }),
 }));
 vi.mock('@/hooks/useAI.js', () => ({
+  useAnalyzeLand: () => mocks.cropMutation,
   useCropRecommendation: () => mocks.cropMutation,
   useAIChat: () => mocks.chatMutation,
   useAIHistoryItem: () => ({ isLoading: false, data: { history: mocks.historyItem } }),

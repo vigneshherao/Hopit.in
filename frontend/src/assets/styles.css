@@ -173,7 +173,7 @@
 }
 
 .crop-orbit {
-  --crop-orbit-radius: -160px;
+  --crop-orbit-radius: -118px;
   animation: crop-orbit 36s linear infinite;
 }
 
@@ -183,8 +183,8 @@
 
 .crop-orbit-slot {
   left: 50%;
-  margin-left: -54px;
-  margin-top: -54px;
+  margin-left: -43px;
+  margin-top: -43px;
   position: absolute;
   top: 50%;
 }
@@ -198,11 +198,11 @@
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.1);
   display: flex;
   flex-direction: column;
-  height: 108px;
+  height: 86px;
   justify-content: center;
-  padding: 10px;
+  padding: 8px;
   position: relative;
-  width: 108px;
+  width: 86px;
 }
 
 .crop-orbit-icon {
@@ -213,12 +213,12 @@
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
   display: flex;
   font-size: 1.15rem;
-  height: 30px;
+  height: 26px;
   justify-content: center;
   position: absolute;
-  right: 4px;
-  top: 4px;
-  width: 30px;
+  right: 2px;
+  top: 2px;
+  width: 26px;
   z-index: 2;
 }
 
@@ -247,6 +247,27 @@
     right: 5px;
     top: 5px;
     width: 34px;
+  }
+}
+
+@media (min-width: 380px) and (max-width: 639px) {
+  .crop-orbit {
+    --crop-orbit-radius: -136px;
+  }
+
+  .crop-orbit-slot {
+    margin-left: -48px;
+    margin-top: -48px;
+  }
+
+  .crop-orbit-card {
+    height: 96px;
+    width: 96px;
+  }
+
+  .crop-orbit-icon {
+    height: 28px;
+    width: 28px;
   }
 }
 

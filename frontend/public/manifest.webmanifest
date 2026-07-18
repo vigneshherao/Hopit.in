@@ -8,9 +8,9 @@
   "theme_color": "#16a34a",
   "icons": [
     {
-      "src": "/icons/hopt-it.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icons/weblogo.png",
+      "sizes": "1536x1024",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
