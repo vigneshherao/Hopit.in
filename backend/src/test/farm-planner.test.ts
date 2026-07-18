@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '@/app.js';
 import { AssistantConversationModel } from '@/models/assistant-conversation.model.js';
 import { AssistantMessageModel } from '@/models/assistant-message.model.js';
+import { DiseaseAnalysisModel } from '@/models/disease-analysis.model.js';
 import { FarmCalendarEventModel } from '@/models/farm-calendar-event.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
@@ -129,6 +130,48 @@ function mockAssistantChatResponse() {
   );
 }
 
+function mockDiseaseResponse() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                summary: 'The image suggests possible early leaf spot, but the prediction is not guaranteed because lighting and image angle may affect visibility.',
+                confidenceScore: 82,
+                cropHealthScore: 68,
+                severity: 'Medium',
+                disease: 'Early leaf spot',
+                symptoms: ['Small brown spots on leaves', 'Yellowing around lesions'],
+                causes: ['High humidity', 'Leaf wetness'],
+                organicTreatment: ['Remove affected leaves', 'Apply neem-based spray'],
+                chemicalTreatment: ['Use a registered copper fungicide after local agronomist confirmation'],
+                prevention: ['Improve airflow', 'Avoid overhead irrigation'],
+                monitoringAdvice: ['Check new leaves every 3 days', 'Take another image after treatment'],
+                estimatedRecoveryDays: 14,
+                estimatedTreatmentCost: 1500,
+                weatherRisk: 'Humid conditions may increase fungal pressure.',
+                recommendations: [
+                  { title: 'Start monitoring', description: 'Inspect the crop every 3 days and compare leaf spots.', priority: 'High', category: 'Monitoring', estimatedCost: 0 },
+                  { title: 'Organic spray', description: 'Apply neem-based spray and remove highly affected leaves.', priority: 'Medium', category: 'Organic', estimatedCost: 600 },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    }),
+  );
+}
+
+function pngBuffer() {
+  return Buffer.from('89504e470d0a1a0a0000000d49484452000000800000008008020000004c5cf69c0000000049454e44ae426082', 'hex');
+}
+
 describe('farm planner API', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
@@ -216,5 +259,55 @@ describe('farm planner API', () => {
     expect(chat.body.data.response.answer).toContain('on track');
     expect(await AssistantConversationModel.countDocuments({ farmPlanId: planId })).toBe(1);
     expect(await AssistantMessageModel.countDocuments({ conversationId: chat.body.data.conversation._id })).toBe(2);
+  });
+
+  it('analyzes disease images, stores history, protects ownership and reuses cache', async () => {
+    mockFarmPlanResponse();
+    const owner = await register('owner', 'disease-owner@example.com');
+    const other = await register('owner', 'disease-other@example.com');
+    const land = await createLand(owner.user?._id, 'disease-land');
+    const generated = await request(app).post('/api/v1/farm-planner/generate-plan').set('Authorization', `Bearer ${owner.token}`).send({ landId: land._id.toString(), selectedCrop: 'Tomato', selectedSeason: 'monsoon', startDate: new Date().toISOString() });
+    const planId = generated.body.data.plan._id;
+
+    const forbidden = await request(app)
+      .post('/api/v1/disease/analyze')
+      .set('Authorization', `Bearer ${other.token}`)
+      .field('farmPlanId', planId)
+      .field('cropName', 'Tomato')
+      .attach('images', pngBuffer(), { filename: 'leaf.png', contentType: 'image/png' });
+    expect(forbidden.status).toBe(404);
+
+    mockDiseaseResponse();
+    const first = await request(app)
+      .post('/api/v1/disease/analyze')
+      .set('Authorization', `Bearer ${owner.token}`)
+      .field('farmPlanId', planId)
+      .field('cropName', 'Tomato')
+      .field('weatherSummary', 'Humid week')
+      .attach('images', pngBuffer(), { filename: 'leaf.png', contentType: 'image/png' });
+
+    expect(first.status).toBe(201);
+    expect(first.body.data.analysis.diseaseName).toBe('Early leaf spot');
+    expect(first.body.data.recommendations).toHaveLength(2);
+    expect(await DiseaseAnalysisModel.countDocuments({ ownerId: owner.user?._id })).toBe(1);
+
+    const second = await request(app)
+      .post('/api/v1/disease/analyze')
+      .set('Authorization', `Bearer ${owner.token}`)
+      .field('farmPlanId', planId)
+      .field('cropName', 'Tomato')
+      .field('weatherSummary', 'Humid week')
+      .attach('images', pngBuffer(), { filename: 'leaf.png', contentType: 'image/png' });
+    expect(second.status).toBe(201);
+    expect(second.body.data.cached).toBe(true);
+    expect(await DiseaseAnalysisModel.countDocuments({ ownerId: owner.user?._id })).toBe(1);
+
+    const history = await request(app).get(`/api/v1/disease/farm/${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(history.status).toBe(200);
+    expect(history.body.data.analyses).toHaveLength(1);
+
+    const stats = await request(app).get('/api/v1/disease/statistics').set('Authorization', `Bearer ${owner.token}`);
+    expect(stats.status).toBe(200);
+    expect(stats.body.data.totalAnalyses).toBe(1);
   });
 });

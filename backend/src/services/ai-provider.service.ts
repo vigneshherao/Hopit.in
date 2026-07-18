@@ -7,6 +7,11 @@ export interface AIProviderRequest {
   responseFormatName: string;
 }
 
+export interface AIProviderImage {
+  mimeType: string;
+  base64: string;
+}
+
 export interface AIProviderResponse {
   provider: string;
   model: string;
@@ -18,6 +23,7 @@ export interface AIProvider {
   readonly provider: string;
   readonly model: string;
   generateJson(request: AIProviderRequest): Promise<AIProviderResponse>;
+  generateJsonWithImages(request: AIProviderRequest & { images: AIProviderImage[] }): Promise<AIProviderResponse>;
 }
 
 class OpenAIProvider implements AIProvider {
@@ -74,6 +80,64 @@ class OpenAIProvider implements AIProvider {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new AppError('AI provider request timed out. Please try again.', 504);
       }
+      throw new AppError('AI provider is unavailable. Please try again later.', 503);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async generateJsonWithImages(request: AIProviderRequest & { images: AIProviderImage[] }): Promise<AIProviderResponse> {
+    if (!env.openaiApiKey) {
+      throw new AppError('AI provider is not configured. Set OPENAI_API_KEY on the backend.', 503);
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), env.aiRequestTimeoutMs);
+    const startedAt = Date.now();
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${env.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          temperature: 0.1,
+          max_tokens: 3500,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: request.systemPrompt },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: request.userPrompt },
+                ...request.images.map((image) => ({
+                  type: 'image_url',
+                  image_url: { url: `data:${image.mimeType};base64,${image.base64}`, detail: 'high' },
+                })),
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new AppError('AI provider image analysis failed. Please try again later.', response.status >= 500 ? 503 : 502);
+      }
+
+      const payload = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+      const content = payload.choices?.[0]?.message?.content;
+      if (!content || content.length > 60_000) {
+        throw new AppError('AI provider returned an empty or oversized response.', 502);
+      }
+
+      return { provider: this.provider, model: this.model, content, durationMs: Date.now() - startedAt };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      if (error instanceof Error && error.name === 'AbortError') throw new AppError('AI provider request timed out. Please try again.', 504);
       throw new AppError('AI provider is unavailable. Please try again later.', 503);
     } finally {
       clearTimeout(timeout);

@@ -8,6 +8,7 @@ import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
+import { FarmDiseasePage } from '@/pages/FarmDiseasePage.jsx';
 import { FarmTasksPage } from '@/pages/FarmTasksPage.jsx';
 import { ProtectedRoute } from '@/routes/ProtectedRoute.jsx';
 
@@ -33,6 +34,10 @@ const mocks = vi.hoisted(() => ({
   insights: null,
   recommendations: null,
   forecast: null,
+  diseaseAnalyze: { isPending: false, error: null, mutate: vi.fn(), data: null },
+  diseaseHistory: null,
+  diseaseStatistics: null,
+  farmDiseaseHistory: null,
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -64,6 +69,12 @@ vi.mock('@/hooks/useAssistant.js', () => ({
   useFarmInsights: () => ({ isLoading: false, data: mocks.insights }),
   useFarmRecommendations: () => ({ isLoading: false, data: mocks.recommendations }),
   useForecast: () => ({ isLoading: false, data: mocks.forecast }),
+}));
+vi.mock('@/hooks/useDisease.js', () => ({
+  useAnalyzeDisease: () => mocks.diseaseAnalyze,
+  useDiseaseHistory: () => ({ isLoading: false, data: mocks.diseaseHistory }),
+  useDiseaseStatistics: () => ({ isLoading: false, data: mocks.diseaseStatistics }),
+  useFarmDiseaseHistory: () => ({ isLoading: false, data: mocks.farmDiseaseHistory }),
 }));
 
 function renderPage(ui, initialEntries = ['/']) {
@@ -173,6 +184,25 @@ describe('farm planner frontend', () => {
     };
     mocks.recommendations = { recommendations: [{ title: 'Delayed tasks need attention', priority: 'High', category: 'Task', action: 'Reassign labour today.', confidenceScore: 92 }] };
     mocks.forecast = { forecasts: [{ forecastType: 'Harvest', prediction: 'Harvest remains on schedule.', confidence: 86 }] };
+    mocks.diseaseAnalyze.isPending = false;
+    mocks.diseaseAnalyze.error = null;
+    mocks.diseaseAnalyze.data = null;
+    mocks.diseaseAnalyze.mutate.mockReset();
+    mocks.diseaseHistory = {
+      analyses: [
+        {
+          _id: 'analysis1',
+          diseaseName: 'Leaf spot',
+          severity: 'Medium',
+          cropHealthScore: 68,
+          cropName: 'Tomato',
+          createdAt: new Date().toISOString(),
+          images: [{ imageUrl: 'https://example.com/leaf.png', thumbnailUrl: 'https://example.com/leaf.png' }],
+        },
+      ],
+    };
+    mocks.diseaseStatistics = { totalAnalyses: 1, averageHealthScore: 68, healthyCrops: 0, mostCommonDisease: 'Leaf spot' };
+    mocks.farmDiseaseHistory = { timeline: [{ createdAt: new Date().toISOString(), healthScore: 68 }] };
   });
 
   it('protects farm planner route', () => {
@@ -240,5 +270,14 @@ describe('farm planner frontend', () => {
     expect(screen.getAllByText('Delayed tasks need attention').length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole('button', { name: /ai analyze/i }));
     expect(mocks.analyzeFarm.mutate).toHaveBeenCalledWith({ farmPlanId: 'plan1', focus: 'weekly-advice' });
+  });
+
+  it('renders disease upload page and submits selected images', async () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/disease" element={<FarmDiseasePage />} /></Routes>, ['/farm-planner/plan1/disease']);
+    expect(screen.getByText('Upload crop images for a health report')).toBeInTheDocument();
+    const file = new File(['leaf'], 'leaf.png', { type: 'image/png' });
+    await userEvent.upload(screen.getByLabelText(/drop crop images or browse/i), file);
+    await userEvent.click(screen.getByRole('button', { name: /analyze crop images/i }));
+    expect(mocks.diseaseAnalyze.mutate).toHaveBeenCalled();
   });
 });

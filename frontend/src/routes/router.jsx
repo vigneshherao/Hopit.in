@@ -14,6 +14,7 @@ import { FarmAssistantPage } from '@/pages/FarmAssistantPage.jsx';
 import { FarmManagementDetailPage } from '@/pages/FarmManagementDetailPage.jsx';
 import { FarmManagementPage } from '@/pages/FarmManagementPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
+import { FarmDiseasePage } from '@/pages/FarmDiseasePage.jsx';
 import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
@@ -330,6 +331,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FarmInsightsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/disease',
+        element: (
+          <ProtectedRoute>
+            <FarmDiseasePage />
           </ProtectedRoute>
         ),
       },
