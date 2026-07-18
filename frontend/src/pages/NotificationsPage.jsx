@@ -34,7 +34,7 @@ export function NotificationsPage() {
           </Button>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+        <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div>
             <div className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-slate-50/80 p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">

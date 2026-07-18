@@ -10,6 +10,7 @@ import { MessageReceiptModel } from '@/models/message-receipt.model.js';
 import { MessageModel, type Message } from '@/models/message.model.js';
 import { MessageReactionModel } from '@/models/message-reaction.model.js';
 import { ChatAttachmentModel } from '@/models/chat-attachment.model.js';
+import { UserModel } from '@/models/user.model.js';
 import { SharedNoteModel } from '@/models/shared-note.model.js';
 import { auditChat } from '@/services/chat/chat.audit.service.js';
 import { mapConversation, mapMember, mapMessage } from '@/services/chat/chat.mapper.js';
@@ -84,6 +85,41 @@ export async function createDirectConversation(userId: string, participantId: st
   ]);
   await auditChat({ conversationId: conversation._id.toString(), actorId: userId, action: 'conversation-created', metadata: { type: 'direct' } });
   return { conversation: mapConversation(conversation.toObject()) };
+}
+
+export async function listChatUsers(userId: string, query: Record<string, unknown>) {
+  const limit = Math.min(Number(query.limit ?? 12), 30);
+  const filter: FilterQuery<unknown> = { _id: { $ne: userId }, isActive: true };
+
+  if (query.role) filter.role = query.role;
+  if (query.search) {
+    const regex = new RegExp(escapeRegex(String(query.search)), 'i');
+    filter.$or = [
+      { name: regex },
+      { role: regex },
+      { 'location.city': regex },
+      { 'location.district': regex },
+      { 'location.state': regex },
+    ];
+  }
+
+  const users = await UserModel.find(filter)
+    .select('name role avatar location.city location.district location.state isEmailVerified isPhoneVerified lastLoginAt')
+    .sort({ lastLoginAt: -1, createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return {
+    users: users.map((user) => ({
+      id: user._id.toString(),
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+      location: user.location,
+      isVerified: Boolean(user.isEmailVerified || user.isPhoneVerified),
+      lastLoginAt: user.lastLoginAt,
+    })),
+  };
 }
 
 export async function createGroupConversation(userId: string, input: { title: string; participantIds: string[]; description?: string }) {

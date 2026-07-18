@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
+import { useAuth } from '@/context/AuthContext.jsx';
 import webLogo from '@/assets/weblogo.png';
 import {
   analyzerExamplePrompts,
@@ -44,6 +45,7 @@ import {
 
 export function HomePage() {
   const carouselCards = [...featureCards, ...featureCards];
+  const { isAuthenticated } = useAuth();
 
   return (
     <main className="overflow-hidden bg-white text-slate-950">
@@ -55,7 +57,7 @@ export function HomePage() {
       <StatsSection />
       <TestimonialsSection />
       <FinalCta />
-      <FooterSection />
+      <FooterSection isAuthenticated={isAuthenticated} />
     </main>
   );
 }
@@ -124,7 +126,7 @@ function HeroSection() {
           >
             <img
               src={landingImages.hero}
-              alt="Farmers using AI technology in a connected agriculture field"
+              alt="Land seekers using AI technology in a connected agriculture field"
               className="aspect-[1672/941] h-auto w-full rounded-[22px] object-contain"
               loading="eager"
             />
@@ -612,7 +614,7 @@ function StatsSection() {
           <div className="mx-auto mt-8 flex max-w-4xl flex-wrap items-center justify-center gap-3">
             {[
               ['Land owners', MapPinned],
-              ['Farmers', Sprout],
+              ['Land seekers', Sprout],
               ['Workers', UsersRound],
               ['AI planning', BrainCircuit],
             ].map(([label, Icon]) => (
@@ -676,7 +678,7 @@ function TestimonialsSection() {
               Trusted by every <span className="text-slate-400">agriculture role</span>
             </h2>
             <p className="mx-auto mt-7 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Owners, farmers, workers, managers, and investors use Hopt It to make land decisions clearer, faster, and easier to execute.
+              Owners, land seekers, workers, managers, and investors use Hopt It to make land decisions clearer, faster, and easier to execute.
             </p>
 
             <div className="mt-8 flex items-center justify-center text-amber-400" aria-label="Five star rating">
@@ -753,7 +755,7 @@ function FinalCta() {
   );
 }
 
-function FooterSection() {
+function FooterSection({ isAuthenticated }) {
   const footerGroups = [
     {
       title: 'Marketplace',
@@ -834,8 +836,17 @@ function FooterSection() {
         <div className="mt-10 flex flex-col gap-4 rounded-3xl border border-emerald-100 bg-emerald-50/55 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm font-semibold text-slate-600">© 2026 Hopt It. Built for the future of agriculture.</p>
           <div className="flex flex-wrap gap-3 text-sm font-semibold text-slate-500">
-            <Link to="/login" className="transition hover:text-emerald-700">Login</Link>
-            <Link to="/register" className="transition hover:text-emerald-700">Register</Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard" className="transition hover:text-emerald-700">Dashboard</Link>
+                <Link to="/profile" className="transition hover:text-emerald-700">Profile</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="transition hover:text-emerald-700">Login</Link>
+                <Link to="/register" className="transition hover:text-emerald-700">Register</Link>
+              </>
+            )}
             <Link to="/lands" className="transition hover:text-emerald-700">Explore</Link>
           </div>
         </div>

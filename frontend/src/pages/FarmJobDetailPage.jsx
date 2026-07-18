@@ -7,17 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.j
 import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { useApplyToFarmJob, useFarmJob } from '@/hooks/useWorkers.js';
+import { useAuth } from '@/context/AuthContext.jsx';
+import { useToast } from '@/components/ui/toast.jsx';
+import { getFriendlyApiMessage } from '@/utils/apiMessages.js';
 import { displayJobPay, workerRoleLabels, workerSkillLabels } from '@/utils/workerData.js';
 
 export function FarmJobDetailPage() {
   const { identifier } = useParams();
+  const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const jobQuery = useFarmJob(identifier);
   const apply = useApplyToFarmJob();
   const form = useForm({ defaultValues: { applicantType: 'individual', coverMessage: '', proposedRate: '', availabilityConfirmation: true } });
   const job = jobQuery.data?.job;
+  const canApply = user?.role === 'worker' || user?.role === 'admin';
+  const canHire = user?.role === 'owner' || user?.role === 'farmer' || user?.role === 'admin';
 
   async function onSubmit(values) {
-    await apply.mutateAsync({ jobId: job._id, payload: { ...values, proposedRate: values.proposedRate ? Number(values.proposedRate) : undefined } });
+    try {
+      await apply.mutateAsync({ jobId: job._id, payload: { ...values, proposedRate: values.proposedRate ? Number(values.proposedRate) : undefined } });
+      showToast({ tone: 'success', title: 'Application submitted', message: 'Your farm job application was sent to the job owner.' });
+    } catch (error) {
+      showToast({ tone: 'error', title: 'Application failed', message: getFriendlyApiMessage(error) });
+    }
   }
 
   if (jobQuery.isLoading) return <section className="page-shell"><div className="h-96 animate-pulse rounded-3xl bg-emerald-50" /></section>;
@@ -30,9 +42,21 @@ export function FarmJobDetailPage() {
         <Card><CardHeader><CardTitle>Job details</CardTitle></CardHeader><CardContent className="grid gap-3 sm:grid-cols-2"><p><Users className="mr-2 inline h-4 w-4 text-emerald-500" />{job.numberOfWorkersRequired} workers required</p><p>{displayJobPay(job)}</p><p>Accommodation: {job.schedule?.accommodationProvided ? 'Yes' : 'No'}</p><p>Food: {job.schedule?.foodProvided ? 'Yes' : 'No'}</p></CardContent></Card>
       </div>
       <Card className="h-fit lg:sticky lg:top-24">
-        <CardHeader><CardTitle>Apply for this job</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{canApply ? 'Apply for this job' : 'Hiring workflow'}</CardTitle></CardHeader>
         <CardContent>
-          {jobQuery.data?.alreadyApplied ? <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700"><ShieldCheck className="mb-2 h-5 w-5" />You already applied to this job.</div> : (
+          {!isAuthenticated ? (
+            <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
+              Sign in as a farm worker to apply for this job.
+            </div>
+          ) : null}
+          {isAuthenticated && canHire ? (
+            <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
+              <ShieldCheck className="mb-2 h-5 w-5" />
+              Owners and land seekers post jobs, review applicants, and accept workers to create bookings. They do not apply to farm jobs.
+            </div>
+          ) : null}
+          {canApply && jobQuery.data?.alreadyApplied ? <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700"><ShieldCheck className="mb-2 h-5 w-5" />You already applied to this job.</div> : null}
+          {canApply && !jobQuery.data?.alreadyApplied ? (
             <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
               <label className="grid gap-2 text-sm font-medium">Applicant type<select className="premium-select" {...form.register('applicantType')}><option value="individual">Individual</option><option value="team">Team</option></select></label>
               <label className="grid gap-2 text-sm font-medium">Cover message<textarea className="min-h-28 rounded-2xl border border-emerald-100 p-3" {...form.register('coverMessage', { required: true })} /></label>
@@ -40,8 +64,9 @@ export function FarmJobDetailPage() {
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" {...form.register('availabilityConfirmation')} />I confirm my availability</label>
               <Button type="submit" disabled={apply.isPending}>{apply.isPending ? 'Submitting...' : 'Submit application'}</Button>
             </form>
-          )}
-          <Button asChild variant="outline" className="mt-3 w-full"><Link to="/worker/profile">Check worker profile</Link></Button>
+          ) : null}
+          {canApply ? <Button asChild variant="outline" className="mt-3 w-full"><Link to="/worker/profile">Check worker profile</Link></Button> : null}
+          {canHire ? <Button asChild className="mt-3 w-full"><Link to="/my-farm-jobs">Manage posted jobs</Link></Button> : null}
         </CardContent>
       </Card>
     </section>

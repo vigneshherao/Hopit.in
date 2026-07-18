@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge.jsx';
 import { getDisplayPrice } from '@/components/lands/LandCard.jsx';
 import { statusLabels } from '@/utils/landData.js';
 import { useDeleteLand, useLandStatistics, useMyLands, useSubmitLandVerification, useUpdateLandStatus } from '@/hooks/useLands.js';
+import { useToast } from '@/components/ui/toast.jsx';
+import { getFriendlyApiMessage } from '@/utils/apiMessages.js';
 
 export function MyLandsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -15,6 +17,7 @@ export function MyLandsPage() {
   const submitVerification = useSubmitLandVerification();
   const updateStatus = useUpdateLandStatus();
   const deleteLand = useDeleteLand();
+  const { showToast } = useToast();
   const stats = statsQuery.data?.statistics;
 
   function setStatus(status) {
@@ -26,6 +29,15 @@ export function MyLandsPage() {
 
   async function confirmAction(message, action) {
     if (window.confirm(message)) await action();
+  }
+
+  async function runLandAction(action, successTitle, successMessage) {
+    try {
+      await action();
+      showToast({ tone: 'success', title: successTitle, message: successMessage });
+    } catch (error) {
+      showToast({ tone: 'error', title: 'Action could not be completed', message: getFriendlyApiMessage(error) });
+    }
   }
 
   return (
@@ -72,10 +84,10 @@ export function MyLandsPage() {
               <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline" size="sm"><Link to={`/my-lands/${land._id}`}>Manage</Link></Button>
                 <Button asChild variant="outline" size="sm"><Link to={`/lands/${land._id}/edit`}>Edit</Link></Button>
-                {land.status === 'draft' || land.status === 'rejected' ? <Button size="sm" onClick={() => submitVerification.mutate(land._id)}>Submit</Button> : null}
-                {land.status === 'available' ? <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'pause' })}>Pause</Button> : null}
-                {land.status === 'inactive' ? <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'resume' })}>Resume</Button> : null}
-                <Button size="sm" variant="destructive" onClick={() => confirmAction('Deactivate this listing?', () => deleteLand.mutateAsync(land._id))}>Delete</Button>
+                {land.status === 'draft' || land.status === 'rejected' ? <Button size="sm" onClick={() => runLandAction(() => submitVerification.mutateAsync(land._id), 'Listing submitted', 'Your land listing has been sent for verification.')}>Submit</Button> : null}
+                {land.status === 'available' ? <Button size="sm" variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'pause' }), 'Listing paused', 'This land is no longer visible in the public marketplace.')}>Pause</Button> : null}
+                {land.status === 'inactive' ? <Button size="sm" variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'resume' }), 'Listing resumed', 'This land is available again in the public marketplace.')}>Resume</Button> : null}
+                <Button size="sm" variant="destructive" onClick={() => confirmAction('Deactivate this listing?', () => runLandAction(() => deleteLand.mutateAsync(land._id), 'Listing deactivated', 'This listing was moved to inactive.'))}>Delete</Button>
               </div>
             </CardContent>
           </Card>

@@ -24,22 +24,26 @@ export function NotificationPreferenceForm() {
 
   return (
     <form
-      className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-xl shadow-emerald-900/5"
+      className="h-fit rounded-[28px] border border-emerald-100 bg-white p-4 shadow-xl shadow-emerald-900/5 sm:p-5 lg:sticky lg:top-28"
       onSubmit={(event) => {
         event.preventDefault();
         updatePreferences.mutate(values);
       }}
     >
-      <h2 className="text-lg font-semibold text-slate-950">Notification preferences</h2>
-      <div className="mt-4 space-y-3">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Controls</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-950">Notification preferences</h2>
+        <p className="mt-1 text-sm text-slate-500">Choose which updates should reach you while managing land, workers, agreements, and farms.</p>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
         {preferenceFields.map(([key, label]) => (
-          <label key={key} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
-            {label}
-            <input type="checkbox" checked={Boolean(values[key])} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.checked }))} />
+          <label key={key} className="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm font-semibold text-slate-700">
+            <span>{label}</span>
+            <input className="h-4 w-4 accent-emerald-600" type="checkbox" checked={Boolean(values[key])} onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.checked }))} />
           </label>
         ))}
       </div>
-      <Button type="submit" className="mt-4 w-full" disabled={updatePreferences.isPending}>
+      <Button type="submit" className="mt-5 h-11 w-full rounded-2xl" disabled={updatePreferences.isPending}>
         Save preferences
       </Button>
     </form>

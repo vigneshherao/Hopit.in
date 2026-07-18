@@ -11,9 +11,9 @@ import {
   MobileBottomNav,
   OfflineBanner,
   SearchTrigger,
-  ShellStatusPill,
 } from '@/components/shared/AppShellEnhancements.jsx';
 import { useAuth } from '@/context/AuthContext.jsx';
+import { ToastProvider } from '@/components/ui/toast.jsx';
 import webLogo from '@/assets/weblogo.png';
 import { cn } from '@/utils/cn.js';
 
@@ -46,10 +46,10 @@ export function AppLayout() {
     const activeItem = visibleNavigationItems.find((item) => location.pathname === item.href || (item.href !== '/' && location.pathname.startsWith(`${item.href}/`)));
 
     if (activeItem && !prioritized.some((item) => item.href === activeItem.href)) {
-      return [...prioritized.slice(0, 4), activeItem];
+      return [...prioritized.slice(0, 3), activeItem];
     }
 
-    return prioritized.slice(0, 5);
+    return prioritized.slice(0, 4);
   }, [isAuthenticated, location.pathname, user?.role, visibleNavigationItems]);
 
   useEffect(() => {
@@ -74,11 +74,12 @@ export function AppLayout() {
   }
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.10),transparent_30rem),radial-gradient(circle_at_12%_18%,rgba(37,99,235,0.07),transparent_24rem),linear-gradient(180deg,#ffffff_0%,#f8fafc_46%,#ffffff_100%)] text-slate-950">
       <CommandPalette open={isCommandOpen} onOpenChange={setIsCommandOpen} isAuthenticated={isAuthenticated} role={user?.role} />
 
       <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/88 shadow-[0_12px_40px_rgba(15,23,42,0.045)] backdrop-blur-xl">
-        <div className="mx-auto grid min-h-[72px] max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid min-h-[72px] max-w-7xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-4 sm:px-6 lg:px-8">
           <NavLink to="/" className="group flex shrink-0 items-center rounded-full font-semibold text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="Hopt It home">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl transition group-hover:-translate-y-0.5 sm:h-16 sm:w-16">
               <img src={webLogo} alt="Hopt It logo" className="h-full w-full object-cover" />
@@ -93,27 +94,28 @@ export function AppLayout() {
                   to={item.href}
                   className={({ isActive }) =>
                     cn(
-                      'inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-3 text-sm font-semibold text-slate-500 transition-all hover:bg-emerald-50 hover:text-slate-950 xl:px-4',
+                      'inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold text-slate-500 transition-all hover:bg-emerald-50 hover:text-slate-950 xl:px-4',
                       isActive && 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600 hover:text-white',
                     )
                   }
                 >
                   <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <span className="hidden xl:inline">{item.label}</span>
                 </NavLink>
               ))}
             </div>
           </nav>
 
           <div className="hidden min-w-0 shrink-0 items-center justify-end gap-2 lg:flex">
-            <SearchTrigger onClick={() => setIsCommandOpen(true)} />
-            <ShellStatusPill isAuthenticated={isAuthenticated} user={user} />
+            <div className="hidden 2xl:block">
+              <SearchTrigger onClick={() => setIsCommandOpen(true)} />
+            </div>
             {isAuthenticated ? (
               <>
                 <NotificationBell />
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  <span className="hidden xl:inline">Logout</span>
                 </Button>
               </>
             ) : (
@@ -126,7 +128,7 @@ export function AppLayout() {
             )}
             <Button variant="outline" size="sm" onClick={() => setIsMenuOpen((current) => !current)} aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={isMenuOpen}>
               {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              Menu
+              <span className="hidden xl:inline">Menu</span>
             </Button>
           </div>
 
@@ -191,5 +193,6 @@ export function AppLayout() {
       <FloatingQuickActions isAuthenticated={isAuthenticated} role={user?.role} onCommand={() => setIsCommandOpen(true)} />
       <MobileBottomNav items={visibleNavigationItems} onCommand={() => setIsCommandOpen(true)} />
     </div>
+    </ToastProvider>
   );
 }

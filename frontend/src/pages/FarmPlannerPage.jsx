@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { Loader2, Plus, Sprout } from 'lucide-react';
+import { CalendarDays, IndianRupee, Loader2, Plus, Sprout, TrendingUp } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -64,9 +64,15 @@ export function FarmPlannerPage() {
         </Card>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3"><h2 className="text-2xl font-semibold text-slate-950">Your farm plans</h2><Badge variant="secondary">{plans.length} plans</Badge></div>
+          <div className="flex flex-col justify-between gap-2 rounded-[28px] border border-emerald-100 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">Plan library</p>
+              <h2 className="mt-1 text-2xl font-semibold text-slate-950">Your farm plans</h2>
+            </div>
+            <Badge variant="secondary" className="w-fit">{plans.length} plans</Badge>
+          </div>
           {plansQuery.isLoading ? <div className="h-72 animate-pulse rounded-3xl bg-emerald-50" /> : null}
-          <div className="grid gap-4">
+          <div className="grid gap-4 2xl:grid-cols-2">
             {plans.map((plan) => <PlanCard key={plan._id} plan={plan} />)}
           </div>
           {!plansQuery.isLoading && !plans.length ? <Card><CardContent className="p-8 text-center text-muted-foreground">No farm plans yet. Generate your first plan from a selected land and crop.</CardContent></Card> : null}
@@ -78,16 +84,50 @@ export function FarmPlannerPage() {
 
 function PlanCard({ plan }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col justify-between gap-4 p-5 lg:flex-row lg:items-center">
-        <div>
-          <div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-semibold text-slate-950">{plan.planTitle}</h3><Badge>{labelize(plan.status)}</Badge><span className={`rounded-full px-3 py-1 text-xs font-semibold ${riskTone(plan.riskLevel)}`}>{labelize(plan.riskLevel)} risk</span></div>
-          <p className="mt-1 text-sm text-muted-foreground">{plan.selectedCrop} · {plan.landId?.title ?? 'Land'} · {plan.farmDurationDays} days</p>
-          <div className="mt-3 flex flex-wrap gap-3 text-sm"><span>{formatCurrency(plan.estimatedInvestment)} investment</span><span>{formatCurrency(plan.estimatedProfit)} profit</span><span>{plan.expectedROI}% ROI</span></div>
+    <Card className="overflow-hidden border-emerald-100 bg-white">
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge>{labelize(plan.status)}</Badge>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${riskTone(plan.riskLevel)}`}>{labelize(plan.riskLevel)} risk</span>
+            </div>
+            <h3 className="mt-3 line-clamp-2 text-xl font-semibold leading-tight text-slate-950">{plan.planTitle}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{plan.selectedCrop} · {plan.landId?.title ?? 'Land'}</p>
+          </div>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+            <Sprout className="h-6 w-6" />
+          </div>
         </div>
-        <Button asChild variant="outline"><Link to={`/farm-planner/${plan._id}`}>Open dashboard</Link></Button>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <PlanMetric icon={IndianRupee} label="Investment" value={formatCurrency(plan.estimatedInvestment)} />
+          <PlanMetric icon={TrendingUp} label="Profit" value={formatCurrency(plan.estimatedProfit)} />
+          <PlanMetric icon={CalendarDays} label="Duration" value={`${plan.farmDurationDays ?? 0} days`} />
+        </div>
+
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-slate-600">
+            Expected ROI <span className="text-emerald-700">{plan.expectedROI ?? 0}%</span>
+          </p>
+          <Button asChild variant="outline" className="rounded-2xl">
+            <Link to={`/farm-planner/${plan._id}`}>Open dashboard</Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function PlanMetric({ icon: Icon, label, value }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+        <Icon className="h-3.5 w-3.5 text-emerald-600" />
+        {label}
+      </div>
+      <p className="mt-2 truncate text-sm font-semibold text-slate-950">{value}</p>
+    </div>
   );
 }
 

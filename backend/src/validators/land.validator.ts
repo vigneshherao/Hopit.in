@@ -15,7 +15,19 @@ import {
   LAND_WATER_SOURCES,
 } from '@/constants/land.constants.js';
 
-const positiveOptional = z.coerce.number().min(0).optional();
+const emptyToUndefined = (value: unknown) => (value === '' || value === null ? undefined : value);
+const positiveOptional = z.preprocess(emptyToUndefined, z.coerce.number().min(0).optional());
+const percentageOptional = z.preprocess(emptyToUndefined, z.coerce.number().min(0).max(100).optional());
+const optionalDate = z.preprocess(emptyToUndefined, z.coerce.date().optional());
+const uploadUrl = z.string().trim().min(1).refine((value) => {
+  if (value.startsWith('/uploads/')) return true;
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}, 'Enter a valid uploaded file URL.');
 const booleanQuery = z
   .enum(['true', 'false'])
   .transform((value) => value === 'true')
@@ -40,8 +52,8 @@ export const pricingSchema = z
     annualLeaseAmount: positiveOptional,
     securityDeposit: positiveOptional,
     priceNegotiable: z.boolean().default(true),
-    revenueShareOwnerPercentage: z.coerce.number().min(0).max(100).optional(),
-    revenueShareFarmerPercentage: z.coerce.number().min(0).max(100).optional(),
+    revenueShareOwnerPercentage: percentageOptional,
+    revenueShareFarmerPercentage: percentageOptional,
   })
   .refine(
     (pricing) =>
@@ -55,15 +67,15 @@ export const pricingSchema = z
   );
 
 export const mediaSchema = z.object({
-  images: z.array(z.string().url()).default([]),
-  videos: z.array(z.string().url()).optional(),
-  droneImages: z.array(z.string().url()).optional(),
+  images: z.array(uploadUrl).default([]),
+  videos: z.array(uploadUrl).optional(),
+  droneImages: z.array(uploadUrl).optional(),
 });
 
 export const documentSchema = z.object({
   type: z.enum(LAND_DOCUMENT_TYPES),
   name: z.string().trim().min(2).max(160),
-  url: z.string().url(),
+  url: uploadUrl,
   verificationStatus: z.enum(LAND_DOCUMENT_VERIFICATION_STATUSES).default('pending'),
   uploadedAt: z.coerce.date().default(() => new Date()),
 });
@@ -71,7 +83,7 @@ export const documentSchema = z.object({
 export const agreementTermsSchema = z.object({
   minimumDurationMonths: positiveOptional,
   maximumDurationMonths: positiveOptional,
-  availableFrom: z.coerce.date().optional(),
+  availableFrom: optionalDate,
   noticePeriodDays: positiveOptional,
   ownerParticipationAllowed: z.boolean().default(false),
   preferredAgreementType: z.enum(LAND_AGREEMENT_TYPES).optional(),

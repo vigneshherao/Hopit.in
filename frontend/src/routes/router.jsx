@@ -218,7 +218,7 @@ export const router = createBrowserRouter([
       {
         path: 'lands/:identifier/apply',
         element: (
-          <RoleRoute allowedRoles={['farmer', 'owner', 'admin']}>
+          <RoleRoute allowedRoles={['farmer', 'worker', 'owner', 'admin']}>
             <LandApplyPage />
           </RoleRoute>
         ),
@@ -243,7 +243,7 @@ export const router = createBrowserRouter([
       {
         path: 'my-applications',
         element: (
-          <RoleRoute allowedRoles={['farmer', 'owner', 'admin']}>
+          <RoleRoute allowedRoles={['farmer', 'worker', 'owner', 'admin']}>
             <MyApplicationsPage />
           </RoleRoute>
         ),
@@ -251,7 +251,7 @@ export const router = createBrowserRouter([
       {
         path: 'my-applications/:id',
         element: (
-          <RoleRoute allowedRoles={['farmer', 'owner', 'admin']}>
+          <RoleRoute allowedRoles={['farmer', 'worker', 'owner', 'admin']}>
             <ApplicationDetailPage />
           </RoleRoute>
         ),
@@ -318,7 +318,7 @@ export const router = createBrowserRouter([
       {
         path: 'farm-jobs/new',
         element: (
-          <RoleRoute allowedRoles={['owner', 'admin']}>
+          <RoleRoute allowedRoles={['owner', 'farmer', 'admin']}>
             <FarmJobCreatePage />
           </RoleRoute>
         ),
@@ -326,7 +326,7 @@ export const router = createBrowserRouter([
       {
         path: 'farm-jobs/:id/edit',
         element: (
-          <RoleRoute allowedRoles={['owner', 'admin']}>
+          <RoleRoute allowedRoles={['owner', 'farmer', 'admin']}>
             <FarmJobCreatePage />
           </RoleRoute>
         ),
@@ -335,7 +335,7 @@ export const router = createBrowserRouter([
       {
         path: 'my-farm-jobs',
         element: (
-          <RoleRoute allowedRoles={['owner', 'admin']}>
+          <RoleRoute allowedRoles={['owner', 'farmer', 'admin']}>
             <MyFarmJobsPage />
           </RoleRoute>
         ),

@@ -9,8 +9,9 @@ import { AnnouncementBanner } from '@/components/chat/AnnouncementBanner.jsx';
 import { MessageBubble } from '@/components/chat/MessageBubble.jsx';
 import { MessageComposer } from '@/components/chat/MessageComposer.jsx';
 import { ThreadSidebar } from '@/components/chat/ThreadSidebar.jsx';
+import { NewConversationModal } from '@/components/chat/NewConversationModal.jsx';
 import { Button } from '@/components/ui/button.jsx';
-import { useArchiveConversation, useAnnouncements, useConversation, useConversationMembers, useConversations, useCreateDirectConversation, useCreateSharedNote, useDeleteMessage, useMessages, useMuteConversation, usePinConversation, usePinMessage, usePinnedMessages, useReactions, useSharedNotes, useStarMessage, useStarredMessages, useThreadReply, useThreads } from '@/hooks/useChat.js';
+import { useArchiveConversation, useAnnouncements, useChatUsers, useConversation, useConversationMembers, useConversations, useCreateDirectConversation, useCreateSharedNote, useDeleteMessage, useMessages, useMuteConversation, usePinConversation, usePinMessage, usePinnedMessages, useReactions, useSharedNotes, useStarMessage, useStarredMessages, useThreadReply, useThreads } from '@/hooks/useChat.js';
 import { useConversationSocketEvents, useReadReceiptSocket } from '@/hooks/useChatSocket.js';
 import { useAuth } from '@/context/AuthContext.jsx';
 
@@ -21,10 +22,15 @@ export function MessagesPage() {
   const activeId = params.conversationId;
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [userRole, setUserRole] = useState('');
   const [activeThreadMessage, setActiveThreadMessage] = useState(null);
   const [replyToMessage, setReplyToMessage] = useState(null);
   const conversationFilters = useMemo(() => ({ search, type: filter === 'all' ? undefined : filter }), [filter, search]);
   const { data: conversationsData, isLoading: loadingConversations } = useConversations(conversationFilters);
+  const userDirectoryFilters = useMemo(() => ({ search: userSearch || undefined, role: userRole || undefined, limit: 16 }), [userRole, userSearch]);
+  const chatUsers = useChatUsers(userDirectoryFilters, isNewConversationOpen);
   const { data: conversationData } = useConversation(activeId);
   const { data: messagesData, isLoading: loadingMessages } = useMessages(activeId);
   const { data: membersData } = useConversationMembers(activeId);
@@ -49,10 +55,20 @@ export function MessagesPage() {
   const conversation = conversationData?.conversation;
   const messages = messagesData?.messages ?? [];
 
-  function startSupportConversation() {
-    const participantId = window.prompt('Enter the Hopt It user id to message');
-    if (!participantId) return;
-    createDirect.mutate({ participantId }, { onSuccess: (data) => navigate(`/messages/${data.conversation._id}`) });
+  function openNewConversationModal() {
+    setIsNewConversationOpen(true);
+  }
+
+  function startDirectConversation(participantId) {
+    createDirect.mutate(
+      { participantId },
+      {
+        onSuccess: (data) => {
+          setIsNewConversationOpen(false);
+          navigate(`/messages/${data.conversation._id}`);
+        },
+      },
+    );
   }
 
   return (
@@ -67,7 +83,7 @@ export function MessagesPage() {
             filter={filter}
             onFilter={setFilter}
             onSelect={(id) => navigate(`/messages/${id}`)}
-            onNew={startSupportConversation}
+            onNew={openNewConversationModal}
           />
           {activeId ? (
             <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1fr_320px]">
@@ -121,12 +137,25 @@ export function MessagesPage() {
             <div>
               <EmptyConversationState />
               <div className="pb-8 text-center">
-                <Button type="button" onClick={startSupportConversation}>Start a support chat</Button>
+                <Button type="button" onClick={openNewConversationModal}>Start a chat</Button>
               </div>
             </div>
           )}
         </div>
       </div>
+      <NewConversationModal
+        open={isNewConversationOpen}
+        users={chatUsers.data?.users ?? []}
+        isLoading={chatUsers.isLoading}
+        isError={chatUsers.isError}
+        isStarting={createDirect.isPending}
+        search={userSearch}
+        role={userRole || 'all'}
+        onClose={() => setIsNewConversationOpen(false)}
+        onSearch={setUserSearch}
+        onRoleChange={setUserRole}
+        onStart={startDirectConversation}
+      />
     </section>
   );
 }

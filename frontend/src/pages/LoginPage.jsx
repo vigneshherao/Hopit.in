@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -11,6 +11,14 @@ import { Label } from '@/components/ui/label.jsx';
 import { useAuth } from '@/context/AuthContext.jsx';
 import { getApiErrorMessage } from '@/utils/authErrors.js';
 import { roleDashboards } from '@/types/domain.js';
+import webLogo from '@/assets/weblogo.png';
+
+const demoAccounts = [
+  ['Owner', 'owner@hoptit.demo'],
+  ['Land Seeker', 'farmer@hoptit.demo'],
+  ['Worker', 'worker@hoptit.demo'],
+  ['Admin', 'admin@hoptit.demo'],
+];
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email address.'),
@@ -45,26 +53,47 @@ export function LoginPage() {
   };
 
   return (
-    <section className="page-shell flex min-h-[calc(100vh-96px)] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-3xl">Login</CardTitle>
-          <CardDescription>Access your Hopt It workspace.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <section className="relative min-h-[calc(100vh-96px)] overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#ffffff_0%,#f7fbf8_48%,#ffffff_100%)]" />
+
+      <div className="relative mx-auto flex min-h-[calc(100vh-150px)] max-w-md flex-col justify-center">
+        <div className="mb-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden">
+            <img src={webLogo} alt="Hopt It" className="h-20 w-20 scale-125 object-cover" />
+          </div>
+          <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700 shadow-sm sm:text-xs sm:tracking-[0.18em]">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Secure workspace
+          </div>
+          <h1 className="mt-5 text-3xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-4xl">Sign in to Hopt It</h1>
+          <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-500 sm:text-base sm:leading-7">
+            Manage land, proposals, workers, AI plans, and agreements from one agriculture workspace.
+          </p>
+        </div>
+
+        <Card className="rounded-[34px] border-emerald-100 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.10)]">
+          <CardHeader className="sr-only">
+            <CardTitle>Login</CardTitle>
+            <CardDescription>Access your Hopt It workspace.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 sm:p-6">
           <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register('email')} />
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input id="email" className="h-12 rounded-2xl border-slate-200 bg-slate-50/80 pl-10" type="email" {...register('email')} />
+              </div>
               {errors.email ? <p className="text-sm text-destructive">{errors.email.message}</p> : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? 'text' : 'password'} {...register('password')} />
+                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input id="password" className="h-12 rounded-2xl border-slate-200 bg-slate-50/80 pl-10 pr-11" type={showPassword ? 'text' : 'password'} {...register('password')} />
                 <button
                   type="button"
-                  className="absolute right-3 top-2.5 text-muted-foreground"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
@@ -75,16 +104,24 @@ export function LoginPage() {
                 <p className="text-sm text-destructive">{errors.password.message}</p>
               ) : null}
             </div>
-            {formError ? <p className="text-sm text-destructive">{formError}</p> : null}
-            <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {formError ? <p className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm font-medium text-rose-700">{formError}</p> : null}
+            <Button className="h-12 w-full rounded-2xl text-base" type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Login'}
+              <ArrowRight className="h-4 w-4" />
             </Button>
-            <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">Demo accounts</p>
-              <p>owner@hoptit.demo / HoptIt@123</p>
-              <p>farmer@hoptit.demo / HoptIt@123</p>
-              <p>worker@hoptit.demo / HoptIt@123</p>
-              <p>admin@hoptit.demo / HoptIt@123</p>
+            <div className="rounded-[26px] border border-slate-100 bg-slate-50/80 p-3">
+              <div className="flex items-center justify-between gap-3 px-1">
+                <p className="text-sm font-semibold text-slate-950">Demo accounts</p>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">Password: HoptIt@123</span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {demoAccounts.map(([role, email]) => (
+                  <div key={email} className="rounded-2xl border border-white bg-white px-3 py-2 text-sm shadow-sm">
+                    <p className="font-semibold text-slate-800">{role}</p>
+                    <p className="truncate text-slate-500">{email}</p>
+                  </div>
+                ))}
+              </div>
             </div>
             <button className="w-full text-sm text-muted-foreground" type="button" disabled>
               Forgot password flow is not enabled yet.
@@ -96,8 +133,9 @@ export function LoginPage() {
               </Link>
             </p>
           </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   );
 }

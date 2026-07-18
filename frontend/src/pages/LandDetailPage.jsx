@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LandCard, getDisplayPrice } from '@/components/lands/LandCard.jsx';
 import { LandMap } from '@/components/lands/LandMap.jsx';
 import { demoLandImage, purposeLabels, transactionLabels } from '@/utils/landData.js';
+import { useAuth } from '@/context/AuthContext.jsx';
 import { useLand } from '@/hooks/useLands.js';
 
 export function LandDetailPage() {
   const { identifier, id } = useParams();
+  const { user } = useAuth();
   const landQuery = useLand(identifier ?? id);
 
   if (landQuery.isLoading) return <section className="page-shell">Loading land details...</section>;
@@ -16,6 +18,10 @@ export function LandDetailPage() {
 
   const { land, related, hasApplied } = landQuery.data;
   const images = land.media?.images?.length ? land.media.images : [demoLandImage];
+  const userRole = user?.role;
+  const canHireWorkers = ['owner', 'farmer', 'admin'].includes(userRole);
+  const isWorker = userRole === 'worker';
+  const aiAnalyzerUrl = buildAiAnalyzerUrl(land, isWorker);
 
   return (
     <section className="page-shell space-y-8">
@@ -44,11 +50,20 @@ export function LandDetailPage() {
               {land.purposes.map((purpose) => <Badge key={purpose} variant="outline">{purposeLabels[purpose]}</Badge>)}
             </div>
             <Button asChild className="w-full">
-              <Link to={`/lands/${land.slug ?? land._id}/apply`}>Apply or submit proposal</Link>
+              <Link to={`/lands/${land.slug ?? land._id}/apply`}>
+                {isWorker ? 'Submit work interest' : 'Apply or submit proposal'}
+              </Link>
             </Button>
             {hasApplied ? <p className="text-sm text-muted-foreground">You have already applied for this land.</p> : null}
-            <Button asChild variant="outline" className="w-full"><Link to="/ai">Run AI analysis</Link></Button>
-            <Button asChild variant="outline" className="w-full"><Link to="/workers">Hire workers</Link></Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link to={aiAnalyzerUrl}>{isWorker ? 'Analyze work suitability' : 'Run AI analysis'}</Link>
+            </Button>
+            {canHireWorkers ? <Button asChild variant="outline" className="w-full"><Link to="/workers">Hire workers</Link></Button> : null}
+            {isWorker ? (
+              <p className="rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-900">
+                Workers can review land, submit work interest, and use AI to understand whether the land matches their skills. Hiring workers is only for landowners, land seekers, and admins.
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       </div>
@@ -124,4 +139,25 @@ function yesNo(value) {
 function documentSummary(documents = []) {
   if (!documents.length) return 'No public document summary available';
   return documents.map((document) => document.name).join(', ');
+}
+
+function buildAiAnalyzerUrl(land, isWorker) {
+  const params = new URLSearchParams({
+    mode: isWorker ? 'worker-fit' : 'land-analysis',
+    soilType: land.landDetails?.soilType ?? '',
+    landArea: String(land.area?.value ?? ''),
+    areaUnit: land.area?.unit ?? '',
+    state: land.location?.state ?? '',
+    district: land.location?.district ?? '',
+    waterAvailability: land.landDetails?.waterAvailability ?? '',
+    marketDistanceKm: String(land.nearbyFacilities?.nearestMarketKm ?? ''),
+    irrigationAvailable: land.landDetails?.irrigationAvailable ? 'true' : 'false',
+    roadAccess: land.landDetails?.roadAccess ? 'true' : 'false',
+    ownerParticipation: land.agreementTerms?.ownerParticipationAllowed ? 'true' : 'false',
+    notes: isWorker
+      ? `Analyze whether ${land.title} is suitable for my farm work skills, likely labour demand, work season, water constraints, and safety risks.`
+      : `Analyze ${land.title} for crop fit, investment, ROI, risk, and next steps.`,
+  });
+
+  return `/ai-analyzer?${params.toString()}`;
 }

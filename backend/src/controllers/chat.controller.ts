@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from '@/types/http.js';
-import { addMembers, blockUser, createDirectConversation, createGroupConversation, deleteChatAttachment, deleteMessage, editMessage, forwardMessage, getChatAttachment, getConversation, getMessage, listBlockedUsers, listConversations, listMembers, listMessages, markConversationRead, markDelivered, removeMember, searchConversations, searchMessages, sendMessage, setConversationFlag, unblockUser, updateConversation, updateMember, uploadChatAttachments } from '@/services/chat/chat.service.js';
+import { addMembers, blockUser, createDirectConversation, createGroupConversation, deleteChatAttachment, deleteMessage, editMessage, forwardMessage, getChatAttachment, getConversation, getMessage, listBlockedUsers, listChatUsers, listConversations, listMembers, listMessages, markConversationRead, markDelivered, removeMember, searchConversations, searchMessages, sendMessage, setConversationFlag, unblockUser, updateConversation, updateMember, uploadChatAttachments } from '@/services/chat/chat.service.js';
 import { sendSuccess } from '@/utils/api-response.js';
 
 function mutedUntil(duration?: string) {
@@ -22,6 +22,10 @@ export async function conversationController(req: AuthenticatedRequest, res: Res
 
 export async function createDirectConversationController(req: AuthenticatedRequest, res: Response) {
   sendSuccess(res, 201, 'Direct conversation ready.', await createDirectConversation(req.user!.id, req.body.participantId));
+}
+
+export async function chatUsersController(req: AuthenticatedRequest, res: Response) {
+  sendSuccess(res, 200, 'Chat users retrieved.', await listChatUsers(req.user!.id, req.query));
 }
 
 export async function createGroupConversationController(req: AuthenticatedRequest, res: Response) {

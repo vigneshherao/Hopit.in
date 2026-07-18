@@ -86,6 +86,14 @@ const schema = z.object({
 });
 
 const steps = ['Basic', 'Location', 'Land', 'Pricing', 'Media', 'Review'];
+const stepFields = [
+  ['title', 'shortDescription', 'description', 'purposes', 'transactionTypes'],
+  ['location.address', 'location.village', 'location.taluk', 'location.city', 'location.district', 'location.state', 'location.pincode', 'location.coordinates'],
+  ['area', 'landDetails'],
+  ['pricing', 'agreementTerms', 'businessSuitabilityText'],
+  ['media', 'documents'],
+  [],
+];
 
 export function LandForm({ initialValues, onSubmit, isSubmitting = false, mode = 'create' }) {
   const [step, setStep] = useState(0);
@@ -115,7 +123,7 @@ export function LandForm({ initialValues, onSubmit, isSubmitting = false, mode =
   const pickerValue = coordinates ? { longitude: coordinates[0], latitude: coordinates[1] } : null;
 
   async function next() {
-    const valid = await trigger();
+    const valid = await trigger(stepFields[step], { shouldFocus: true });
     if (valid) setStep((value) => Math.min(value + 1, steps.length - 1));
   }
 
@@ -443,9 +451,24 @@ function buildDefaults(initialValues) {
 }
 
 function normalizeFormValues(values, status) {
+  const transactionSet = new Set(values.transactionTypes);
+  const pricing = {
+    priceNegotiable: values.pricing.priceNegotiable,
+    securityDeposit: values.pricing.securityDeposit,
+  };
+
+  if (transactionSet.has('sale')) pricing.salePrice = values.pricing.salePrice;
+  if (transactionSet.has('rent')) pricing.monthlyRent = values.pricing.monthlyRent;
+  if (transactionSet.has('lease')) pricing.annualLeaseAmount = values.pricing.annualLeaseAmount;
+  if (transactionSet.has('revenue-share')) {
+    pricing.revenueShareOwnerPercentage = values.pricing.revenueShareOwnerPercentage;
+    pricing.revenueShareFarmerPercentage = values.pricing.revenueShareFarmerPercentage;
+  }
+
   return {
     ...values,
     status,
+    pricing,
     landDetails: {
       ...values.landDetails,
       previousCrops: splitList(values.landDetails.previousCropsText),
@@ -462,5 +485,9 @@ function splitList(value = '') {
 }
 
 function fieldLabel(value) {
+  const labels = {
+    revenueShareFarmerPercentage: 'Revenue Share Land Seeker Percentage',
+  };
+  if (labels[value]) return labels[value];
   return value.replace(/([A-Z])/g, ' $1').replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

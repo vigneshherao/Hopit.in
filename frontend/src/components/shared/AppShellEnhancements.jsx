@@ -17,8 +17,9 @@ function isVisible(item, isAuthenticated, role) {
 export function Breadcrumbs() {
   const { pathname } = useLocation();
   const parts = pathname.split('/').filter(Boolean);
+  const hiddenPaths = new Set(['/login', '/register']);
 
-  if (!parts.length) return null;
+  if (!parts.length || hiddenPaths.has(pathname)) return null;
 
   return (
     <nav className="mx-auto hidden w-full max-w-7xl items-center gap-2 px-4 pt-4 text-sm font-semibold text-slate-500 sm:flex sm:px-6 lg:px-8" aria-label="Breadcrumb">

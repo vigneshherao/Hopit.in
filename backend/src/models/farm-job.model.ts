@@ -65,8 +65,17 @@ const farmJobSchema = new Schema<FarmJob>(
       state: { type: String, trim: true, index: true },
       pincode: { type: String, trim: true },
       coordinates: {
-        type: { type: String, enum: ['Point'], default: 'Point' },
-        coordinates: { type: [Number] },
+        type: { type: String, enum: ['Point'], default: undefined },
+        coordinates: {
+          type: [Number],
+          default: undefined,
+          validate: {
+            validator(value: number[] | undefined) {
+              return !value || (value.length === 2 && value[0] >= -180 && value[0] <= 180 && value[1] >= -90 && value[1] <= 90);
+            },
+            message: 'Coordinates must be [longitude, latitude].',
+          },
+        },
       },
     },
     cropOrBusinessType: { type: String, trim: true, index: true },
@@ -89,6 +98,10 @@ const farmJobSchema = new Schema<FarmJob>(
 );
 
 farmJobSchema.pre('validate', function validateOpenJob(next) {
+  const coordinates = this.location?.coordinates?.coordinates;
+  if (this.location?.coordinates && (!Array.isArray(coordinates) || coordinates.length !== 2)) {
+    this.location.coordinates = undefined;
+  }
   if (!this.professionalRolesRequired.length) return next(new Error('At least one professional role is required.'));
   if (this.compensation.maximumAmount !== undefined && this.compensation.minimumAmount !== undefined && this.compensation.maximumAmount < this.compensation.minimumAmount) {
     return next(new Error('Maximum compensation cannot be less than minimum compensation.'));
@@ -107,7 +120,8 @@ farmJobSchema.pre('validate', function validateOpenJob(next) {
 farmJobSchema.index({ 'location.coordinates': '2dsphere' });
 farmJobSchema.index({ status: 1, createdAt: -1 });
 farmJobSchema.index({ postedBy: 1, status: 1 });
-farmJobSchema.index({ professionalRolesRequired: 1, skillsRequired: 1, workType: 1 });
+farmJobSchema.index({ professionalRolesRequired: 1, workType: 1 });
+farmJobSchema.index({ skillsRequired: 1, workType: 1 });
 farmJobSchema.index({ title: 'text', description: 'text', professionalRolesRequired: 'text', skillsRequired: 'text', 'location.city': 'text', 'location.district': 'text', 'location.state': 'text' });
 
 export const FarmJobModel = model<FarmJob>('FarmJob', farmJobSchema);

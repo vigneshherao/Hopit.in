@@ -46,10 +46,10 @@ const applicationRateLimit = rateLimit({
 
 applicationRouter.use(authenticate);
 applicationRouter.get('/statistics', asyncHandler(applicationStatisticsController));
-applicationRouter.get('/my', authorize('farmer', 'owner', 'admin'), validateRequest({ query: applicationFilterSchema }), asyncHandler(myApplicationsController));
+applicationRouter.get('/my', authorize('farmer', 'worker', 'owner', 'admin'), validateRequest({ query: applicationFilterSchema }), asyncHandler(myApplicationsController));
 applicationRouter.get('/received', authorize('owner', 'admin'), validateRequest({ query: applicationFilterSchema }), asyncHandler(receivedApplicationsController));
-applicationRouter.post('/', applicationRateLimit, authorize('farmer', 'owner', 'admin'), validateRequest({ body: createApplicationSchema }), asyncHandler(createApplicationController));
-applicationRouter.post('/upload/documents', applicationRateLimit, authorize('farmer', 'owner', 'admin'), upload.array('files', 8), asyncHandler(uploadApplicationDocumentsController));
+applicationRouter.post('/', applicationRateLimit, authorize('farmer', 'worker', 'owner', 'admin'), validateRequest({ body: createApplicationSchema }), asyncHandler(createApplicationController));
+applicationRouter.post('/upload/documents', applicationRateLimit, authorize('farmer', 'worker', 'owner', 'admin'), upload.array('files', 8), asyncHandler(uploadApplicationDocumentsController));
 applicationRouter.get('/:id', validateRequest({ params: idParamSchema }), asyncHandler(applicationDetailsController));
 applicationRouter.patch('/:id', validateRequest({ params: idParamSchema, body: updateApplicationSchema }), asyncHandler(updateApplicationController));
 applicationRouter.post('/:id/submit', validateRequest({ params: idParamSchema }), asyncHandler(submitApplicationController));

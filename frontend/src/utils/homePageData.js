@@ -44,7 +44,7 @@ export const featureCards = [
     icon: MapPin,
   },
   {
-    title: 'Hire Farmers & Workers',
+    title: 'Hire Farm Talent',
     description: 'Build reliable farm teams with role-aware profiles, bookings, and trust signals.',
     image: farmersImage,
     icon: Users,
@@ -153,10 +153,10 @@ export const testimonials = [
     location: 'Mandya, Karnataka',
     image: profileOneImage,
     metric: '3 land deals reviewed',
-    quote: 'Hopt It made our idle land visible to serious farmers with clear proposals.',
+    quote: 'Hopt It made our idle land visible to serious buyers, lease seekers, and agri-business operators.',
   },
   {
-    role: 'Farmer',
+    role: 'Land Seeker',
     name: 'Arun P.',
     location: 'Coimbatore, Tamil Nadu',
     image: profileTwoImage,

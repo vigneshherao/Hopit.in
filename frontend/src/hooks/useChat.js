@@ -16,6 +16,7 @@ export const chatKeys = {
   notes: (filters = {}) => ['chat', 'notes', filters],
   announcements: (filters = {}) => ['chat', 'announcements', filters],
   bookmarks: (filters = {}) => ['chat', 'bookmarks', filters],
+  users: (filters = {}) => ['chat', 'users', filters],
 };
 
 export function useConversations(filters = {}) {
@@ -29,6 +30,10 @@ export function useConversation(id) {
 export function useCreateDirectConversation() {
   const queryClient = useQueryClient();
   return useMutation({ mutationFn: chatService.createDirectConversation, onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.all }) });
+}
+
+export function useChatUsers(filters = {}, enabled = true) {
+  return useQuery({ queryKey: chatKeys.users(filters), queryFn: () => chatService.getChatUsers(filters), enabled, staleTime: 30_000 });
 }
 
 export function useCreateGroupConversation() {

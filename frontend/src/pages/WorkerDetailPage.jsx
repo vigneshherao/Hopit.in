@@ -12,6 +12,17 @@ export function WorkerDetailPage() {
   const worker = workerQuery.data?.worker;
   const reviews = workerQuery.data?.reviews ?? [];
   const user = worker?.userId ?? {};
+  const hireSearchParams = new URLSearchParams({
+    workerId: worker?._id ?? '',
+    workerName: user.name ?? worker?.headline ?? 'Selected worker',
+    role: worker?.professionalRoles?.[0] ?? '',
+    skills: worker?.skills?.slice(0, 4).join(',') ?? '',
+    city: worker?.location?.city ?? '',
+    district: worker?.location?.district ?? '',
+    state: worker?.location?.state ?? '',
+    amount: String(worker?.pricing?.dailyWage ?? worker?.pricing?.weeklyRate ?? worker?.pricing?.monthlySalary ?? ''),
+  });
+  const hirePath = `/farm-jobs/new?${hireSearchParams.toString()}`;
 
   if (workerQuery.isLoading) return <section className="page-shell"><div className="h-96 animate-pulse rounded-3xl bg-emerald-50" /></section>;
   if (!worker) return <section className="page-shell"><Card><CardContent className="p-8 text-center">Worker profile not found.</CardContent></Card></section>;
@@ -34,8 +45,8 @@ export function WorkerDetailPage() {
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">{worker.bio}</p>
           </div>
           <div className="pt-0 lg:pt-16">
-            <Button asChild><Link to="/farm-jobs/new">Hire worker</Link></Button>
-            <Button asChild variant="outline" className="mt-2 w-full"><Link to="/farm-jobs">Invite to job</Link></Button>
+            <Button asChild><Link to={hirePath}>Hire worker</Link></Button>
+            <Button asChild variant="outline" className="mt-2 w-full"><Link to={`${hirePath}&mode=invite`}>Invite to job</Link></Button>
           </div>
         </CardContent>
       </Card>

@@ -16,7 +16,7 @@ export function ProfilePage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-md border p-4">
               <p className="text-sm text-muted-foreground">Role model</p>
-              <p className="mt-2 font-medium">Land owner, farmer, or farm worker</p>
+              <p className="mt-2 font-medium">Land owner, land seeker, or farm worker</p>
             </div>
             <div className="rounded-md border p-4">
               <p className="text-sm text-muted-foreground">Verification</p>

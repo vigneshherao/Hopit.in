@@ -4,7 +4,7 @@ export const selfRegisterRoles = ['owner', 'farmer', 'worker'];
 
 export const roleLabels = {
   owner: 'Land Owner',
-  farmer: 'Farmer',
+  farmer: 'Land Seeker',
   worker: 'Farm Worker',
   admin: 'Admin',
 };

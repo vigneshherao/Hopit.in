@@ -4,18 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.j
 import { Badge } from '@/components/ui/badge.jsx';
 import { statusLabels } from '@/utils/landData.js';
 import { useLand, useSubmitLandVerification, useUpdateLandStatus } from '@/hooks/useLands.js';
+import { useToast } from '@/components/ui/toast.jsx';
+import { getFriendlyApiMessage } from '@/utils/apiMessages.js';
 
 export function MyLandDetailPage() {
   const { id } = useParams();
   const landQuery = useLand(id);
   const submitVerification = useSubmitLandVerification();
   const updateStatus = useUpdateLandStatus();
+  const { showToast } = useToast();
 
   if (landQuery.isLoading) return <section className="page-shell">Loading listing...</section>;
   if (!landQuery.data?.land) return <section className="page-shell">Listing not found.</section>;
 
   const { land, applicationCount } = landQuery.data;
   const missing = getMissingChecklist(land);
+
+  async function runLandAction(action, successTitle, successMessage) {
+    try {
+      await action();
+      showToast({ tone: 'success', title: successTitle, message: successMessage });
+    } catch (error) {
+      showToast({ tone: 'error', title: 'Action could not be completed', message: getFriendlyApiMessage(error) });
+    }
+  }
 
   return (
     <section className="page-shell space-y-6">
@@ -57,11 +69,11 @@ export function MyLandDetailPage() {
       <Card>
         <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button disabled={Boolean(missing.length)} onClick={() => submitVerification.mutate(land._id)}>Submit for verification</Button>
-          <Button variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'pause' })}>Pause</Button>
-          <Button variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'resume' })}>Resume</Button>
-          <Button variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'mark-reserved' })}>Mark reserved</Button>
-          <Button variant="outline" onClick={() => updateStatus.mutate({ id: land._id, action: 'mark-occupied' })}>Mark occupied</Button>
+          <Button disabled={Boolean(missing.length)} onClick={() => runLandAction(() => submitVerification.mutateAsync(land._id), 'Listing submitted', 'Your land listing has been sent for verification.')}>Submit for verification</Button>
+          <Button variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'pause' }), 'Listing paused', 'This land is no longer visible in the public marketplace.')}>Pause</Button>
+          <Button variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'resume' }), 'Listing resumed', 'This land is available again in the public marketplace.')}>Resume</Button>
+          <Button variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'mark-reserved' }), 'Listing reserved', 'This listing is now marked as reserved.')}>Mark reserved</Button>
+          <Button variant="outline" onClick={() => runLandAction(() => updateStatus.mutateAsync({ id: land._id, action: 'mark-occupied' }), 'Listing occupied', 'This listing is now marked as occupied.')}>Mark occupied</Button>
         </CardContent>
       </Card>
 

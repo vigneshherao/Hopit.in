@@ -84,6 +84,8 @@ describe('application workflow frontend', () => {
     await userEvent.type(screen.getByLabelText(/proposal title/i), 'Lease proposal');
     await userEvent.type(screen.getByLabelText(/summary/i), 'A serious lease proposal for vegetable farming.');
     await userEvent.type(screen.getByLabelText(/intended use/i), 'Vegetable farming');
+    await userEvent.type(screen.getByLabelText(/duration months/i), '24');
+    await userEvent.type(screen.getByLabelText(/annual lease/i), '360000');
     await userEvent.click(screen.getByRole('button', { name: /submit application/i }));
     expect(createApplication).toHaveBeenCalled();
   });

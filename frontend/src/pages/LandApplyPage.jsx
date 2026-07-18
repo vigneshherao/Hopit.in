@@ -13,6 +13,11 @@ import { useCreateApplication } from '@/hooks/useApplications.js';
 import { useLand } from '@/hooks/useLands.js';
 import { getApiErrorMessage } from '@/utils/authErrors.js';
 
+const optionalNumber = z.preprocess(
+  (value) => (value === '' || value === null || Number.isNaN(value) ? undefined : value),
+  z.coerce.number().optional(),
+);
+
 const schema = z.object({
   applicationType: z.string().min(1),
   occupation: z.string().optional(),
@@ -22,14 +27,38 @@ const schema = z.object({
   title: z.string().min(3, 'Proposal title is required.'),
   summary: z.string().min(10, 'Summary must be at least 10 characters.'),
   intendedUse: z.string().min(3, 'Intended use is required.'),
-  proposedDurationMonths: z.coerce.number().optional(),
-  proposedMonthlyRent: z.coerce.number().optional(),
-  proposedAnnualLeaseAmount: z.coerce.number().optional(),
-  proposedPurchasePrice: z.coerce.number().optional(),
-  proposedOwnerRevenuePercentage: z.coerce.number().optional(),
-  proposedApplicantRevenuePercentage: z.coerce.number().optional(),
-  expectedInvestment: z.coerce.number().optional(),
+  proposedDurationMonths: optionalNumber,
+  proposedMonthlyRent: optionalNumber,
+  proposedAnnualLeaseAmount: optionalNumber,
+  proposedPurchasePrice: optionalNumber,
+  proposedOwnerRevenuePercentage: optionalNumber,
+  proposedApplicantRevenuePercentage: optionalNumber,
+  expectedInvestment: optionalNumber,
   coverMessage: z.string().optional(),
+}).superRefine((values, ctx) => {
+  if (values.applicationType === 'lease') {
+    if (!values.proposedDurationMonths) ctx.addIssue({ code: 'custom', path: ['proposedDurationMonths'], message: 'Duration is required for lease.' });
+    if (!values.proposedAnnualLeaseAmount) ctx.addIssue({ code: 'custom', path: ['proposedAnnualLeaseAmount'], message: 'Annual lease amount is required.' });
+  }
+  if (values.applicationType === 'rent') {
+    if (!values.proposedDurationMonths) ctx.addIssue({ code: 'custom', path: ['proposedDurationMonths'], message: 'Duration is required for rent.' });
+    if (!values.proposedMonthlyRent) ctx.addIssue({ code: 'custom', path: ['proposedMonthlyRent'], message: 'Monthly rent is required.' });
+  }
+  if (values.applicationType === 'revenue-share') {
+    if (values.proposedOwnerRevenuePercentage === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['proposedOwnerRevenuePercentage'], message: 'Owner revenue share is required.' });
+    }
+    if (values.proposedApplicantRevenuePercentage === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['proposedApplicantRevenuePercentage'], message: 'Applicant revenue share is required.' });
+    }
+    if (
+      values.proposedOwnerRevenuePercentage !== undefined &&
+      values.proposedApplicantRevenuePercentage !== undefined &&
+      values.proposedOwnerRevenuePercentage + values.proposedApplicantRevenuePercentage !== 100
+    ) {
+      ctx.addIssue({ code: 'custom', path: ['proposedOwnerRevenuePercentage'], message: 'Revenue shares must total 100.' });
+    }
+  }
 });
 
 export function LandApplyPage() {
@@ -41,6 +70,7 @@ export function LandApplyPage() {
   const land = landQuery.data?.land;
   const types = useMemo(() => compatibleApplicationTypes(land), [land]);
   const form = useForm({ resolver: zodResolver(schema), defaultValues: { applicationType: types[0] ?? 'lease' } });
+  const selectedApplicationType = form.watch('applicationType');
 
   useEffect(() => {
     if (types[0]) form.setValue('applicationType', types[0]);
@@ -51,9 +81,31 @@ export function LandApplyPage() {
   if (String(land.ownerId?._id ?? land.ownerId) === user?.id) {
     return <section className="page-shell">You cannot apply to your own land.</section>;
   }
+  const isWorker = user?.role === 'worker';
 
   async function submit(values, saveAsDraft) {
     try {
+      const proposal = {
+        title: values.title,
+        summary: values.summary,
+        intendedUse: values.intendedUse,
+        ownerParticipationRequested: false,
+      };
+
+      if (['lease', 'rent', 'joint-venture', 'revenue-share'].includes(values.applicationType)) {
+        proposal.proposedDurationMonths = values.proposedDurationMonths;
+      }
+      if (values.applicationType === 'rent') proposal.proposedMonthlyRent = values.proposedMonthlyRent;
+      if (values.applicationType === 'lease') proposal.proposedAnnualLeaseAmount = values.proposedAnnualLeaseAmount;
+      if (values.applicationType === 'sale-enquiry') proposal.proposedPurchasePrice = values.proposedPurchasePrice;
+      if (values.applicationType === 'revenue-share') {
+        proposal.proposedOwnerRevenuePercentage = values.proposedOwnerRevenuePercentage;
+        proposal.proposedApplicantRevenuePercentage = values.proposedApplicantRevenuePercentage;
+      }
+      if (['joint-venture', 'revenue-share', 'business-proposal'].includes(values.applicationType)) {
+        proposal.expectedInvestment = values.expectedInvestment;
+      }
+
       const result = await createApplication.mutateAsync({
         landId: land._id,
         applicationType: values.applicationType,
@@ -63,19 +115,7 @@ export function LandApplyPage() {
           farmingExperience: values.farmingExperience,
           businessExperience: values.businessExperience,
         },
-        proposal: {
-          title: values.title,
-          summary: values.summary,
-          intendedUse: values.intendedUse,
-          proposedDurationMonths: values.proposedDurationMonths,
-          proposedMonthlyRent: values.proposedMonthlyRent,
-          proposedAnnualLeaseAmount: values.proposedAnnualLeaseAmount,
-          proposedPurchasePrice: values.proposedPurchasePrice,
-          proposedOwnerRevenuePercentage: values.proposedOwnerRevenuePercentage,
-          proposedApplicantRevenuePercentage: values.proposedApplicantRevenuePercentage,
-          expectedInvestment: values.expectedInvestment,
-          ownerParticipationRequested: false,
-        },
+        proposal,
         coverMessage: values.coverMessage,
         saveAsDraft,
       });
@@ -89,8 +129,12 @@ export function LandApplyPage() {
     <section className="page-shell">
       <Card>
         <CardHeader>
-          <CardTitle>Apply for {land.title}</CardTitle>
-          <CardDescription>{land.location.district}, {land.location.state}</CardDescription>
+          <CardTitle>{isWorker ? 'Submit work interest' : 'Apply'} for {land.title}</CardTitle>
+          <CardDescription>
+            {isWorker
+              ? `Tell the owner how your skills fit this land in ${land.location.district}, ${land.location.state}.`
+              : `${land.location.district}, ${land.location.state}`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4 md:grid-cols-2" noValidate>
@@ -101,17 +145,35 @@ export function LandApplyPage() {
             </Field>
             <Field label="Occupation"><Input {...form.register('occupation')} /></Field>
             <Field label="Current location"><Input {...form.register('currentLocation')} /></Field>
-            <Field label="Proposal title" error={form.formState.errors.title?.message}><Input {...form.register('title')} /></Field>
-            <Field label="Summary" error={form.formState.errors.summary?.message}><Input {...form.register('summary')} /></Field>
-            <Field label="Intended use" error={form.formState.errors.intendedUse?.message}><Input {...form.register('intendedUse')} /></Field>
-            <Field label="Duration months"><Input type="number" {...form.register('proposedDurationMonths')} /></Field>
-            <Field label="Monthly rent"><Input type="number" {...form.register('proposedMonthlyRent')} /></Field>
-            <Field label="Annual lease"><Input type="number" {...form.register('proposedAnnualLeaseAmount')} /></Field>
-            <Field label="Purchase offer"><Input type="number" {...form.register('proposedPurchasePrice')} /></Field>
-            <Field label="Expected investment"><Input type="number" {...form.register('expectedInvestment')} /></Field>
+            <Field label={isWorker ? 'Work interest title' : 'Proposal title'} error={form.formState.errors.title?.message}><Input {...form.register('title')} /></Field>
+            <Field label={isWorker ? 'Your skill fit summary' : 'Summary'} error={form.formState.errors.summary?.message}><Input {...form.register('summary')} /></Field>
+            <Field label={isWorker ? 'Work you can support' : 'Intended use'} error={form.formState.errors.intendedUse?.message}><Input {...form.register('intendedUse')} /></Field>
+            {['lease', 'rent', 'joint-venture', 'revenue-share'].includes(selectedApplicationType) ? (
+              <Field label="Duration months" error={form.formState.errors.proposedDurationMonths?.message}><Input type="number" {...form.register('proposedDurationMonths')} /></Field>
+            ) : null}
+            {selectedApplicationType === 'rent' ? (
+              <Field label="Monthly rent" error={form.formState.errors.proposedMonthlyRent?.message}><Input type="number" {...form.register('proposedMonthlyRent')} /></Field>
+            ) : null}
+            {selectedApplicationType === 'lease' ? (
+              <Field label="Annual lease" error={form.formState.errors.proposedAnnualLeaseAmount?.message}><Input type="number" {...form.register('proposedAnnualLeaseAmount')} /></Field>
+            ) : null}
+            {selectedApplicationType === 'sale-enquiry' ? (
+              <Field label="Purchase offer" error={form.formState.errors.proposedPurchasePrice?.message}><Input type="number" {...form.register('proposedPurchasePrice')} /></Field>
+            ) : null}
+            {selectedApplicationType === 'revenue-share' ? (
+              <>
+                <Field label="Owner revenue %" error={form.formState.errors.proposedOwnerRevenuePercentage?.message}><Input type="number" min="0" max="100" {...form.register('proposedOwnerRevenuePercentage')} /></Field>
+                <Field label="Applicant revenue %" error={form.formState.errors.proposedApplicantRevenuePercentage?.message}><Input type="number" min="0" max="100" {...form.register('proposedApplicantRevenuePercentage')} /></Field>
+              </>
+            ) : null}
+            {['joint-venture', 'revenue-share', 'business-proposal'].includes(selectedApplicationType) ? (
+              <Field label="Expected investment"><Input type="number" {...form.register('expectedInvestment')} /></Field>
+            ) : null}
             <Field label="Cover message"><Input {...form.register('coverMessage')} /></Field>
             <p className="md:col-span-2 text-sm text-muted-foreground">
-              This application is a proposal only. Final agreements require legal review and applicable registration.
+              {isWorker
+                ? 'This is a work-interest proposal. The owner can review your profile and continue discussion before assigning any work.'
+                : 'This application is a proposal only. Final agreements require legal review and applicable registration.'}
             </p>
             <div className="md:col-span-2 flex gap-3">
               <Button type="button" variant="outline" onClick={form.handleSubmit((values) => submit(values, true))}>Save draft</Button>

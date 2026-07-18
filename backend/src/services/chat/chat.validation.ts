@@ -36,6 +36,11 @@ export const messageQuerySchema = z.object({
 });
 
 export const directConversationSchema = z.object({ participantId: objectId });
+export const chatUserDirectoryQuerySchema = z.object({
+  search: z.string().trim().max(120).optional(),
+  role: z.enum(['owner', 'farmer', 'worker', 'admin']).optional(),
+  limit: z.coerce.number().int().min(1).max(30).default(12),
+});
 export const groupConversationSchema = z.object({
   title: z.string().trim().min(2).max(160),
   participantIds: z.array(objectId).min(2).max(env.chatMaxGroupMembers),

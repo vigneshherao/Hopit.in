@@ -8,7 +8,7 @@ import { roleLabels } from '@/types/domain.js';
 
 const nextFeatures = {
   owner: 'Land listings, application review, lease tracking, and owner analytics.',
-  farmer: 'Land discovery, applications, worker booking, and crop planning.',
+  farmer: 'Land discovery, purchase or lease proposals, worker booking, and business planning.',
   worker: 'Worker profile, job invitations, booking calendar, and earnings.',
   admin: 'User moderation, verification queues, marketplace oversight, and audit trails.',
 };

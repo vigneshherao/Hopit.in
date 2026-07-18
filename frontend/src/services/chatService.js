@@ -15,6 +15,11 @@ export async function createDirectConversation(payload) {
   return data.data;
 }
 
+export async function getChatUsers(params = {}) {
+  const { data } = await apiClient.get('/chat/users', { params });
+  return data.data;
+}
+
 export async function createGroupConversation(payload) {
   const { data } = await apiClient.post('/chat/conversations/group', payload);
   return data.data;
