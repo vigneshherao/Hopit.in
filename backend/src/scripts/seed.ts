@@ -8,17 +8,17 @@ import { UserModel } from '@/models/user.model.js';
 import { WorkerProfileModel } from '@/models/worker-profile.model.js';
 import { logger } from '@/utils/logger.js';
 
-const demoPassword = 'AgriLink@123';
+const demoPassword = 'HoptIt@123';
 const allowProductionSeed = process.env.ALLOW_PRODUCTION_SEED === 'true';
 
 const demoUsers = [
-  { name: 'Demo Owner', email: 'owner@agrilink.demo', role: 'owner' },
-  { name: 'Demo Farmer', email: 'farmer@agrilink.demo', role: 'farmer' },
-  { name: 'Demo Worker', email: 'worker@agrilink.demo', role: 'worker' },
-  { name: 'Demo Admin', email: 'admin@agrilink.demo', role: 'admin' },
-  { name: 'Demo Investor', email: 'investor@agrilink.demo', role: 'owner' },
-  { name: 'Demo Dairy Farmer', email: 'dairy@agrilink.demo', role: 'farmer' },
-  { name: 'Demo Solar Entrepreneur', email: 'solar@agrilink.demo', role: 'owner' },
+  { name: 'Demo Owner', email: 'owner@hoptit.demo', role: 'owner' },
+  { name: 'Demo Farmer', email: 'farmer@hoptit.demo', role: 'farmer' },
+  { name: 'Demo Worker', email: 'worker@hoptit.demo', role: 'worker' },
+  { name: 'Demo Admin', email: 'admin@hoptit.demo', role: 'admin' },
+  { name: 'Demo Investor', email: 'investor@hoptit.demo', role: 'owner' },
+  { name: 'Demo Dairy Farmer', email: 'dairy@hoptit.demo', role: 'farmer' },
+  { name: 'Demo Solar Entrepreneur', email: 'solar@hoptit.demo', role: 'owner' },
 ] as const;
 
 const imageUrls = [
@@ -63,11 +63,37 @@ async function seed(): Promise<void> {
         {
           $setOnInsert: {
             userId: user._id,
+            headline: 'Experienced farm worker for sowing and harvest support',
+            bio: 'Reliable agriculture worker with practical field experience in sowing, harvesting, irrigation support, and daily farm operations.',
+            professionalRoles: ['general-farm-worker', 'seasonal-worker'],
             skills: ['sowing', 'harvesting'],
             experienceYears: 3,
-            dailyWage: 750,
-            availabilityStatus: 'available',
-            serviceRadiusKm: 25,
+            languages: ['Kannada', 'Tamil'],
+            location: {
+              city: 'Mandya',
+              district: 'Mandya',
+              state: 'Karnataka',
+              country: 'India',
+            },
+            availability: {
+              status: 'available',
+              preferredDurationTypes: ['daily', 'seasonal'],
+              willingToRelocate: false,
+              willingToStayOnFarm: true,
+              maximumTravelDistanceKm: 25,
+            },
+            pricing: {
+              dailyWage: 750,
+              negotiable: true,
+            },
+            workPreferences: {
+              preferredCrops: ['Paddy', 'Sugarcane', 'Vegetables'],
+              preferredWorkTypes: ['sowing', 'harvesting', 'irrigation'],
+              acceptsIndividualWork: true,
+              acceptsTeamWork: true,
+              acceptsFarmManagement: false,
+              acceptsNightStay: true,
+            },
           },
         },
         { upsert: true },
@@ -75,8 +101,8 @@ async function seed(): Promise<void> {
     }
   }
 
-  const owner = await UserModel.findOne({ email: 'owner@agrilink.demo' });
-  const admin = await UserModel.findOne({ email: 'admin@agrilink.demo' });
+  const owner = await UserModel.findOne({ email: 'owner@hoptit.demo' });
+  const admin = await UserModel.findOne({ email: 'admin@hoptit.demo' });
   if (!owner) throw new Error('Seed owner missing.');
 
   const listings = buildLandListings(owner._id, admin?._id);
@@ -92,12 +118,12 @@ async function seed(): Promise<void> {
 
   await seedApplications(owner._id, admin?._id);
 
-  logger.info('Development demo users seeded. Password: AgriLink@123');
+  logger.info('Development demo users seeded. Password: HoptIt@123');
 }
 
 async function seedApplications(ownerId: unknown, adminId: unknown) {
   const applicants = await UserModel.find({
-    email: { $in: ['farmer@agrilink.demo', 'investor@agrilink.demo', 'dairy@agrilink.demo', 'solar@agrilink.demo'] },
+    email: { $in: ['farmer@hoptit.demo', 'investor@hoptit.demo', 'dairy@hoptit.demo', 'solar@hoptit.demo'] },
   });
   const lands = await LandModel.find({ ownerId }).limit(8);
   if (!lands.length || !applicants.length) return;

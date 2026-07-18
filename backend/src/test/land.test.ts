@@ -4,7 +4,7 @@ import { createApp } from '@/app.js';
 import { LandModel } from '@/models/land.model.js';
 
 const app = createApp();
-const password = 'AgriLink@123';
+const password = 'HoptIt@123';
 
 async function register(role: 'owner' | 'farmer' | 'admin', email = `${role}@example.com`) {
   const response = await request(app).post('/api/v1/auth/register').send({

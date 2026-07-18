@@ -1,6 +1,6 @@
 # Authentication
 
-Hopit uses short-lived JWT access tokens and rotating refresh tokens.
+Hopt It uses short-lived JWT access tokens and rotating refresh tokens.
 
 ## Roles
 
@@ -55,15 +55,15 @@ npm run seed --workspace backend
 Demo-only password for all seeded users:
 
 ```text
-AgriLink@123
+HoptIt@123
 ```
 
 Users:
 
-- `owner@agrilink.demo`
-- `farmer@agrilink.demo`
-- `worker@agrilink.demo`
-- `admin@agrilink.demo`
+- `owner@hoptit.demo`
+- `farmer@hoptit.demo`
+- `worker@hoptit.demo`
+- `admin@hoptit.demo`
 
 ## Security Notes
 

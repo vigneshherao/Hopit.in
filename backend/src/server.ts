@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp();
   server = app.listen(env.port, () => {
-    logger.info(`Hopit API listening on port ${env.port}`);
+    logger.info(`Hopt It API listening on port ${env.port}`);
   });
 }
 
@@ -51,6 +51,6 @@ process.on('SIGTERM', (signal) => {
 });
 
 bootstrap().catch((error: unknown) => {
-  logger.error('Failed to start Hopit API', error instanceof Error ? error : String(error));
+  logger.error('Failed to start Hopt It API', error instanceof Error ? error : String(error));
   process.exit(1);
 });

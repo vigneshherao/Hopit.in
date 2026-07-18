@@ -4,6 +4,12 @@ import { AgreementPage } from '@/pages/AgreementPage.jsx';
 import { AiPage } from '@/pages/AiPage.jsx';
 import { ApplicationDetailPage } from '@/pages/ApplicationDetailPage.jsx';
 import { DashboardPage } from '@/pages/DashboardPage.jsx';
+import { FarmJobCreatePage } from '@/pages/FarmJobCreatePage.jsx';
+import { FarmJobDetailPage } from '@/pages/FarmJobDetailPage.jsx';
+import { FarmJobsPage } from '@/pages/FarmJobsPage.jsx';
+import { FarmManagementDetailPage } from '@/pages/FarmManagementDetailPage.jsx';
+import { FarmManagementPage } from '@/pages/FarmManagementPage.jsx';
+import { FarmProgressReportCreatePage } from '@/pages/FarmProgressReportCreatePage.jsx';
 import { HomePage } from '@/pages/HomePage.jsx';
 import { LandApplyPage } from '@/pages/LandApplyPage.jsx';
 import { LandCreatePage } from '@/pages/LandCreatePage.jsx';
@@ -14,11 +20,19 @@ import { LoginPage } from '@/pages/LoginPage.jsx';
 import { MyLandDetailPage } from '@/pages/MyLandDetailPage.jsx';
 import { MyLandsPage } from '@/pages/MyLandsPage.jsx';
 import { MyApplicationsPage } from '@/pages/MyApplicationsPage.jsx';
+import { MyFarmJobsPage } from '@/pages/MyFarmJobsPage.jsx';
+import { MyJobApplicationsPage } from '@/pages/MyJobApplicationsPage.jsx';
 import { NotFoundPage } from '@/pages/NotFoundPage.jsx';
 import { ProfilePage } from '@/pages/ProfilePage.jsx';
 import { ReceivedApplicationsPage } from '@/pages/ReceivedApplicationsPage.jsx';
 import { RegisterPage } from '@/pages/RegisterPage.jsx';
 import { RoleDashboardPage } from '@/pages/RoleDashboardPage.jsx';
+import { WorkerBookingDetailPage } from '@/pages/WorkerBookingDetailPage.jsx';
+import { WorkerBookingsPage } from '@/pages/WorkerBookingsPage.jsx';
+import { WorkerDashboardPage } from '@/pages/WorkerDashboardPage.jsx';
+import { WorkerDetailPage } from '@/pages/WorkerDetailPage.jsx';
+import { WorkerProfileEditPage } from '@/pages/WorkerProfileEditPage.jsx';
+import { WorkerProfilePage } from '@/pages/WorkerProfilePage.jsx';
 import { WorkersPage } from '@/pages/WorkersPage.jsx';
 import { ProtectedRoute } from '@/routes/ProtectedRoute.jsx';
 import { RoleRoute } from '@/routes/RoleRoute.jsx';
@@ -163,6 +177,105 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'workers', element: <WorkersPage /> },
+      { path: 'workers/:id', element: <WorkerDetailPage /> },
+      {
+        path: 'worker/profile',
+        element: (
+          <RoleRoute allowedRoles={['worker', 'admin']}>
+            <WorkerProfilePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'worker/profile/edit',
+        element: (
+          <RoleRoute allowedRoles={['worker', 'admin']}>
+            <WorkerProfileEditPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'worker/dashboard',
+        element: (
+          <RoleRoute allowedRoles={['worker', 'admin']}>
+            <WorkerDashboardPage />
+          </RoleRoute>
+        ),
+      },
+      { path: 'farm-jobs', element: <FarmJobsPage /> },
+      {
+        path: 'farm-jobs/new',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <FarmJobCreatePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'farm-jobs/:id/edit',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <FarmJobCreatePage />
+          </RoleRoute>
+        ),
+      },
+      { path: 'farm-jobs/:identifier', element: <FarmJobDetailPage /> },
+      {
+        path: 'my-farm-jobs',
+        element: (
+          <RoleRoute allowedRoles={['owner', 'admin']}>
+            <MyFarmJobsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'my-job-applications',
+        element: (
+          <RoleRoute allowedRoles={['worker', 'admin']}>
+            <MyJobApplicationsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'worker-bookings',
+        element: (
+          <ProtectedRoute>
+            <WorkerBookingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'worker-bookings/:id',
+        element: (
+          <ProtectedRoute>
+            <WorkerBookingDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-management',
+        element: (
+          <ProtectedRoute>
+            <FarmManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-management/:id',
+        element: (
+          <ProtectedRoute>
+            <FarmManagementDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-management/:id/reports/new',
+        element: (
+          <RoleRoute allowedRoles={['worker', 'admin']}>
+            <FarmProgressReportCreatePage />
+          </RoleRoute>
+        ),
+      },
       { path: 'ai', element: <AiPage /> },
       { path: 'not-found', element: <NotFoundPage /> },
       { path: '*', element: <NotFoundPage /> },

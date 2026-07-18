@@ -1,6 +1,6 @@
-# Hopit
+# Hopt It
 
-Hopit is an AI powered agriculture platform foundation connecting land owners, farmers, and farm workers. The project is organized as a modular monolith with a React frontend and an Express API backend.
+Hopt It is an AI powered agriculture platform foundation connecting land owners, farmers, and farm workers. The project is organized as a modular monolith with a React frontend and an Express API backend.
 
 ## Tech Stack
 
@@ -125,7 +125,6 @@ Hopit.in/
     src/
       assets/
       components/
-      constants/
       context/
       hooks/
       layouts/
@@ -171,21 +170,27 @@ Use `backend` as the service root.
 
 ## Authentication Architecture
 
-Hopit uses JWT access tokens plus rotating refresh tokens. Access tokens are short lived and sent with `Authorization: Bearer <token>`. Refresh tokens are random secrets stored only as SHA-256 hashes in MongoDB and sent to the browser through an HTTP-only cookie.
+Hopt It uses JWT access tokens plus rotating refresh tokens. Access tokens are short lived and sent with `Authorization: Bearer <token>`. Refresh tokens are random secrets stored only as SHA-256 hashes in MongoDB and sent to the browser through an HTTP-only cookie.
 
 See [docs/authentication.md](/Users/vigneshhe/Desktop/Hopit.in/docs/authentication.md) for the full flow.
 
 ## Land Marketplace
 
-Hopit includes a land marketplace for sale, lease, rent, joint venture, and revenue-share listings. Owners can create drafts, submit for verification, manage statuses, and upload images/documents. Public users can browse available listings with filters and map views.
+Hopt It includes a land marketplace for sale, lease, rent, joint venture, and revenue-share listings. Owners can create drafts, submit for verification, manage statuses, and upload images/documents. Public users can browse available listings with filters and map views.
 
 See [docs/land-marketplace.md](/Users/vigneshhe/Desktop/Hopit.in/docs/land-marketplace.md).
 
 ## Application Workflow
 
-Hopit supports land applications, proposal negotiation, owner selection, and platform-generated draft agreement summaries.
+Hopt It supports land applications, proposal negotiation, owner selection, and platform-generated draft agreement summaries.
 
 See [docs/application-workflow.md](/Users/vigneshhe/Desktop/Hopit.in/docs/application-workflow.md).
+
+## Worker Hiring System
+
+Hopt It now supports a hiring marketplace for farm managers, supervisors, skilled agriculture workers, teams, farm jobs, worker bookings, and farm-management progress reporting.
+
+See [docs/worker-hiring.md](/Users/vigneshhe/Desktop/Hopit.in/docs/worker-hiring.md).
 
 ## Database Models
 
@@ -213,15 +218,15 @@ npm run seed --workspace backend
 Development-only password:
 
 ```text
-AgriLink@123
+HoptIt@123
 ```
 
 Demo emails:
 
-- `owner@agrilink.demo`
-- `farmer@agrilink.demo`
-- `worker@agrilink.demo`
-- `admin@agrilink.demo`
+- `owner@hoptit.demo`
+- `farmer@hoptit.demo`
+- `worker@hoptit.demo`
+- `admin@hoptit.demo`
 
 ## Security Notes
 

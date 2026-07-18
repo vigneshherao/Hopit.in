@@ -1,6 +1,6 @@
 # Application Workflow
 
-Hopit supports land applications, proposals, negotiations, owner selection, and platform-generated agreement draft summaries.
+Hopt It supports land applications, proposals, negotiations, owner selection, and platform-generated agreement draft summaries.
 
 ## Lifecycle
 

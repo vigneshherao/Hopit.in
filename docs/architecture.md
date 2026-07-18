@@ -1,6 +1,6 @@
-# Hopit Architecture
+# Hopt It Architecture
 
-Hopit is structured as a modular monolith. The frontend owns user experience, route composition, form ergonomics, API access, and client state. The backend owns API boundaries, validation, persistence, security middleware, and operational lifecycle.
+Hopt It is structured as a modular monolith. The frontend owns user experience, route composition, form ergonomics, API access, and client state. The backend owns API boundaries, validation, persistence, security middleware, and operational lifecycle.
 
 ## Backend Module Flow
 

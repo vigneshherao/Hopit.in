@@ -6,7 +6,7 @@ import { UserModel } from '@/models/user.model.js';
 import { signAccessToken } from '@/utils/token.js';
 
 const app = createApp();
-const strongPassword = 'AgriLink@123';
+const strongPassword = 'HoptIt@123';
 
 async function register(email = 'farmer@example.com', role = 'farmer') {
   return request(app).post('/api/v1/auth/register').send({

@@ -16,7 +16,7 @@ export function AppLayout() {
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
               <Leaf className="h-5 w-5" />
             </span>
-            <span className="whitespace-nowrap">Hopit</span>
+            <span className="whitespace-nowrap">Hopt It</span>
           </NavLink>
 
           <nav className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto pb-1 lg:order-2 lg:mx-0 lg:w-auto lg:justify-center lg:overflow-visible lg:pb-0">

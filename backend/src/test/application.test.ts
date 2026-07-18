@@ -6,7 +6,7 @@ import { LandModel } from '@/models/land.model.js';
 import { UserModel } from '@/models/user.model.js';
 
 const app = createApp();
-const password = 'AgriLink@123';
+const password = 'HoptIt@123';
 
 async function register(role: 'owner' | 'farmer' | 'worker' | 'admin', email: string) {
   const publicRole = role === 'admin' ? 'owner' : role;

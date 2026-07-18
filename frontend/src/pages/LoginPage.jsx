@@ -49,7 +49,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-3xl">Login</CardTitle>
-          <CardDescription>Access your Hopit workspace.</CardDescription>
+          <CardDescription>Access your Hopt It workspace.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" noValidate onSubmit={handleSubmit(onSubmit)}>
@@ -81,16 +81,16 @@ export function LoginPage() {
             </Button>
             <div className="rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">Demo accounts</p>
-              <p>owner@agrilink.demo / AgriLink@123</p>
-              <p>farmer@agrilink.demo / AgriLink@123</p>
-              <p>worker@agrilink.demo / AgriLink@123</p>
-              <p>admin@agrilink.demo / AgriLink@123</p>
+              <p>owner@hoptit.demo / HoptIt@123</p>
+              <p>farmer@hoptit.demo / HoptIt@123</p>
+              <p>worker@hoptit.demo / HoptIt@123</p>
+              <p>admin@hoptit.demo / HoptIt@123</p>
             </div>
             <button className="w-full text-sm text-muted-foreground" type="button" disabled>
               Forgot password flow is not enabled yet.
             </button>
             <p className="text-center text-sm text-muted-foreground">
-              New to Hopit?{' '}
+              New to Hopt It?{' '}
               <Link className="font-medium text-primary" to="/register">
                 Create account
               </Link>

@@ -7,7 +7,7 @@ export function NotFoundPage() {
       <p className="text-sm font-medium text-muted-foreground">404</p>
       <h1 className="mt-3 text-3xl font-bold">Page not found</h1>
       <p className="mt-3 max-w-md text-muted-foreground">
-        The page you are looking for does not exist in the Hopit foundation.
+        The page you are looking for does not exist in the Hopt It foundation.
       </p>
       <Button asChild className="mt-6">
         <Link to="/">Go home</Link>

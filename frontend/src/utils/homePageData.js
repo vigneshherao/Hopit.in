@@ -27,7 +27,7 @@ import equipmentImage from '@/assets/equipment.png';
 import farmersImage from '@/assets/farmers.png';
 import logisticsImage from '@/assets/logistics.png';
 
-export const brandName = 'Hopit';
+export const brandName = 'Hopt It';
 
 export const landingImages = {
   hero: heroImage,
@@ -115,7 +115,7 @@ export const testimonials = [
   {
     role: 'Owner',
     name: 'Meera R.',
-    quote: 'Hopit made our idle land visible to serious farmers with clear proposals.',
+    quote: 'Hopt It made our idle land visible to serious farmers with clear proposals.',
   },
   {
     role: 'Farmer',
