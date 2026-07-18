@@ -10,9 +10,11 @@ import { DashboardPage } from '@/pages/DashboardPage.jsx';
 import { FarmJobCreatePage } from '@/pages/FarmJobCreatePage.jsx';
 import { FarmJobDetailPage } from '@/pages/FarmJobDetailPage.jsx';
 import { FarmJobsPage } from '@/pages/FarmJobsPage.jsx';
+import { FarmAssistantPage } from '@/pages/FarmAssistantPage.jsx';
 import { FarmManagementDetailPage } from '@/pages/FarmManagementDetailPage.jsx';
 import { FarmManagementPage } from '@/pages/FarmManagementPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
+import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmProgressReportCreatePage } from '@/pages/FarmProgressReportCreatePage.jsx';
@@ -312,6 +314,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <FarmCalendarPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/assistant',
+        element: (
+          <ProtectedRoute>
+            <FarmAssistantPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'farm-planner/:id/insights',
+        element: (
+          <ProtectedRoute>
+            <FarmInsightsPage />
           </ProtectedRoute>
         ),
       },

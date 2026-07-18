@@ -1,6 +1,8 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '@/app.js';
+import { AssistantConversationModel } from '@/models/assistant-conversation.model.js';
+import { AssistantMessageModel } from '@/models/assistant-message.model.js';
 import { FarmCalendarEventModel } from '@/models/farm-calendar-event.model.js';
 import { FarmTaskModel } from '@/models/farm-task.model.js';
 import { LandModel } from '@/models/land.model.js';
@@ -102,6 +104,31 @@ function mockFarmPlanResponse(overrides = {}) {
   );
 }
 
+function mockAssistantChatResponse() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                answer: 'Your farm is on track. Focus on overdue tasks, irrigation checks and harvest preparation.',
+                healthScore: 78,
+                suggestedActions: ['Review delayed tasks', 'Check irrigation tomorrow'],
+                suggestedQuestions: ['Which tasks are delayed?', 'How many workers do I need?'],
+                confidenceScore: 86,
+              }),
+            },
+          },
+        ],
+      }),
+    }),
+  );
+}
+
 describe('farm planner API', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
@@ -161,5 +188,33 @@ describe('farm planner API', () => {
     const generated = await request(app).post('/api/v1/farm-planner/generate-plan').set('Authorization', `Bearer ${owner.token}`).send({ landId: land._id.toString(), selectedCrop: 'Tomato', selectedSeason: 'monsoon', startDate: new Date().toISOString() });
     const response = await request(app).get(`/api/v1/farm-planner/plans/${generated.body.data.plan._id}`).set('Authorization', `Bearer ${other.token}`);
     expect(response.status).toBe(404);
+  });
+
+  it('creates assistant insights, forecasts and chat for the owner only', async () => {
+    mockFarmPlanResponse();
+    const owner = await register('owner', 'assistant-owner@example.com');
+    const other = await register('owner', 'assistant-other@example.com');
+    const land = await createLand(owner.user?._id, 'assistant-land');
+    const generated = await request(app).post('/api/v1/farm-planner/generate-plan').set('Authorization', `Bearer ${owner.token}`).send({ landId: land._id.toString(), selectedCrop: 'Tomato', selectedSeason: 'monsoon', startDate: new Date().toISOString() });
+    const planId = generated.body.data.plan._id;
+
+    const forbidden = await request(app).get(`/api/v1/assistant/insights/${planId}`).set('Authorization', `Bearer ${other.token}`);
+    expect(forbidden.status).toBe(404);
+
+    const insights = await request(app).get(`/api/v1/assistant/insights/${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(insights.status).toBe(200);
+    expect(insights.body.data.insights.length).toBeGreaterThan(0);
+    expect(insights.body.data.health.score).toBeGreaterThanOrEqual(0);
+
+    const forecast = await request(app).get(`/api/v1/assistant/forecast/${planId}`).set('Authorization', `Bearer ${owner.token}`);
+    expect(forecast.status).toBe(200);
+    expect(forecast.body.data.forecasts.some((item: { forecastType: string }) => item.forecastType === 'Harvest')).toBe(true);
+
+    mockAssistantChatResponse();
+    const chat = await request(app).post('/api/v1/assistant/chat').set('Authorization', `Bearer ${owner.token}`).send({ farmPlanId: planId, message: 'How is my farm doing?' });
+    expect(chat.status).toBe(201);
+    expect(chat.body.data.response.answer).toContain('on track');
+    expect(await AssistantConversationModel.countDocuments({ farmPlanId: planId })).toBe(1);
+    expect(await AssistantMessageModel.countDocuments({ conversationId: chat.body.data.conversation._id })).toBe(2);
   });
 });

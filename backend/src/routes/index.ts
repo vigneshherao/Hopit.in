@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { agreementRouter } from '@/routes/agreement.routes.js';
+import { aiAssistantRouter } from '@/routes/ai-assistant.routes.js';
 import { aiRouter } from '@/routes/ai.routes.js';
 import { applicationRouter } from '@/routes/application.routes.js';
 import { authRouter } from '@/routes/auth.routes.js';
@@ -18,6 +19,7 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/applications', applicationRouter);
 apiRouter.use('/agreements', agreementRouter);
 apiRouter.use('/ai', aiRouter);
+apiRouter.use('/assistant', aiAssistantRouter);
 apiRouter.use('/farm-jobs', farmJobRouter);
 apiRouter.use('/farm-calendar', farmCalendarRouter);
 apiRouter.use('/farm-management', farmManagementRouter);

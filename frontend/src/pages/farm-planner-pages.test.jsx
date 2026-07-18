@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { FarmAssistantPage } from '@/pages/FarmAssistantPage.jsx';
+import { FarmInsightsPage } from '@/pages/FarmInsightsPage.jsx';
 import { FarmPlannerDetailPage } from '@/pages/FarmPlannerDetailPage.jsx';
 import { FarmPlannerPage } from '@/pages/FarmPlannerPage.jsx';
 import { FarmCalendarPage } from '@/pages/FarmCalendarPage.jsx';
@@ -25,6 +27,12 @@ const mocks = vi.hoisted(() => ({
   startTask: { mutate: vi.fn() },
   cancelTask: { mutate: vi.fn() },
   updateCalendarEvent: { mutate: vi.fn() },
+  assistantChat: { isPending: false, error: null, mutateAsync: vi.fn() },
+  analyzeFarm: { isPending: false, mutate: vi.fn() },
+  generateReport: { isPending: false, mutateAsync: vi.fn() },
+  insights: null,
+  recommendations: null,
+  forecast: null,
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -48,6 +56,14 @@ vi.mock('@/hooks/useFarmTasks.js', () => ({
   useStartTask: () => mocks.startTask,
   useCancelTask: () => mocks.cancelTask,
   useUpdateCalendarEvent: () => mocks.updateCalendarEvent,
+}));
+vi.mock('@/hooks/useAssistant.js', () => ({
+  useAssistantChat: () => mocks.assistantChat,
+  useAnalyzeFarm: () => mocks.analyzeFarm,
+  useGenerateReport: () => mocks.generateReport,
+  useFarmInsights: () => ({ isLoading: false, data: mocks.insights }),
+  useFarmRecommendations: () => ({ isLoading: false, data: mocks.recommendations }),
+  useForecast: () => ({ isLoading: false, data: mocks.forecast }),
 }));
 
 function renderPage(ui, initialEntries = ['/']) {
@@ -135,6 +151,28 @@ describe('farm planner frontend', () => {
       widgets: { today: 2, thisWeek: 3, overdue: 0, completedPercentage: 33, pendingPercentage: 33 },
     };
     mocks.calendar = { events: [{ _id: 'event1', title: 'Land Cleaning', description: 'Prepare land', startDate: new Date().toISOString(), endDate: new Date().toISOString(), eventColor: '#059669' }] };
+    mocks.assistantChat.isPending = false;
+    mocks.assistantChat.error = null;
+    mocks.assistantChat.mutateAsync.mockReset();
+    mocks.assistantChat.mutateAsync.mockResolvedValue({
+      conversation: { _id: 'conversation1' },
+      messages: [
+        { _id: 'message1', sender: 'user', content: 'How is my farm doing?' },
+        { _id: 'message2', sender: 'assistant', content: 'Your farm is healthy and on track.' },
+      ],
+      response: { answer: 'Your farm is healthy and on track.', confidenceScore: 88 },
+    });
+    mocks.analyzeFarm.isPending = false;
+    mocks.analyzeFarm.mutate.mockReset();
+    mocks.generateReport.isPending = false;
+    mocks.generateReport.mutateAsync.mockReset();
+    mocks.insights = {
+      health: { score: 78, label: 'Good' },
+      insights: [{ _id: 'insight1', title: 'Delayed tasks need attention', priority: 'High', category: 'Task', description: 'Two tasks are delayed.', recommendation: 'Reassign labour today.', confidenceScore: 92 }],
+      grouped: { Critical: [], High: [{ _id: 'insight1', title: 'Delayed tasks need attention', priority: 'High', category: 'Task', description: 'Two tasks are delayed.', recommendation: 'Reassign labour today.', confidenceScore: 92 }], Medium: [], Low: [] },
+    };
+    mocks.recommendations = { recommendations: [{ title: 'Delayed tasks need attention', priority: 'High', category: 'Task', action: 'Reassign labour today.', confidenceScore: 92 }] };
+    mocks.forecast = { forecasts: [{ forecastType: 'Harvest', prediction: 'Harvest remains on schedule.', confidence: 86 }] };
   });
 
   it('protects farm planner route', () => {
@@ -186,5 +224,21 @@ describe('farm planner frontend', () => {
     renderPage(<Routes><Route path="/farm-planner/:id/calendar" element={<FarmCalendarPage />} /></Routes>, ['/farm-planner/plan1/calendar']);
     expect(screen.getByText('Calendar and timeline')).toBeInTheDocument();
     expect(screen.getByText('Land Cleaning')).toBeInTheDocument();
+  });
+
+  it('renders assistant chat and sends a suggested question', async () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/assistant" element={<FarmAssistantPage />} /></Routes>, ['/farm-planner/plan1/assistant']);
+    expect(screen.getByText('Ask what your farm needs next')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'What should I do today?' }));
+    expect(mocks.assistantChat.mutateAsync).toHaveBeenCalledWith({ farmPlanId: 'plan1', conversationId: null, message: 'What should I do today?' });
+    expect(await screen.findByText('Your farm is healthy and on track.')).toBeInTheDocument();
+  });
+
+  it('renders insights dashboard and triggers AI analysis', async () => {
+    renderPage(<Routes><Route path="/farm-planner/:id/insights" element={<FarmInsightsPage />} /></Routes>, ['/farm-planner/plan1/insights']);
+    expect(screen.getByText('Decision support for this farm')).toBeInTheDocument();
+    expect(screen.getAllByText('Delayed tasks need attention').length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: /ai analyze/i }));
+    expect(mocks.analyzeFarm.mutate).toHaveBeenCalledWith({ farmPlanId: 'plan1', focus: 'weekly-advice' });
   });
 });
