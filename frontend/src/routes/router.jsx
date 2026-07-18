@@ -36,6 +36,7 @@ import { MyApplicationsPage } from '@/pages/MyApplicationsPage.jsx';
 import { MyFarmJobsPage } from '@/pages/MyFarmJobsPage.jsx';
 import { MyJobApplicationsPage } from '@/pages/MyJobApplicationsPage.jsx';
 import { MessagesPage } from '@/pages/MessagesPage.jsx';
+import { TeamWorkspacePage } from '@/pages/TeamWorkspacePage.jsx';
 import { NotFoundPage } from '@/pages/NotFoundPage.jsx';
 import { NotificationsPage } from '@/pages/NotificationsPage.jsx';
 import { ProfilePage } from '@/pages/ProfilePage.jsx';
@@ -130,6 +131,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <MessagesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'messages/:conversationId/workspace',
+        element: (
+          <ProtectedRoute>
+            <TeamWorkspacePage />
           </ProtectedRoute>
         ),
       },

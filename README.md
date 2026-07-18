@@ -249,6 +249,12 @@ Hopt It chat supports reactions, mentions, pinned messages, starred messages, th
 
 See [docs/chat-collaboration.md](/Users/vigneshhe/Desktop/Hopit.in/docs/chat-collaboration.md).
 
+## Collaboration Enterprise
+
+Hopt It includes production collaboration foundations for team workspaces, timelines, analytics, audit logs, reporting, moderation, digest settings, and push-provider readiness.
+
+See [docs/collaboration-enterprise.md](/Users/vigneshhe/Desktop/Hopit.in/docs/collaboration-enterprise.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

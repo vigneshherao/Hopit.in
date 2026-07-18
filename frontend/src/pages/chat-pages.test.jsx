@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessagesPage } from '@/pages/MessagesPage.jsx';
+import { TeamWorkspacePage } from '@/pages/TeamWorkspacePage.jsx';
 import { ProtectedRoute } from '@/routes/ProtectedRoute.jsx';
 
 const mocks = vi.hoisted(() => ({
@@ -23,6 +24,8 @@ const mocks = vi.hoisted(() => ({
   reaction: { mutate: vi.fn() },
   createNote: { mutate: vi.fn() },
   threadReply: { mutate: vi.fn() },
+  moderate: { mutate: vi.fn() },
+  updateDigest: { mutate: vi.fn() },
 }));
 
 vi.mock('@/context/AuthContext.jsx', () => ({ useAuth: () => mocks.authState }));
@@ -54,6 +57,28 @@ vi.mock('@/hooks/useChat.js', () => ({
   useAnnouncements: () => ({ isLoading: false, data: { announcements: [] } }),
   useThreads: () => ({ isLoading: false, data: null }),
 }));
+vi.mock('@/hooks/useChatEnterprise.js', () => ({
+  useTeamWorkspace: () => ({
+    isLoading: false,
+    data: {
+      conversation: { _id: 'conversation1', title: 'Field Operations Team' },
+      analytics: { messageCount: 8, dailyMessages: 2, weeklyMessages: 8, monthlyMessages: 8, reactionCount: 3, threadCount: 1 },
+      recentFiles: [{ _id: 'file1', originalFileName: 'soil-report.pdf', type: 'document' }],
+      recentDiscussions: [{ _id: 'message1', text: 'Irrigation line is ready.' }],
+      pinnedMessages: [],
+      upcomingTasks: [{ _id: 'task1', title: 'First irrigation', category: 'Irrigation', startDate: new Date().toISOString() }],
+      upcomingEvents: [{ _id: 'event1', title: 'Harvest review', startDate: new Date().toISOString() }],
+      activities: [{ _id: 'activity1', activityType: 'message-sent', actorId: { name: 'Owner' }, createdAt: new Date().toISOString() }],
+    },
+  }),
+  useAnalyticsDashboard: () => ({ data: { widgets: { unreadMessages: 2, activeConversationCount: 1, mostUsedReaction: '🌱', topConversation: { conversationId: { title: 'Field Operations Team' } } } } }),
+  useReports: () => ({ data: { reports: [{ _id: 'report1', reason: 'spam', entityType: 'message', status: 'open' }] } }),
+  useModeration: () => mocks.moderate,
+  useNotificationDigest: () => ({ data: { settings: { frequency: 'instant', channels: ['in-app'] } } }),
+  useUpdateNotificationDigest: () => mocks.updateDigest,
+  useAuditLogs: () => ({ data: { logs: [{ _id: 'log1', action: 'report-created', entity: 'message', createdAt: new Date().toISOString() }] } }),
+}));
+vi.mock('@/hooks/useSocket.js', () => ({ useSocket: () => ({ status: 'online' }) }));
 
 function renderPage(ui, initialEntries = ['/messages']) {
   const queryClient = new QueryClient();
@@ -89,6 +114,8 @@ describe('chat frontend pages', () => {
     mocks.reaction.mutate.mockReset();
     mocks.createNote.mutate.mockReset();
     mocks.threadReply.mutate.mockReset();
+    mocks.moderate.mutate.mockReset();
+    mocks.updateDigest.mutate.mockReset();
   });
 
   it('protects messages route', () => {
@@ -119,5 +146,13 @@ describe('chat frontend pages', () => {
   it('renders empty conversation state', () => {
     renderPage(<Routes><Route path="/messages" element={<MessagesPage />} /></Routes>, ['/messages']);
     expect(screen.getByText('Open a conversation')).toBeInTheDocument();
+  });
+
+  it('renders team workspace dashboard', () => {
+    renderPage(<Routes><Route path="/messages/:conversationId/workspace" element={<TeamWorkspacePage />} /></Routes>, ['/messages/conversation1/workspace']);
+    expect(screen.getByText('Team Workspace')).toBeInTheDocument();
+    expect(screen.getAllByText('Field Operations Team').length).toBeGreaterThan(0);
+    expect(screen.getByText('Recent files')).toBeInTheDocument();
+    expect(screen.getByText('Activity timeline')).toBeInTheDocument();
   });
 });

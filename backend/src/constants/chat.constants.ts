@@ -32,6 +32,9 @@ export const CHAT_SOCKET_EVENTS = {
   THREAD_REPLY: 'thread-reply',
   NOTE_UPDATE: 'note-update',
   ANNOUNCEMENT_CREATE: 'announcement-create',
+  REPORT_MESSAGE: 'report-message',
+  REPORT_USER: 'report-user',
+  REPORT_ATTACHMENT: 'report-attachment',
   CONVERSATION_NEW: 'chat:conversation:new',
   CONVERSATION_UPDATE: 'chat:conversation:update',
   CONVERSATION_REMOVED: 'chat:conversation:removed',
@@ -52,6 +55,10 @@ export const CHAT_SOCKET_EVENTS = {
   MESSAGE_UNSTARRED: 'message-unstarred',
   ANNOUNCEMENT_CREATED: 'announcement-created',
   NOTE_UPDATED: 'note-updated',
+  MODERATION_UPDATE: 'moderation-update',
+  ANALYTICS_UPDATE: 'analytics-update',
+  AUDIT_CREATED: 'audit-created',
+  REPORT_CREATED: 'report-created',
   ERROR: 'chat:error',
 } as const;
 

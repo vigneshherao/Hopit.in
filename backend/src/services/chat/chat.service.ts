@@ -17,6 +17,8 @@ import { ensureNotBlocked, getActiveMember, requireManageMembers, requireSendPer
 import { emitChatMessage, emitChatUnread, emitChatUpdate } from '@/services/chat/chat.socket.js';
 import { notifyConversationMembers } from '@/services/chat/chat.notification.service.js';
 import { createMentionsFromText } from '@/services/chat/chat.mention.service.js';
+import { recordConversationActivity } from '@/services/chat/chat.enterprise.service.js';
+import { writeAuditLog } from '@/services/chat/chat.audit-log.service.js';
 import { createActivity } from '@/services/activity/activity.service.js';
 import { AppError } from '@/utils/app-error.js';
 
@@ -261,6 +263,8 @@ export async function sendMessage(conversationId: string, userId: string, input:
   emitChatMessage(conversationId, mapped);
   emitChatUnread(conversationId, { conversationId });
   await notifyConversationMembers({ conversationId, senderId: userId, title: 'New chat message', preview });
+  await recordConversationActivity({ conversationId, actorId: userId, activityType: 'message-sent', entityType: 'message', entityId: message._id.toString(), metadata: { preview, type: input.type } });
+  await writeAuditLog({ userId, action: 'message-sent', entity: 'message', entityId: message._id.toString(), newValue: { conversationId, type: input.type } });
   await createActivity({ userId, actorId: userId, entityType: 'chat', entityId: new mongoose.Types.ObjectId(conversationId), action: 'message-sent', title: 'Sent a chat message', description: preview, visibility: 'private', dedupeKey: input.clientMessageId ? `chat-${userId}-${input.clientMessageId}` : undefined });
   return { message: mapped, temporaryId: input.clientMessageId };
 }
@@ -278,6 +282,8 @@ export async function editMessage(messageId: string, userId: string, text: strin
   message.editVersion += 1;
   await message.save();
   await auditChat({ conversationId: message.conversationId.toString(), messageId, actorId: userId, action: 'message-edited' });
+  await recordConversationActivity({ conversationId: message.conversationId.toString(), actorId: userId, activityType: 'message-edited', entityType: 'message', entityId: messageId });
+  await writeAuditLog({ userId, action: 'message-edited', entity: 'message', entityId: messageId, newValue: { text: message.text } });
   const mapped = mapMessage(message.toObject());
   emitChatUpdate(message.conversationId.toString(), mapped);
   return { message: mapped };
@@ -301,6 +307,8 @@ export async function deleteMessage(messageId: string, userId: string, scope: 's
   message.deletedBy = userId as never;
   await message.save();
   await auditChat({ conversationId: message.conversationId.toString(), messageId, actorId: userId, action: 'message-deleted' });
+  await recordConversationActivity({ conversationId: message.conversationId.toString(), actorId: userId, activityType: 'message-deleted', entityType: 'message', entityId: messageId });
+  await writeAuditLog({ userId, action: 'message-deleted', entity: 'message', entityId: messageId, newValue: { scope } });
   const mapped = mapMessage(message.toObject());
   emitChatUpdate(message.conversationId.toString(), mapped);
   return { message: mapped, scope };

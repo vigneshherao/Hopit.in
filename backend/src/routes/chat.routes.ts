@@ -4,11 +4,13 @@ import { Router } from 'express';
 import { env } from '@/config/env.js';
 import { addMembersController, archiveConversationController, attachmentController, blockedUsersController, blockUserController, conversationController, conversationsController, createDirectConversationController, createGroupConversationController, deleteAttachmentController, deleteMessageController, editMessageController, forwardMessageController, markDeliveredController, markReadController, membersController, messageController, messagesController, muteConversationController, pinConversationController, removeMemberController, searchConversationsController, searchMessagesController, sendMessageController, unarchiveConversationController, unblockUserController, unmuteConversationController, unpinConversationController, updateConversationController, updateMemberController, uploadAttachmentsController, leaveConversationController } from '@/controllers/chat.controller.js';
 import { addReactionController, announcementsController, bookmarksController, createAnnouncementController, createBookmarkController, createNoteController, deleteAnnouncementController, deleteBookmarkController, deleteNoteController, mentionsController, pinnedMessagesController, pinMessageController, removeReactionController, starMessageController, starredMessagesController, threadController, threadReplyController, unpinMessageController, unstarMessageController, updateAnnouncementController, updateNoteController, notesController } from '@/controllers/chat-collaboration.controller.js';
+import { analyticsDashboardController, auditLogsController, conversationAnalyticsController, conversationTimelineController, createReportController, digestSettingsController, moderateReportController, reportsController, teamWorkspaceController, updateDigestSettingsController } from '@/controllers/chat-enterprise.controller.js';
 import { authenticate } from '@/middleware/auth.js';
 import { validateRequest } from '@/middleware/validate-request.js';
 import { asyncHandler } from '@/utils/async-handler.js';
 import { addMembersSchema, attachmentParamSchema, blockUserSchema, chatSearchQuerySchema, conversationParamSchema, conversationQuerySchema, conversationUpdateSchema, directConversationSchema, groupConversationSchema, messageCreateSchema, messageDeleteSchema, messageEditSchema, messageForwardSchema, messageParamSchema, messageQuerySchema, muteSchema, readReceiptSchema, updateMemberSchema, userParamSchema } from '@/services/chat/chat.validation.js';
 import { announcementCreateSchema, announcementParamSchema, announcementUpdateSchema, bookmarkCreateSchema, bookmarkDeleteSchema, conversationQuerySchema as collaborationConversationQuerySchema, messageTargetSchema, noteCreateSchema, noteParamSchema, noteUpdateSchema, reactionSchema, threadQuerySchema, threadReplySchema } from '@/services/chat/chat.collaboration.validation.js';
+import { auditQuerySchema, digestSettingsSchema, enterpriseConversationQuerySchema, moderationActionSchema, reportCreateSchema, reportParamSchema } from '@/services/chat/chat.enterprise.validation.js';
 
 export const chatRouter = Router();
 
@@ -45,6 +47,16 @@ chatRouter.delete('/announcements/:announcementId', validateRequest({ params: an
 chatRouter.get('/bookmarks', validateRequest({ query: collaborationConversationQuerySchema }), asyncHandler(bookmarksController));
 chatRouter.post('/bookmarks', validateRequest({ body: bookmarkCreateSchema }), asyncHandler(createBookmarkController));
 chatRouter.delete('/bookmarks', validateRequest({ body: bookmarkDeleteSchema }), asyncHandler(deleteBookmarkController));
+chatRouter.get('/workspace/:conversationId', validateRequest({ params: conversationParamSchema }), asyncHandler(teamWorkspaceController));
+chatRouter.get('/timeline', validateRequest({ query: enterpriseConversationQuerySchema }), asyncHandler(conversationTimelineController));
+chatRouter.get('/analytics', asyncHandler(analyticsDashboardController));
+chatRouter.get('/analytics/:conversationId', validateRequest({ params: conversationParamSchema }), asyncHandler(conversationAnalyticsController));
+chatRouter.post('/reports', validateRequest({ body: reportCreateSchema }), asyncHandler(createReportController));
+chatRouter.get('/reports', validateRequest({ query: enterpriseConversationQuerySchema }), asyncHandler(reportsController));
+chatRouter.patch('/reports/:reportId/moderation', validateRequest({ params: reportParamSchema, body: moderationActionSchema }), asyncHandler(moderateReportController));
+chatRouter.get('/audit-logs', validateRequest({ query: auditQuerySchema }), asyncHandler(auditLogsController));
+chatRouter.get('/notification-digest', asyncHandler(digestSettingsController));
+chatRouter.patch('/notification-digest', validateRequest({ body: digestSettingsSchema }), asyncHandler(updateDigestSettingsController));
 chatRouter.get('/blocked-users', asyncHandler(blockedUsersController));
 chatRouter.post('/users/:userId/block', validateRequest({ params: userParamSchema, body: blockUserSchema }), asyncHandler(blockUserController));
 chatRouter.post('/users/:userId/unblock', validateRequest({ params: userParamSchema }), asyncHandler(unblockUserController));

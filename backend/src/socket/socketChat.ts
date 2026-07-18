@@ -1,7 +1,10 @@
 import type { Socket } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from '@/constants/chat.constants.js';
+import { MessageModel } from '@/models/message.model.js';
 import { messageCreateSchema, messageDeleteSchema, messageEditSchema, readReceiptSchema } from '@/services/chat/chat.validation.js';
 import { announcementCreateSchema, messageTargetSchema, noteCreateSchema, noteUpdateSchema, reactionSchema, threadReplySchema } from '@/services/chat/chat.collaboration.validation.js';
+import { reportCreateSchema } from '@/services/chat/chat.enterprise.validation.js';
+import { createReport } from '@/services/chat/chat.enterprise.service.js';
 import { addReaction, createAnnouncement, createSharedNote, createThreadReply, pinMessage, removeReaction, starMessage, unpinMessage, unstarMessage, updateSharedNote } from '@/services/chat/chat.collaboration.service.js';
 import { deleteMessage, editMessage, markConversationRead, markDelivered, sendMessage } from '@/services/chat/chat.service.js';
 import { getActiveMember } from '@/services/chat/chat.permissions.js';
@@ -174,6 +177,20 @@ export function registerChatSocketHandlers(socket: Socket): void {
     }
   });
 
+  socket.on(CHAT_SOCKET_EVENTS.THREAD_OPEN, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = messageTargetSchema.parse(payload);
+      const messageRecord = await MessageModel.findById(parsed.messageId).select('conversationId').lean();
+      if (!messageRecord) throw new Error('Message not found.');
+      await getActiveMember(messageRecord.conversationId.toString(), socket.data.userId as string);
+      ack?.({ success: true, messageId: parsed.messageId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to open thread.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
   socket.on(CHAT_SOCKET_EVENTS.THREAD_REPLY, async (payload: unknown, ack?: (response: unknown) => void) => {
     try {
       const parsed = threadReplySchema.parse(payload);
@@ -204,6 +221,42 @@ export function registerChatSocketHandlers(socket: Socket): void {
       ack?.({ success: true, announcement: result.announcement });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to create announcement.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.REPORT_MESSAGE, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = reportCreateSchema.parse({ ...(payload as Record<string, unknown>), entityType: 'message' });
+      const result = await createReport({ id: socket.data.userId as string, email: '', role: socket.data.role as never }, parsed);
+      ack?.({ success: true, report: result.report });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to report message.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.REPORT_USER, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = reportCreateSchema.parse({ ...(payload as Record<string, unknown>), entityType: 'user' });
+      const result = await createReport({ id: socket.data.userId as string, email: '', role: socket.data.role as never }, parsed);
+      ack?.({ success: true, report: result.report });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to report user.';
+      emitError(socket, message);
+      ack?.({ success: false, error: message });
+    }
+  });
+
+  socket.on(CHAT_SOCKET_EVENTS.REPORT_ATTACHMENT, async (payload: unknown, ack?: (response: unknown) => void) => {
+    try {
+      const parsed = reportCreateSchema.parse({ ...(payload as Record<string, unknown>), entityType: 'attachment' });
+      const result = await createReport({ id: socket.data.userId as string, email: '', role: socket.data.role as never }, parsed);
+      ack?.({ success: true, report: result.report });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to report attachment.';
       emitError(socket, message);
       ack?.({ success: false, error: message });
     }

@@ -25,18 +25,45 @@ export function useChatMessagesSocket(conversationId) {
   useEffect(() => {
     if (!socket || !conversationId) return undefined;
     const refresh = () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] });
-      queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['chat'] });
     };
     socket.on('chat:message:new', refresh);
     socket.on('chat:message:update', refresh);
     socket.on('chat:message:deleted', refresh);
     socket.on('chat:unread:update', refresh);
+    socket.on('reaction-added', refresh);
+    socket.on('reaction-removed', refresh);
+    socket.on('mention-created', refresh);
+    socket.on('thread-updated', refresh);
+    socket.on('message-pinned', refresh);
+    socket.on('message-unpinned', refresh);
+    socket.on('message-starred', refresh);
+    socket.on('message-unstarred', refresh);
+    socket.on('announcement-created', refresh);
+    socket.on('note-updated', refresh);
+    socket.on('moderation-update', refresh);
+    socket.on('analytics-update', refresh);
+    socket.on('audit-created', refresh);
+    socket.on('report-created', refresh);
     return () => {
       socket.off('chat:message:new', refresh);
       socket.off('chat:message:update', refresh);
       socket.off('chat:message:deleted', refresh);
       socket.off('chat:unread:update', refresh);
+      socket.off('reaction-added', refresh);
+      socket.off('reaction-removed', refresh);
+      socket.off('mention-created', refresh);
+      socket.off('thread-updated', refresh);
+      socket.off('message-pinned', refresh);
+      socket.off('message-unpinned', refresh);
+      socket.off('message-starred', refresh);
+      socket.off('message-unstarred', refresh);
+      socket.off('announcement-created', refresh);
+      socket.off('note-updated', refresh);
+      socket.off('moderation-update', refresh);
+      socket.off('analytics-update', refresh);
+      socket.off('audit-created', refresh);
+      socket.off('report-created', refresh);
     };
   }, [conversationId, queryClient, socket]);
 

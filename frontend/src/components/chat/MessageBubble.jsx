@@ -1,10 +1,14 @@
 import { Copy, GitBranch, MapPin, MoreHorizontal, Paperclip, Pin, Reply, Star, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { EmojiPicker } from '@/components/chat/EmojiPicker.jsx';
 import { MessageStatusIcon } from '@/components/chat/MessageStatusIcon.jsx';
 import { ReactionBar } from '@/components/chat/ReactionBar.jsx';
 import { chatTime } from '@/utils/chatData.js';
 import { cn } from '@/utils/cn.js';
 
 export function MessageBubble({ message, isOwn, onReact, onPin, onStar, onThread, onDelete, onReply }) {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   if (message.type === 'system') {
     return <div className="mx-auto max-w-lg rounded-full bg-slate-100 px-4 py-2 text-center text-xs font-semibold text-slate-500">{message.text || 'System update'}</div>;
   }
@@ -51,9 +55,21 @@ export function MessageBubble({ message, isOwn, onReact, onPin, onStar, onThread
         {!message.isDeletedForEveryone && (
           <div className={cn('mt-2 flex flex-wrap items-center gap-1 border-t pt-2', isOwn ? 'border-white/15' : 'border-slate-100')}>
             <ReactionBar reactions={message.reactions} onReact={(emoji) => onReact?.(message, emoji)} compact />
-            <button type="button" onClick={() => onReact?.(message, '🌱')} className={cn('grid h-7 w-7 place-items-center rounded-full', isOwn ? 'hover:bg-white/15' : 'hover:bg-emerald-50')} aria-label="React">
+            <div className="relative">
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 z-20 mb-2">
+                  <EmojiPicker
+                    onSelect={(emoji) => {
+                      onReact?.(message, emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  />
+                </div>
+              )}
+              <button type="button" onClick={() => setShowEmojiPicker((value) => !value)} className={cn('grid h-7 w-7 place-items-center rounded-full', isOwn ? 'hover:bg-white/15' : 'hover:bg-emerald-50')} aria-label="React">
               <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
+              </button>
+            </div>
             <button type="button" onClick={() => onReply?.(message)} className={cn('grid h-7 w-7 place-items-center rounded-full', isOwn ? 'hover:bg-white/15' : 'hover:bg-emerald-50')} aria-label="Reply">
               <Reply className="h-3.5 w-3.5" />
             </button>

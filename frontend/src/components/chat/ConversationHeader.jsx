@@ -1,4 +1,5 @@
-import { Archive, Pin, Search, VolumeX } from 'lucide-react';
+import { Archive, LayoutDashboard, Pin, Search, VolumeX } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ConversationAvatar } from '@/components/chat/ConversationAvatar.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { conversationTitle } from '@/utils/chatData.js';
@@ -14,6 +15,13 @@ export function ConversationHeader({ conversation, typingUsers = [], onArchive, 
         </div>
       </div>
       <div className="flex items-center gap-1">
+        {conversation?._id && (
+          <Button asChild type="button" variant="ghost" size="icon" aria-label="Open team workspace">
+            <Link to={`/messages/${conversation._id}/workspace`}>
+              <LayoutDashboard className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
         <Button type="button" variant="ghost" size="icon" aria-label="Search messages">
           <Search className="h-4 w-4" />
         </Button>

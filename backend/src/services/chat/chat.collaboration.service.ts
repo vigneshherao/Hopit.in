@@ -12,6 +12,8 @@ import { StarredMessageModel } from '@/models/starred-message.model.js';
 import { getActiveMember, requireManageMembers, requireSendPermission } from '@/services/chat/chat.permissions.js';
 import { emitChatMessage, emitConversation } from '@/services/chat/chat.socket.js';
 import { createMentionsFromText } from '@/services/chat/chat.mention.service.js';
+import { recordConversationActivity } from '@/services/chat/chat.enterprise.service.js';
+import { writeAuditLog } from '@/services/chat/chat.audit-log.service.js';
 import { createNotification } from '@/services/notification/notification.service.js';
 import { AppError } from '@/utils/app-error.js';
 
@@ -51,6 +53,8 @@ export async function addReaction(userId: string, input: { messageId: string; em
     { upsert: true, new: true },
   );
   emitConversation(message.conversationId.toString(), CHAT_SOCKET_EVENTS.REACTION_ADDED, { reaction });
+  await recordConversationActivity({ conversationId: message.conversationId.toString(), actorId: userId, activityType: 'reaction-added', entityType: 'message', entityId: input.messageId, metadata: { emoji: input.emoji } });
+  await writeAuditLog({ userId, action: 'reaction-added', entity: 'message', entityId: input.messageId, newValue: { emoji: input.emoji } });
   if (message.senderId.toString() !== userId) {
     await createNotification({
       receiverId: message.senderId.toString(),
@@ -71,6 +75,8 @@ export async function removeReaction(userId: string, messageId: string) {
   const message = await getAccessibleMessage(messageId, userId);
   await MessageReactionModel.deleteOne({ messageId, userId });
   emitConversation(message.conversationId.toString(), CHAT_SOCKET_EVENTS.REACTION_REMOVED, { messageId, userId });
+  await recordConversationActivity({ conversationId: message.conversationId.toString(), actorId: userId, activityType: 'reaction-removed', entityType: 'message', entityId: messageId });
+  await writeAuditLog({ userId, action: 'reaction-removed', entity: 'message', entityId: messageId });
   return { removed: true };
 }
 
@@ -101,6 +107,8 @@ export async function pinMessage(userId: string, messageId: string) {
   if (!exists && pinCount >= 20) throw new AppError('This conversation already has 20 pinned messages.', 400);
   const pin = await PinnedMessageModel.findOneAndUpdate({ conversationId, messageId }, { pinnedBy: userId, pinnedAt: new Date() }, { upsert: true, new: true });
   emitConversation(conversationId, CHAT_SOCKET_EVENTS.MESSAGE_PINNED, { pin });
+  await recordConversationActivity({ conversationId, actorId: userId, activityType: 'pinned-message', entityType: 'message', entityId: messageId });
+  await writeAuditLog({ userId, action: 'message-pinned', entity: 'message', entityId: messageId });
   await notifyMembers({ conversationId, actorId: userId, title: 'Message pinned', message: 'A message was pinned in your workspace.', type: 'chat-pin', metadata: { messageId } });
   return { pin };
 }
@@ -112,6 +120,8 @@ export async function unpinMessage(userId: string, messageId: string) {
   if (!member.permissions.canEditConversation && message.senderId.toString() !== userId) throw new AppError('You cannot unpin this message.', 403);
   await PinnedMessageModel.deleteOne({ conversationId, messageId });
   emitConversation(conversationId, CHAT_SOCKET_EVENTS.MESSAGE_UNPINNED, { conversationId, messageId });
+  await recordConversationActivity({ conversationId, actorId: userId, activityType: 'unpinned-message', entityType: 'message', entityId: messageId });
+  await writeAuditLog({ userId, action: 'message-unpinned', entity: 'message', entityId: messageId });
   return { removed: true };
 }
 
@@ -169,6 +179,8 @@ export async function createThreadReply(userId: string, input: { messageId: stri
   await createMentionsFromText({ conversationId: root.conversationId.toString(), messageId: reply._id.toString(), mentionedBy: userId, text: input.text });
   emitChatMessage(root.conversationId.toString(), reply.toObject());
   emitConversation(root.conversationId.toString(), CHAT_SOCKET_EVENTS.THREAD_UPDATED, { rootMessageId: root._id, reply });
+  await recordConversationActivity({ conversationId: root.conversationId.toString(), actorId: userId, activityType: root.threadReplyCount ? 'thread-reply' : 'thread-created', entityType: 'message', entityId: root._id.toString(), metadata: { replyId: reply._id.toString() } });
+  await writeAuditLog({ userId, action: 'thread-reply', entity: 'message', entityId: root._id.toString(), newValue: { replyId: reply._id.toString() } });
   await notifyMembers({ conversationId: root.conversationId.toString(), actorId: userId, title: 'New thread reply', message: 'A teammate replied in a message thread.', type: 'chat-thread', metadata: { messageId: root._id.toString() } });
   return { reply };
 }
@@ -184,6 +196,8 @@ export async function createSharedNote(userId: string, input: { conversationId: 
   await requireSendPermission(input.conversationId, userId);
   const note = await SharedNoteModel.create({ ...input, createdBy: userId, updatedBy: userId });
   emitConversation(input.conversationId, CHAT_SOCKET_EVENTS.NOTE_UPDATED, { note });
+  await recordConversationActivity({ conversationId: input.conversationId, actorId: userId, activityType: 'note-created', entityType: 'shared-note', entityId: note._id.toString(), metadata: { title: input.title } });
+  await writeAuditLog({ userId, action: 'note-created', entity: 'shared-note', entityId: note._id.toString(), newValue: { title: input.title } });
   await notifyMembers({ conversationId: input.conversationId, actorId: userId, title: 'Shared note added', message: input.title, type: 'chat-note', metadata: { noteId: note._id.toString() } });
   return { note };
 }
@@ -198,6 +212,8 @@ export async function updateSharedNote(userId: string, noteId: string, input: { 
   note.version += 1;
   await note.save();
   emitConversation(note.conversationId.toString(), CHAT_SOCKET_EVENTS.NOTE_UPDATED, { note });
+  await recordConversationActivity({ conversationId: note.conversationId.toString(), actorId: userId, activityType: 'note-updated', entityType: 'shared-note', entityId: noteId, metadata: { version: note.version } });
+  await writeAuditLog({ userId, action: 'note-updated', entity: 'shared-note', entityId: noteId, newValue: { version: note.version } });
   return { note };
 }
 
@@ -222,6 +238,8 @@ export async function createAnnouncement(userId: string, input: { conversationId
   if (!member.permissions.canEditConversation && !member.permissions.canAddMembers) throw new AppError('You cannot create announcements here.', 403);
   const announcement = await AnnouncementModel.create({ ...input, createdBy: userId });
   emitConversation(input.conversationId, CHAT_SOCKET_EVENTS.ANNOUNCEMENT_CREATED, { announcement });
+  await recordConversationActivity({ conversationId: input.conversationId, actorId: userId, activityType: 'announcement-posted', entityType: 'announcement', entityId: announcement._id.toString(), metadata: { priority: input.priority } });
+  await writeAuditLog({ userId, action: 'announcement-created', entity: 'announcement', entityId: announcement._id.toString(), newValue: { priority: input.priority } });
   await notifyMembers({ conversationId: input.conversationId, actorId: userId, title: input.title, message: input.message, type: 'chat-announcement', priority: input.priority === 'critical' ? 'critical' : 'high', metadata: { announcementId: announcement._id.toString() } });
   return { announcement };
 }

@@ -4,6 +4,8 @@ import { createApp } from '@/app.js';
 import { ConversationBlockModel } from '@/models/conversation-block.model.js';
 import { ConversationMemberModel } from '@/models/conversation-member.model.js';
 import { MessageModel } from '@/models/message.model.js';
+import { UserModel } from '@/models/user.model.js';
+import { signAccessToken } from '@/utils/token.js';
 
 const app = createApp();
 const password = 'HoptIt@123';
@@ -179,5 +181,43 @@ describe('chat messaging API', () => {
     expect(search.status).toBe(200);
     expect(search.body.data.notes.length).toBeGreaterThan(0);
     expect(search.body.data.announcements.length).toBeGreaterThan(0);
+  });
+
+  it('supports workspace analytics, reports, moderation and audit logs', async () => {
+    const owner = await register('chat-enterprise-owner@example.com');
+    const farmer = await register('chat-enterprise-farmer@example.com', 'farmer');
+    const adminSeed = await register('chat-enterprise-admin@example.com');
+    await UserModel.updateOne({ _id: adminSeed.user.id }, { role: 'admin' });
+    const admin = { ...adminSeed, accessToken: signAccessToken({ sub: adminSeed.user.id, email: adminSeed.user.email, role: 'admin' }) };
+    const group = await request(app).post('/api/v1/chat/conversations/group').set('Authorization', `Bearer ${owner.accessToken}`).send({ title: 'Farm Control Room', participantIds: [farmer.user.id, adminSeed.user.id] });
+    const conversationId = group.body.data.conversation._id;
+    const sent = await request(app).post(`/api/v1/chat/conversations/${conversationId}/messages`).set('Authorization', `Bearer ${owner.accessToken}`).send({ type: 'text', text: 'Please review the harvest plan.' });
+    const messageId = sent.body.data.message._id;
+
+    const workspace = await request(app).get(`/api/v1/chat/workspace/${conversationId}`).set('Authorization', `Bearer ${owner.accessToken}`);
+    expect(workspace.status).toBe(200);
+    expect(workspace.body.data.analytics.messageCount).toBeGreaterThan(0);
+
+    const analytics = await request(app).get(`/api/v1/chat/analytics/${conversationId}`).set('Authorization', `Bearer ${farmer.accessToken}`);
+    expect(analytics.status).toBe(200);
+    expect(analytics.body.data.analytics.activeMembers).toBe(3);
+
+    const report = await request(app).post('/api/v1/chat/reports').set('Authorization', `Bearer ${farmer.accessToken}`).send({ entityType: 'message', entityId: messageId, conversationId, reason: 'spam', description: 'Repeated promotional message' });
+    expect(report.status).toBe(201);
+
+    const ownerReports = await request(app).get('/api/v1/chat/reports').set('Authorization', `Bearer ${owner.accessToken}`);
+    expect(ownerReports.status).toBe(403);
+
+    const reports = await request(app).get('/api/v1/chat/reports?status=open').set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(reports.status).toBe(200);
+    expect(reports.body.data.reports.length).toBeGreaterThan(0);
+
+    const moderated = await request(app).patch(`/api/v1/chat/reports/${report.body.data.report._id}/moderation`).set('Authorization', `Bearer ${admin.accessToken}`).send({ action: 'resolve-report', resolution: 'Reviewed by admin' });
+    expect(moderated.status).toBe(200);
+    expect(moderated.body.data.report.status).toBe('resolved');
+
+    const audit = await request(app).get('/api/v1/chat/audit-logs?entity=message').set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(audit.status).toBe(200);
+    expect(audit.body.data.logs.length).toBeGreaterThan(0);
   });
 });
