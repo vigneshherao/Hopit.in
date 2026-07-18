@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { Leaf, LogIn, LogOut } from 'lucide-react';
 import { navigationItems } from '@/utils/navigationData.js';
 import { Button } from '@/components/ui/button.jsx';
+import { NotificationBell } from '@/components/realtime/NotificationBell.jsx';
 import { useAuth } from '@/context/AuthContext.jsx';
 import { cn } from '@/utils/cn.js';
 
@@ -38,10 +39,13 @@ export function AppLayout() {
           </nav>
 
           {isAuthenticated ? (
-            <Button className="order-2 lg:order-3" variant="outline" size="sm" onClick={logout}>
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <div className="order-2 flex items-center gap-2 lg:order-3">
+              <NotificationBell />
+              <Button variant="outline" size="sm" onClick={logout}>
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           ) : (
             <Button asChild className="order-2 lg:order-3" variant="outline" size="sm">
               <NavLink to="/login">

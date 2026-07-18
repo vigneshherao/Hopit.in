@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import { createApp } from '@/app.js';
 import { connectDatabase, disconnectDatabase } from '@/config/database.js';
 import { env } from '@/config/env.js';
+import { initSocketServer } from '@/socket/socketServer.js';
 import { logger } from '@/utils/logger.js';
 
 let server: Server | undefined;
@@ -24,6 +25,7 @@ async function bootstrap(): Promise<void> {
   server = app.listen(env.port, () => {
     logger.info(`Hopt It API listening on port ${env.port}`);
   });
+  initSocketServer(server);
 }
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {

@@ -231,6 +231,12 @@ Hopt It includes farm-boundary mapping, demo satellite imagery requests, drone s
 
 See [docs/remote-monitoring.md](/Users/vigneshhe/Desktop/Hopit.in/docs/remote-monitoring.md).
 
+## Realtime Notifications
+
+Hopt It includes Socket.IO infrastructure for authenticated live notifications, activity feeds, online presence, safe rooms, read status, and reusable event helpers.
+
+See [docs/realtime-notifications.md](/Users/vigneshhe/Desktop/Hopit.in/docs/realtime-notifications.md).
+
 ## Database Models
 
 The backend includes foundation schemas for `User`, `RefreshToken`, `Land`, `Application`, `WorkerProfile`, `WorkerBooking`, `AIHistory`, and `Notification`.

@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { ActivityPage } from '@/pages/ActivityPage.jsx';
 import { AppLayout } from '@/layouts/AppLayout.jsx';
 import { AgreementPage } from '@/pages/AgreementPage.jsx';
 import { AiAnalyzerPage } from '@/pages/AiAnalyzerPage.jsx';
@@ -35,6 +36,7 @@ import { MyApplicationsPage } from '@/pages/MyApplicationsPage.jsx';
 import { MyFarmJobsPage } from '@/pages/MyFarmJobsPage.jsx';
 import { MyJobApplicationsPage } from '@/pages/MyJobApplicationsPage.jsx';
 import { NotFoundPage } from '@/pages/NotFoundPage.jsx';
+import { NotificationsPage } from '@/pages/NotificationsPage.jsx';
 import { ProfilePage } from '@/pages/ProfilePage.jsx';
 import { ReceivedApplicationsPage } from '@/pages/ReceivedApplicationsPage.jsx';
 import { RegisterPage } from '@/pages/RegisterPage.jsx';
@@ -103,6 +105,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'notifications',
+        element: (
+          <ProtectedRoute>
+            <NotificationsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'activity',
+        element: (
+          <ProtectedRoute>
+            <ActivityPage />
           </ProtectedRoute>
         ),
       },
