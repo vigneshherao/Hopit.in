@@ -26,6 +26,11 @@ import profileTwoImage from '@/assets/profile2.jpeg';
 import profileThreeImage from '@/assets/profile3.jpeg';
 import profileFourImage from '@/assets/profil4.jpeg';
 import profileFiveImage from '@/assets/profile5.jpeg';
+import feature1 from '@/assets/feat1.png';
+import feature2 from '@/assets/feat2.png';
+import feature3 from '@/assets/feat3.png';
+import feature4 from '@/assets/feat4.png';
+import feature5 from '@/assets/feat1.png';
 
 export const brandName = 'Hopt It';
 
@@ -92,7 +97,7 @@ export const usefulnessCards = [
     title: 'Verified Land',
     shortTitle: 'Find Land',
     description: 'Compare sale, lease, rent, and partnership land with soil, water, price, and location clarity.',
-    image: landCardImage,
+    image: feature1,
     icon: MapPin,
     metric: 'Land clarity',
   },
@@ -100,7 +105,7 @@ export const usefulnessCards = [
     title: 'AI Decisions',
     shortTitle: 'Use AI',
     description: 'Analyze crop fit, investment, profit, ROI, risk, and next steps before spending money.',
-    image: aiCardImage,
+    image: feature2,
     icon: BrainCircuit,
     metric: 'Plan smarter',
   },
@@ -108,7 +113,7 @@ export const usefulnessCards = [
     title: 'Trusted Workers',
     shortTitle: 'Hire Team',
     description: 'Hire workers, supervisors, specialists, and farm managers for daily or long-term operations.',
-    image: farmersImage,
+    image: feature3,
     icon: Users,
     metric: 'Execute better',
   },
@@ -116,7 +121,7 @@ export const usefulnessCards = [
     title: 'Agreements',
     shortTitle: 'Close Deals',
     description: 'Move proposals into structured agreements with clearer responsibilities and deal terms.',
-    image: agreementCardImage,
+    image: feature4,
     icon: FileSignature,
     metric: 'Deal confidence',
   },
@@ -124,7 +129,7 @@ export const usefulnessCards = [
     title: 'Farm Operations',
     shortTitle: 'Track Work',
     description: 'Manage plans, tasks, progress, expenses, yield, revenue, and profit from one workspace.',
-    image: profitCardImage,
+    image: feature5,
     icon: LineChart,
     metric: 'Business control',
   },
