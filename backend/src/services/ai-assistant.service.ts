@@ -9,6 +9,7 @@ import { buildAnalysisPrompt, buildFarmChatPrompt, buildReportPrompt } from '@/s
 import { buildFarmAssistantContext, getOwnedFarmPlan } from '@/services/ai-assistant.context-builder.js';
 import type { AuthenticatedUser } from '@/types/http.js';
 import { AppError } from '@/utils/app-error.js';
+import { parseAIJson } from '@/utils/parse-ai-json.js';
 import {
   assistantAnalyzeResponseSchema,
   assistantChatResponseSchema,
@@ -285,18 +286,10 @@ function groupByPriority<T extends { priority: string }>(items: T[]) {
 }
 
 function validateJson<T>(content: string, schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false } }) {
-  const parsed = parseJson(content);
+  const parsed = parseAIJson(content, 'AI assistant returned invalid JSON. Please retry.');
   const result = schema.safeParse(parsed);
   if (!result.success) throw new AppError('AI assistant returned malformed output. Please retry.', 502);
   return result.data;
-}
-
-function parseJson(content: string) {
-  try {
-    return JSON.parse(content.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim()) as unknown;
-  } catch {
-    throw new AppError('AI assistant returned invalid JSON. Please retry.', 502);
-  }
 }
 
 function sanitizeText(value: string, maxLength: number) {

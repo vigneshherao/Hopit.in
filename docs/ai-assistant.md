@@ -49,7 +49,7 @@ The GET forecast endpoint uses deterministic farm-plan and task data so the dash
 - Risk
 - Labour
 
-Provider-backed reporting and chat still require `OPENAI_API_KEY`.
+Provider-backed reporting and chat still require `GEMINI_API_KEY`.
 
 ## Security
 
@@ -73,8 +73,8 @@ The assistant page includes suggested questions, conversation history, copy resp
 Existing AI variables are reused:
 
 ```bash
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash
 AI_REQUEST_TIMEOUT_MS=30000
 AI_DAILY_REQUEST_LIMIT=25
 ```
@@ -82,4 +82,3 @@ AI_DAILY_REQUEST_LIMIT=25
 ## Limitations
 
 This milestone does not implement drone monitoring, satellite imaging, IoT sensors or computer vision. PDF and Excel exports are represented as structured report data for frontend export; full binary PDF/XLSX rendering can be added later.
-

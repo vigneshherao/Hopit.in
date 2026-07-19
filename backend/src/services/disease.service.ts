@@ -15,6 +15,7 @@ import { getAIProvider } from '@/services/ai-provider.service.js';
 import { validateDiseaseImage, type ValidatedDiseaseImage } from '@/services/imageHash.service.js';
 import type { AuthenticatedUser } from '@/types/http.js';
 import { AppError } from '@/utils/app-error.js';
+import { parseAIJson } from '@/utils/parse-ai-json.js';
 import { diseaseAIResponseSchema, type DiseaseAnalyzeBody, type DiseaseHistoryQuery } from '@/validators/disease.validator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -176,18 +177,10 @@ async function findAnalysisForUser(id: string, user: AuthenticatedUser) {
 }
 
 function validateAIResponse(content: string) {
-  const parsed = parseJson(content);
+  const parsed = parseAIJson(content, 'AI disease analysis returned invalid JSON. Please retry.');
   const result = diseaseAIResponseSchema.safeParse(parsed);
   if (!result.success) throw new AppError('AI disease analysis returned malformed output. Please retry.', 502);
   return result.data;
-}
-
-function parseJson(content: string) {
-  try {
-    return JSON.parse(content.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim()) as unknown;
-  } catch {
-    throw new AppError('AI disease analysis returned invalid JSON. Please retry.', 502);
-  }
 }
 
 async function storeDiseaseImage(file: Express.Multer.File, image: ValidatedDiseaseImage, analysisId: string) {

@@ -4,6 +4,8 @@ import { AIHistoryModel } from '@/models/ai-history.model.js';
 import { LandModel, type LandDocument } from '@/models/land.model.js';
 import type { AuthenticatedUser } from '@/types/http.js';
 import { AppError } from '@/utils/app-error.js';
+import { logger } from '@/utils/logger.js';
+import { parseAIJson } from '@/utils/parse-ai-json.js';
 import { getAIProvider } from '@/services/ai-provider.service.js';
 import {
   aiChatResponseSchema,
@@ -104,9 +106,13 @@ async function runAIRequest(feature: Exclude<AIFeature, 'chat'>, input: AIAnalys
 async function callProviderAndValidate(feature: AIFeature, prompt: { systemPrompt: string; userPrompt: string }) {
   const provider = getAIProvider();
   const raw = await provider.generateJson({ ...prompt, responseFormatName: feature });
-  const parsed = parseJson(raw.content);
+  const parsed = parseAIJson(raw.content);
   const result = featureSchemaMap[feature].safeParse(parsed);
   if (!result.success) {
+    logger.error('AI provider output failed schema validation', {
+      feature,
+      issues: result.error.issues.map((issue) => ({ path: issue.path.join('.'), code: issue.code })),
+    });
     throw new AppError('AI provider returned malformed output. Please retry.', 502);
   }
   return { structured: result.data, provider: raw.provider, model: raw.model, durationMs: raw.durationMs };
@@ -171,7 +177,7 @@ function buildPrompt(feature: AIFeature, context: Record<string, unknown>) {
 
   const contracts: Record<AIFeature, string> = {
     'land-analysis':
-      'Return JSON with landHealthScore, soilSuitability, waterAssessment, climateSuitability, landStrengths, landLimitations, riskScore, riskLevel, preparationSteps, suitableCategories, explanation.',
+      'Return the exact requested JSON schema. Scores are numbers from 0 to 100. riskLevel must be lowercase low, medium, or high. Every list must contain at least one concise string.',
     'crop-recommendation':
       'Return JSON with summary, topRecommendedCrop, and recommendations array containing at least five ranked crops with all required cost, yield, revenue, profit, ROI, water, labour, market, risk, soil, seed, irrigation, fertilizer, and confidence fields.',
     'business-recommendation':
@@ -203,15 +209,6 @@ async function findHistoryForUser(id: string, user: AuthenticatedUser) {
   if (!history) throw new AppError('AI history item not found.', 404);
   if (user.role !== 'admin' && String(history.userId) !== user.id) throw new AppError('AI history item not found.', 404);
   return history;
-}
-
-function parseJson(content: string) {
-  const trimmed = content.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-  try {
-    return JSON.parse(trimmed) as unknown;
-  } catch {
-    throw new AppError('AI provider returned invalid JSON. Please retry.', 502);
-  }
 }
 
 function sanitizeText(value?: string) {

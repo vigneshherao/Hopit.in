@@ -5,7 +5,7 @@ import { getAccessToken, notifyUnauthorized, setAccessToken } from '@/services/t
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
   withCredentials: true,
-  timeout: 15000,
+  timeout: env.apiTimeoutMs,
   headers: {
     'Content-Type': 'application/json',
   },

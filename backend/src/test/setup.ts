@@ -4,8 +4,8 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 let mongoServer: MongoMemoryServer;
 
-process.env.OPENAI_API_KEY = 'test-openai-key';
-process.env.OPENAI_MODEL = 'test-model';
+process.env.GEMINI_API_KEY = 'test-gemini-key';
+process.env.GEMINI_MODEL = 'test-model';
 process.env.AI_DAILY_REQUEST_LIMIT = '25';
 
 beforeAll(async () => {

@@ -5,6 +5,7 @@ import { getAIProvider } from '@/services/ai-provider.service.js';
 import { generateTasksForFarmPlan } from '@/services/farm-task.service.js';
 import type { AuthenticatedUser } from '@/types/http.js';
 import { AppError } from '@/utils/app-error.js';
+import { parseAIJson } from '@/utils/parse-ai-json.js';
 import {
   farmPlanAIResponseSchema,
   type FarmPlanQuery,
@@ -198,7 +199,7 @@ async function generateAIPlan({
         'Return JSON with planTitle, description, farmDurationDays, farmDurationMonths, expectedHarvestDate, currentStage, landPreparation, seedRecommendation, sowing, waterSchedule, fertilizerSchedule, pesticideSchedule, harvestSchedule, labourRequirement, equipmentRequirement, fertilizerRequirement, waterRequirement, timeline, riskAnalysis, weatherNotes, estimatedInvestment, estimatedRevenue, estimatedProfit, expectedROI.',
     }),
   });
-  const parsed = parseJson(response.content);
+  const parsed = parseAIJson(response.content);
   const result = farmPlanAIResponseSchema.safeParse(parsed);
   if (!result.success) throw new AppError('AI provider returned malformed farm plan output. Please retry.', 502);
   return { ...result.data, provider: response.provider, model: response.model, durationMs: response.durationMs || Date.now() - startedAt };
@@ -268,13 +269,4 @@ function applyAIToPlan(plan: FarmPlanDocument, ai: Awaited<ReturnType<typeof gen
   plan.weatherNotes = ai.weatherNotes;
   plan.progress.nextAction = ai.timeline[0]?.activity;
   plan.progress.updatedAt = new Date();
-}
-
-function parseJson(content: string) {
-  const trimmed = content.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-  try {
-    return JSON.parse(trimmed) as unknown;
-  } catch {
-    throw new AppError('AI provider returned invalid JSON. Please retry.', 502);
-  }
 }

@@ -109,8 +109,8 @@ The page includes:
 Uses existing variables:
 
 ```bash
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash
 AI_REQUEST_TIMEOUT_MS=30000
 AI_DAILY_REQUEST_LIMIT=25
 CLOUDINARY_CLOUD_NAME=
@@ -123,4 +123,3 @@ Cloudinary is optional. Local development storage works through `/uploads/diseas
 ## Limitations
 
 This module only analyzes uploaded crop images. It does not implement drone monitoring, satellite imagery, live camera streaming, IoT sensors or weather prediction.
-

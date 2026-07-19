@@ -32,7 +32,10 @@ function mockFetchResponse(payload: unknown, ok = true) {
     vi.fn().mockResolvedValue({
       ok,
       status: ok ? 200 : 503,
-      json: async () => ({ choices: [{ message: { content: typeof payload === 'string' ? payload : JSON.stringify(payload) } }] }),
+      headers: new Headers(),
+      json: async () => ok
+        ? ({ candidates: [{ content: { parts: [{ text: typeof payload === 'string' ? payload : JSON.stringify(payload) }] } }] })
+        : ({ error: { code: 503, status: 'UNAVAILABLE' } }),
     }),
   );
 }

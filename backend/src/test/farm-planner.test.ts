@@ -105,7 +105,7 @@ function mockFarmPlanResponse(overrides = {}) {
     vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => ({ choices: [{ message: { content: JSON.stringify(payload) } }] }),
+      json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify(payload) }] } }] }),
     }),
   );
 }
@@ -117,16 +117,16 @@ function mockAssistantChatResponse() {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [
+        candidates: [
           {
-            message: {
-              content: JSON.stringify({
+            content: {
+              parts: [{ text: JSON.stringify({
                 answer: 'Your farm is on track. Focus on overdue tasks, irrigation checks and harvest preparation.',
                 healthScore: 78,
                 suggestedActions: ['Review delayed tasks', 'Check irrigation tomorrow'],
                 suggestedQuestions: ['Which tasks are delayed?', 'How many workers do I need?'],
                 confidenceScore: 86,
-              }),
+              }) }],
             },
           },
         ],
@@ -142,10 +142,10 @@ function mockDiseaseResponse() {
       ok: true,
       status: 200,
       json: async () => ({
-        choices: [
+        candidates: [
           {
-            message: {
-              content: JSON.stringify({
+            content: {
+              parts: [{ text: JSON.stringify({
                 summary: 'The image suggests possible early leaf spot, but the prediction is not guaranteed because lighting and image angle may affect visibility.',
                 confidenceScore: 82,
                 cropHealthScore: 68,
@@ -164,7 +164,7 @@ function mockDiseaseResponse() {
                   { title: 'Start monitoring', description: 'Inspect the crop every 3 days and compare leaf spots.', priority: 'High', category: 'Monitoring', estimatedCost: 0 },
                   { title: 'Organic spray', description: 'Apply neem-based spray and remove highly affected leaves.', priority: 'Medium', category: 'Organic', estimatedCost: 600 },
                 ],
-              }),
+              }) }],
             },
           },
         ],

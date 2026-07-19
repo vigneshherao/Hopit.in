@@ -5,13 +5,13 @@ Hopt It runs AI land analysis through backend-only provider integrations. React 
 ## Environment Variables
 
 ```env
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash
 AI_REQUEST_TIMEOUT_MS=30000
 AI_DAILY_REQUEST_LIMIT=25
 ```
 
-When `OPENAI_API_KEY` is missing, AI endpoints return a clear `503` error. The backend does not generate fake recommendations.
+When `GEMINI_API_KEY` is missing, AI endpoints return a clear `503` error. The backend does not generate fake recommendations.
 
 ## Request Flow
 
@@ -60,7 +60,7 @@ Chat responses include answer, suggested questions, and confidence score.
 
 ## Cost Controls
 
-Use `AI_DAILY_REQUEST_LIMIT` to cap daily requests per user and per route limiter. Use `AI_REQUEST_TIMEOUT_MS` to avoid long provider calls. Use a low-cost model through `OPENAI_MODEL` for development and hackathon demos.
+Use `AI_DAILY_REQUEST_LIMIT` to cap daily requests per user and per route limiter. Use `AI_REQUEST_TIMEOUT_MS` to avoid long provider calls. Configure the model through `GEMINI_MODEL`.
 
 ## Seed Data
 
