@@ -12,7 +12,27 @@ export function LoadingSpinner({ label = 'Loading', className }) {
 }
 
 export function Skeleton({ className }) {
-  return <div className={cn('animate-pulse rounded-2xl bg-gradient-to-r from-slate-100 via-emerald-50 to-slate-100 bg-[length:200%_100%]', className)} />;
+  return <div aria-hidden="true" className={cn('animate-pulse rounded-2xl bg-gradient-to-r from-slate-100 via-emerald-50 to-slate-100 bg-[length:200%_100%]', className)} />;
+}
+
+export function CardSkeleton({ lines = 2, className }) {
+  return (
+    <div role="status" aria-label="Loading card" className={cn('rounded-3xl border border-emerald-100/70 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.05)]', className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+        <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
+      </div>
+      {lines > 0 ? <div className="mt-5 space-y-2">{Array.from({ length: lines }, (_, index) => <Skeleton key={index} className={cn('h-3', index === lines - 1 ? 'w-2/3' : 'w-full')} />)}</div> : null}
+      <span className="sr-only">Loading</span>
+    </div>
+  );
+}
+
+export function CardGridSkeleton({ count = 4, className }) {
+  return <div className={cn('grid gap-4 sm:grid-cols-2 xl:grid-cols-4', className)}>{Array.from({ length: count }, (_, index) => <CardSkeleton key={index} lines={0} />)}</div>;
 }
 
 export function Alert({ variant = 'info', title, description, actionLabel, onAction, className }) {

@@ -74,26 +74,29 @@ export function MessagesPage() {
   return (
     <section className="mx-auto max-w-[1600px] px-0 py-0 sm:px-4 sm:py-6 lg:px-8">
       <div className="overflow-hidden border-emerald-100 bg-white shadow-2xl shadow-emerald-900/8 sm:rounded-[2rem] sm:border">
-        <div className="grid min-h-[calc(100vh-7rem)] lg:grid-cols-[384px_1fr]">
-          <ConversationSidebar
-            conversations={conversationsData?.conversations ?? []}
-            activeId={activeId}
-            search={search}
-            onSearch={setSearch}
-            filter={filter}
-            onFilter={setFilter}
-            onSelect={(id) => navigate(`/messages/${id}`)}
-            onNew={openNewConversationModal}
-          />
+        <div className="grid min-h-[calc(100svh-7rem)] lg:grid-cols-[minmax(18rem,384px)_minmax(0,1fr)]">
+          <div className={activeId ? 'hidden lg:block' : 'block'}>
+            <ConversationSidebar
+              conversations={conversationsData?.conversations ?? []}
+              activeId={activeId}
+              search={search}
+              onSearch={setSearch}
+              filter={filter}
+              onFilter={setFilter}
+              onSelect={(id) => navigate(`/messages/${id}`)}
+              onNew={openNewConversationModal}
+            />
+          </div>
           {activeId ? (
             <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1fr_320px]">
-              <div className="flex min-h-[calc(100vh-8rem)] min-w-0 flex-col bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_32%),#f8fffb]">
+              <div className="flex min-h-[calc(100svh-8rem)] min-w-0 flex-col bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_32%),#f8fffb]">
                 <ConversationHeader
                   conversation={conversation}
                   typingUsers={typingUsers}
                   onArchive={() => archiveConversation.mutate(activeId)}
                   onMute={() => muteConversation.mutate({ id: activeId, duration: '1-day' })}
                   onPin={() => pinConversation.mutate(activeId)}
+                  onBack={() => navigate('/messages')}
                 />
                 <AnnouncementBanner announcements={announcementsData?.announcements ?? []} />
                 <div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-6" onMouseEnter={() => markRead(messages.at(-1)?._id)}>

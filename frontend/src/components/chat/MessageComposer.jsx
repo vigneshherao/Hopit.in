@@ -39,14 +39,14 @@ export function MessageComposer({ conversationId, members = [], replyToMessage, 
   const activeMention = text.match(/(^|\s)(@[\w-]*)$/)?.[2] ?? '';
 
   return (
-    <div className="sticky bottom-0 border-t border-emerald-100 bg-white/90 p-3 backdrop-blur-xl">
+    <div className="sticky bottom-0 border-t border-emerald-100 bg-white/90 p-2 backdrop-blur-xl sm:p-3">
       {replyToMessage && (
         <div className="mb-2 flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
           <span className="line-clamp-1">Replying to: {replyToMessage.text || 'message'}</span>
           <button type="button" onClick={onClearReply} className="font-bold">Clear</button>
         </div>
       )}
-      <div className="relative flex items-end gap-2 rounded-3xl border border-emerald-100 bg-white p-2 shadow-xl shadow-emerald-900/5">
+      <div className="relative flex items-end gap-1 rounded-2xl border border-emerald-100 bg-white p-1.5 shadow-xl shadow-emerald-900/5 sm:gap-2 sm:rounded-3xl sm:p-2">
         <MentionAutocomplete
           members={members}
           query={activeMention}
@@ -63,7 +63,7 @@ export function MessageComposer({ conversationId, members = [], replyToMessage, 
           <ImagePlus className="h-5 w-5" />
           <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" multiple onChange={(event) => upload(event.target.files)} />
         </label>
-        <button type="button" onClick={shareApproxLocation} className="flex h-10 w-10 items-center justify-center rounded-2xl text-slate-500 hover:bg-emerald-50 hover:text-emerald-700" aria-label="Share location">
+        <button type="button" onClick={shareApproxLocation} className="hidden h-10 w-10 items-center justify-center rounded-2xl text-slate-500 hover:bg-emerald-50 hover:text-emerald-700 min-[380px]:flex" aria-label="Share location">
           <MapPin className="h-5 w-5" />
         </button>
         <textarea

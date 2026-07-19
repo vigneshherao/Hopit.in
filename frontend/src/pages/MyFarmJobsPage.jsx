@@ -37,7 +37,7 @@ function JobManagementCard({ job, updateStatus }) {
           {apps.data?.applications?.map((application) => (
             <div key={application._id} className="flex flex-col justify-between gap-3 rounded-2xl border border-emerald-100 p-3 sm:flex-row sm:items-center">
               <div><p className="font-medium">{application.applicantUserId?.name}</p><p className="text-sm text-muted-foreground">{application.coverMessage}</p></div>
-              <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => action.mutate({ id: application._id, action: 'shortlist' })}>Shortlist</Button><Button size="sm" onClick={() => window.confirm('Accept this applicant and create booking?') && action.mutate({ id: application._id, action: 'accept' })}>Accept</Button><Button size="sm" variant="destructive" onClick={() => action.mutate({ id: application._id, action: 'reject', payload: { reason: 'Not selected for this job.' } })}>Reject</Button></div>
+              <div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={() => action.mutate({ id: application._id, action: 'shortlist' })}>Shortlist</Button><Button size="sm" onClick={() => window.confirm('Accept this applicant and create booking?') && action.mutate({ id: application._id, action: 'accept' })}>Accept</Button><Button size="sm" variant="destructive" onClick={() => action.mutate({ id: application._id, action: 'reject', payload: { reason: 'Not selected for this job.' } })}>Reject</Button></div>
             </div>
           ))}
         </div>

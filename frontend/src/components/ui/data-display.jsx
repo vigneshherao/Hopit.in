@@ -91,7 +91,7 @@ export function DataTable({ columns = [], rows = [], className }) {
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
           <thead className="sticky top-0 bg-slate-50 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-            <tr>{columns.map((column) => <th key={column.key} className="px-4 py-3">{column.label}</th>)}</tr>
+            <tr>{columns.map((column) => <th key={column.key} className="whitespace-nowrap px-4 py-3">{column.label}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map((row) => (

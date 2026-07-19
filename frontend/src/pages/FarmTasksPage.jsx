@@ -50,7 +50,7 @@ export function FarmTasksPage() {
     <section className="page-shell space-y-6">
       <div className="flex flex-col justify-between gap-4 rounded-[36px] border border-emerald-100 bg-white p-7 shadow-xl shadow-emerald-900/5 lg:flex-row lg:items-end">
         <div><p className="text-sm font-semibold uppercase text-emerald-600">Task Scheduler</p><h1 className="mt-2 text-4xl font-semibold text-slate-950">Farm execution board</h1><p className="mt-2 text-muted-foreground">Kanban, widgets, progress, dependency-aware completion, and calendar-linked task scheduling.</p></div>
-        <div className="flex gap-2"><Button asChild variant="outline"><Link to={`/farm-planner/${id}`}>Dashboard</Link></Button><Button asChild><Link to={`/farm-planner/${id}/calendar`}>Calendar</Link></Button></div>
+        <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to={`/farm-planner/${id}`}>Dashboard</Link></Button><Button asChild><Link to={`/farm-planner/${id}/calendar`}>Calendar</Link></Button></div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-5">

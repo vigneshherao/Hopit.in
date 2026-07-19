@@ -1,6 +1,7 @@
 import { Activity, MapPinned, UsersRound } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
+import { CardSkeleton } from '@/components/ui/feedback.jsx';
 import { useAuth } from '@/context/AuthContext.jsx';
 import { useHealth } from '@/hooks/useHealth.js';
 import { roleDashboards } from '@/types/domain.js';
@@ -39,19 +40,18 @@ export function DashboardPage() {
           </Card>
         ))}
       </div>
-      <Card>
+      {health.isLoading ? <CardSkeleton lines={2} /> : <Card>
         <CardHeader>
           <CardTitle>API status</CardTitle>
           <CardDescription>Live backend health endpoint connection.</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            {health.isLoading && 'Checking backend status...'}
             {health.isError && 'Backend is not reachable from the configured API URL.'}
             {health.data && `Backend healthy. Uptime: ${Number(health.data.uptime).toFixed(2)} seconds.`}
           </p>
         </CardContent>
-      </Card>
+      </Card>}
     </section>
   );
 }

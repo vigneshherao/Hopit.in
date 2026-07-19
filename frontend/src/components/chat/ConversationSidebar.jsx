@@ -7,7 +7,7 @@ import { cn } from '@/utils/cn.js';
 
 export function ConversationSidebar({ conversations = [], activeId, search, onSearch, filter, onFilter, onSelect, onNew }) {
   return (
-    <aside className="flex min-h-[calc(100vh-8rem)] flex-col border-r border-emerald-100 bg-white/85 backdrop-blur-xl lg:w-96">
+    <aside className="flex min-h-[calc(100svh-8rem)] w-full flex-col border-r border-emerald-100 bg-white/85 backdrop-blur-xl">
       <div className="border-b border-emerald-100 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
