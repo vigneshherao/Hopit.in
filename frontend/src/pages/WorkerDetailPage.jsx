@@ -44,9 +44,9 @@ export function WorkerDetailPage() {
             <p className="mt-3 flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="h-4 w-4" />{worker.location?.district}, {worker.location?.state}</p>
             <p className="mt-4 max-w-3xl leading-7 text-slate-600">{worker.bio}</p>
           </div>
-          <div className="pt-0 lg:pt-16">
-            <Button asChild><Link to={hirePath}>Hire worker</Link></Button>
-            <Button asChild variant="outline" className="mt-2 w-full"><Link to={`${hirePath}&mode=invite`}>Invite to job</Link></Button>
+          <div className="grid w-full gap-1.5 pt-0 sm:w-36 lg:pt-16">
+            <Button asChild className="w-full"><Link to={hirePath}>Hire worker</Link></Button>
+            <Button asChild variant="outline" className="w-full"><Link to={`${hirePath}&mode=invite`}>Invite to job</Link></Button>
           </div>
         </CardContent>
       </Card>

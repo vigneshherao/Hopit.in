@@ -1,0 +1,13 @@
+name: Bug report
+description: Report a reproducible Hopt It problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    attributes: { label: What happened?, description: Include steps, expected behavior, and screenshots. }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Environment, placeholder: Browser, device, Node version, deployment }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Logs, render: shell }

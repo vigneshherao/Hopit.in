@@ -1,15 +1,19 @@
 # Hopt It
 
-Hardening references: [security](docs/security.md), [performance](docs/performance.md), [testing](docs/testing.md), and [demo stability](docs/demo-stability.md).
+Project guides: [deployment](docs/deployment.md), [demo](docs/demo.md), [API](docs/api.md), [security](docs/security.md), [performance](docs/performance.md), and [testing](docs/testing.md).
 
 Hopt It is an AI powered agriculture platform foundation connecting land owners, farmers, and farm workers. The project is organized as a modular monolith with a React frontend and an Express API backend.
 
 ## Tech Stack
 
 - Frontend: React 19, Vite, JavaScript, Tailwind CSS, React Router, React Hook Form, TanStack Query, Axios, Framer Motion, Zod, shadcn-style UI primitives, Lucide Icons
-- Backend: Node.js, Express, TypeScript, MongoDB, Mongoose, JWT ready middleware, Multer, Cloudinary ready configuration, Zod validation
+- Backend: Node.js, Express, MongoDB, Mongoose, JWT middleware, Multer, Cloudinary-ready configuration, Zod validation
 - Development: ESLint, Prettier, Husky, lint-staged, dotenv, nodemon
 - Deployment: Vercel frontend and Render backend ready
+
+## Architecture
+
+Hopt It is a modular monolith: a React SPA calls an Express REST API, Socket.IO provides realtime collaboration, and MongoDB stores marketplace and farm-operation data. See [architecture](docs/architecture.md), [frontend](docs/frontend.md), [backend](docs/backend.md), and [database](docs/database.md).
 
 ## Frontend Experience
 
@@ -182,6 +186,17 @@ Hopit.in/
 
 ## Deployment
 
+For environment, backup, scaling, rollback, container, and managed-host instructions, see [docs/deployment.md](docs/deployment.md).
+
+### Docker
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Open `http://localhost:8080` after `/ready` reports healthy.
+
 ### Frontend on Vercel
 
 Use `frontend` as the project root.
@@ -221,6 +236,20 @@ Useful demo accounts:
 - `worker@hoptit.demo`
 - `manager@hoptit.demo`
 - `admin@hoptit.demo`
+
+The farm manager is seeded with the worker role and manager profile. `security@hoptit.demo` is the moderation/security admin persona. See [docs/demo.md](docs/demo.md) for the 5, 7, and 10-minute scripts.
+
+## Screenshots
+
+Capture deployment-current images for the landing page, dashboard, marketplace, AI analysis, disease detection, weather, worker marketplace, chat, and admin dashboard before submission. The repository intentionally does not ship fabricated screenshot placeholders.
+
+## Roadmap
+
+Route-level lazy loading, optimized responsive media, unified provider demo mode, OpenAPI generation, automated E2E/load testing, shared queues, object storage, partner integrations, and agronomist-reviewed recommendation evaluation.
+
+## Community
+
+Contributions follow [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). The project is available under the [MIT License](LICENSE).
 
 ## Authentication Architecture
 

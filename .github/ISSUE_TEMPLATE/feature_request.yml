@@ -1,0 +1,11 @@
+name: Feature request
+description: Propose an outcome for Hopt It users
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    attributes: { label: Problem, description: What user problem should this solve? }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Proposed outcome }
+    validations: { required: true }
